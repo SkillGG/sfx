@@ -1,12 +1,30 @@
-// a single SFX component with a katakana - reading - english - meaning columns
+"use client";
 
-const SFX = () => {
+import { type SFXData, cn } from "@/utils";
+
+export const SFXCard = ({ sfx }: { sfx: SFXData }) => {
   return (
-    <div>
-      <div>Katakana</div>
-      <div>Reading</div>
-      <div>English</div>
-      <div>Meaning</div>
+    <div
+      className={cn(
+        "flex flex-col gap-2 rounded-lg border border-dashed border-blue-300 bg-blue-50 px-4 py-3 shadow-sm dark:border-blue-600 dark:bg-slate-800",
+      )}
+    >
+      <div className={cn("flex flex-row items-baseline gap-2")}>
+        <div
+          className={cn("text-lg font-bold text-blue-900 dark:text-blue-100")}
+        >
+          {sfx.text}
+        </div>
+        <div className={cn("text-sm text-blue-500 dark:text-blue-400")}>
+          {sfx.read}
+        </div>
+      </div>
+      <div>
+        <div className={cn("text-blue-700 dark:text-blue-300")}>{sfx.def}</div>
+        <div className={cn("text-sm text-blue-400 dark:text-blue-500")}>
+          {sfx.extra ?? ""}
+        </div>
+      </div>
     </div>
   );
 };

@@ -14,9 +14,8 @@ datasource db {
 model SFX {
     id Int @id @default(autoincrement())
 
-    jap  String
+    text String
     read String
-    eng  String
     def  String
 
     extra String?
@@ -24,7 +23,36 @@ model SFX {
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
-    @@index([jap])
+    ogTranslations Translation[] @relation("ogSFX")
+    tlTranslations Translation[] @relation("tlSFX")
+
+    @@index([text])
     @@index([read])
-    @@index([eng])
+}
+
+model Translation {
+    id Int @id @default(autoincrement())
+
+    sfx1Id Int
+    ogSFX  SFX @relation("ogSFX", fields: [sfx1Id], references: [id])
+
+    sfx2Id Int
+    tlSFX  SFX @relation("tlSFX", fields: [sfx2Id], references: [id])
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    additionalInfo String?
+
+    @@index([sfx1Id])
+    @@index([sfx2Id])
+}
+
+model UserSession {
+    id Int @id @default(autoincrement())
+
+    createdAt DateTime @default(now())
+    maxTime   Int      @default(1800000) // 30 mins
+
+    token String @unique
 }
