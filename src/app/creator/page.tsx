@@ -6,15 +6,22 @@ import { SFXCardEditable } from "../_components/editableSFX";
 import { SFXTLEditor } from "../_components/sfxTLEdit.";
 import { useDarkMode } from "../hooks/darkmode";
 import DarkModeSwitch from "../_components/darkModeSwitch";
-import { EditableSelect } from "../_components/editableSelect";
-import { useSFXLangs } from "../hooks/langs";
+import { SFXLangSelect } from "../_components/sfxLangSelect";
 import { useRouter } from "next/navigation";
 import type { SFXData } from "@/utils";
 import { cn } from "@/utils";
+import { useValidation } from "../hooks/validation";
+import { ValidationErrorDisplay } from "../_components/validationError";
 
 const SFXListPanel = () => {
-  const sfx = api.sfx.listSFX.useQuery({});
+  const sfx = api.sfx.listSFX.useQuery();
   const utils = api.useUtils();
+
+  const updateSFX = api.sfx.updateSFX.useMutation();
+
+  if (sfx.isLoading) {
+    return <div>Loading SFX List</div>;
+  }
 
   return (
     <div>
@@ -22,8 +29,18 @@ const SFXListPanel = () => {
         <SFXCardEditable
           key={sfx.id}
           sfx={sfx}
-          onSave={async () => {
+          disableTLEdition
+          onSave={async (newSFX) => {
+            await updateSFX.mutateAsync({
+              id: sfx.id,
+              text: newSFX.text,
+              def: newSFX.def,
+              extra: newSFX.extra,
+              read: newSFX.read,
+              language: newSFX.language,
+            });
             await utils.sfx.listSFX.invalidate();
+            await utils.sfx.getSFX.invalidate();
           }}
         />
       ))}
@@ -39,6 +56,7 @@ const CreatorPage = () => {
   const [def, setDef] = useState<string>("");
   const [extra, setExtra] = useState<string>("");
   const [read, setRead] = useState<string>("");
+  const [readingEnabled, setReadingEnabled] = useState<boolean>(true);
 
   const [tls, setTLs] = useState<SFXData["tls"]>({});
 
@@ -46,17 +64,65 @@ const CreatorPage = () => {
 
   const [lang, setLang] = useState<string>("");
 
-  const { langs } = useSFXLangs();
-
   const { mode } = useDarkMode();
+
+  // Initialize validation hook
+  const validation = useValidation();
 
   const updateSFX = useCallback((sfx: SFXData) => {
     setSFX(sfx.text);
     setDef(sfx.def);
     setExtra(sfx.extra ?? "");
-    setRead(sfx.read);
+    setRead(sfx.read ?? "");
     setTLs(sfx.tls ?? {});
+    setLang(sfx.language);
   }, []);
+
+  // Validate form data before submission
+  const handleCreate = () => {
+    const sfxData = {
+      text: sfx,
+      def,
+      extra: extra ?? null,
+      read: readingEnabled ? (read ?? null) : null,
+      language: lang ?? "en",
+      tls: tls ?? {},
+    };
+
+    const validationResult = validation.validateSFXData(sfxData);
+
+    if (validationResult.isValid) {
+      createSFX.mutate({
+        text: sfx,
+        def,
+        extra: extra ?? null,
+        read: readingEnabled ? read : null,
+        language: lang ?? "en",
+        tls: tls ?? {},
+      });
+    }
+  };
+
+  // Simple change handlers
+  const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSFX(e.target.value);
+  };
+
+  const handleDefChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setDef(e.target.value);
+  };
+
+  const handleExtraChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setExtra(e.target.value);
+  };
+
+  const handleReadChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setRead(e.target.value);
+  };
+
+  const handleLanguageChange = (lang: string) => {
+    setLang(lang);
+  };
 
   return (
     <div
@@ -105,100 +171,167 @@ const CreatorPage = () => {
             )}
           >
             New SFX
-            <EditableSelect
+            <SFXLangSelect
               classNames={{
                 main: "ml-2 text-sm",
               }}
-              values={langs.map(({ code, name }) => ({
-                label: name,
-                value: code,
-              }))}
+              hideValues={[lang]}
               value={lang}
-              onChange={(e) => {
-                if (typeof e === "string") setLang(e);
-                else setLang(e.target.value);
-              }}
+              onChange={handleLanguageChange}
             />
           </h2>
-          <div className={cn("flex flex-row items-center gap-2")}>
+
+          <div className={cn("flex flex-row items-start gap-2")}>
             <label
               htmlFor="sfx"
               className={cn(
-                "flex-1 font-medium whitespace-nowrap text-blue-700 dark:text-blue-300",
+                "mt-1 flex-1 font-medium whitespace-nowrap text-blue-700 dark:text-blue-300",
+                validation.hasFieldError("text") &&
+                  "text-red-600 dark:text-red-400",
               )}
             >
               SFX
             </label>
-            <input
-              className={cn(
-                "ml-auto flex-3 rounded border border-blue-300 bg-white px-2 py-1 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-blue-600 dark:bg-slate-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-400 dark:focus:ring-blue-400",
-              )}
-              placeholder="SFX"
-              type="text"
-              value={sfx}
-              onChange={(e) => setSFX(e.target.value)}
-            />
+            <div className={cn("ml-auto flex flex-3 flex-col gap-2")}>
+              <input
+                className={cn(
+                  "rounded border bg-white px-2 py-1 focus:ring-1 focus:outline-none dark:bg-slate-700 dark:text-white dark:placeholder-gray-400",
+                  validation.hasFieldError("text")
+                    ? "border-red-500 focus:border-red-500 focus:ring-red-500 dark:border-red-400 dark:focus:border-red-400 dark:focus:ring-red-400"
+                    : "border-blue-300 focus:border-blue-500 focus:ring-blue-500 dark:border-blue-600 dark:focus:border-blue-400 dark:focus:ring-blue-400",
+                )}
+                placeholder="SFX"
+                type="text"
+                value={sfx}
+                onChange={handleTextChange}
+              />
+              <ValidationErrorDisplay
+                className="self-end"
+                errors={validation.errors}
+                field="text"
+                compact
+              />
+            </div>
           </div>
-          <div className={cn("flex flex-row items-center gap-2")}>
+
+          <div className={cn("items-top flex flex-row gap-2")}>
             <label
               htmlFor="def"
               className={cn(
-                "flex-1 font-medium whitespace-nowrap text-blue-700 dark:text-blue-300",
+                "mt-1 flex-1 font-medium whitespace-nowrap text-blue-700 dark:text-blue-300",
+                validation.hasFieldError("def") &&
+                  "text-red-600 dark:text-red-400",
               )}
             >
               Definition
             </label>
-            <input
-              className={cn(
-                "ml-auto flex-3 rounded border border-blue-300 bg-white px-2 py-1 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-blue-600 dark:bg-slate-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-400 dark:focus:ring-blue-400",
-              )}
-              placeholder="Definition"
-              type="text"
-              value={def}
-              onChange={(e) => setDef(e.target.value)}
-            />
+            <div className={cn("ml-auto flex flex-3 flex-col gap-2")}>
+              <input
+                className={cn(
+                  "flex-3 rounded border bg-white px-2 py-1 focus:ring-1 focus:outline-none dark:bg-slate-700 dark:text-white dark:placeholder-gray-400",
+                  validation.hasFieldError("def")
+                    ? "border-red-500 focus:border-red-500 focus:ring-red-500 dark:border-red-400 dark:focus:border-red-400 dark:focus:ring-red-400"
+                    : "border-blue-300 focus:border-blue-500 focus:ring-blue-500 dark:border-blue-600 dark:focus:border-blue-400 dark:focus:ring-blue-400",
+                )}
+                placeholder="Definition"
+                type="text"
+                value={def}
+                onChange={handleDefChange}
+              />
+              <ValidationErrorDisplay
+                className="self-end"
+                errors={validation.errors}
+                field="def"
+                compact
+              />
+            </div>
           </div>
+
           <div className={cn("flex flex-row items-center gap-2")}>
             <label
               htmlFor="extra"
               className={cn(
                 "flex-1 font-medium whitespace-nowrap text-blue-700 dark:text-blue-300",
+                validation.hasFieldError("extra") &&
+                  "text-red-600 dark:text-red-400",
               )}
             >
               Extra
             </label>
-            <input
-              className={cn(
-                "ml-auto flex-3 rounded border border-blue-300 bg-white px-2 py-1 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-blue-600 dark:bg-slate-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-400 dark:focus:ring-blue-400",
-              )}
-              placeholder="Extra"
-              type="text"
-              value={extra}
-              onChange={(e) => setExtra(e.target.value)}
-            />
+            <div className={cn("ml-auto flex w-full flex-3 flex-col gap-2")}>
+              <input
+                className={cn(
+                  "ml-auto w-full rounded border bg-white px-2 py-1 focus:ring-1 focus:outline-none dark:bg-slate-700 dark:text-white dark:placeholder-gray-400",
+                  validation.hasFieldError("extra")
+                    ? "border-red-500 focus:border-red-500 focus:ring-red-500 dark:border-red-400 dark:focus:border-red-400 dark:focus:ring-red-400"
+                    : "border-blue-300 focus:border-blue-500 focus:ring-blue-500 dark:border-blue-600 dark:focus:border-blue-400 dark:focus:ring-blue-400",
+                )}
+                placeholder="Extra"
+                type="text"
+                value={extra}
+                onChange={handleExtraChange}
+              />
+            </div>
           </div>
+          <ValidationErrorDisplay
+            errors={validation.errors}
+            field="extra"
+            compact
+          />
+
           <div className={cn("flex flex-row items-center gap-2")}>
-            <label
-              htmlFor="read"
-              className={cn(
-                "flex-1 font-medium whitespace-nowrap text-blue-700 dark:text-blue-300",
-              )}
-            >
-              Reading
-            </label>
-            <input
-              className={cn(
-                "ml-auto flex-3 rounded border border-blue-300 bg-white px-2 py-1 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-blue-600 dark:bg-slate-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-400 dark:focus:ring-blue-400",
-              )}
-              placeholder="Reading"
-              type="text"
-              value={read}
-              onChange={(e) => setRead(e.target.value)}
-            />
+            <div className={cn("flex flex-1 items-center gap-2")}>
+              <label
+                htmlFor="read"
+                className={cn(
+                  "font-medium whitespace-nowrap text-blue-700 dark:text-blue-300",
+                  validation.hasFieldError("read") &&
+                    "text-red-600 dark:text-red-400",
+                )}
+              >
+                Reading
+              </label>
+              <label
+                className={cn(
+                  "flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400",
+                )}
+              >
+                <input
+                  type="checkbox"
+                  checked={readingEnabled}
+                  onChange={(e) => setReadingEnabled(e.target.checked)}
+                  className={cn(
+                    "h-4 w-4 rounded border-blue-300 text-blue-600 focus:ring-blue-500 dark:border-blue-600 dark:bg-slate-700 dark:focus:ring-blue-400",
+                  )}
+                />
+                <span>Enable</span>
+              </label>
+            </div>
+            <div className={cn("ml-auto flex flex-3 flex-col gap-2")}>
+              <input
+                className={cn(
+                  "ml-auto w-full rounded border bg-white px-2 py-1 focus:ring-1 focus:outline-none dark:bg-slate-700 dark:text-white dark:placeholder-gray-400",
+                  !readingEnabled && "cursor-not-allowed opacity-50",
+                  validation.hasFieldError("read")
+                    ? "border-red-500 focus:border-red-500 focus:ring-red-500 dark:border-red-400 dark:focus:border-red-400 dark:focus:ring-red-400"
+                    : "border-blue-300 focus:border-blue-500 focus:ring-blue-500 dark:border-blue-600 dark:focus:border-blue-400 dark:focus:ring-blue-400",
+                )}
+                placeholder="Reading"
+                type="text"
+                value={read}
+                onChange={handleReadChange}
+                disabled={!readingEnabled}
+              />
+            </div>
           </div>
+          <ValidationErrorDisplay
+            errors={validation.errors}
+            field="read"
+            compact
+          />
         </div>
         <SFXTLEditor
-          sfx={{ text: sfx, def, extra, read, tls }}
+          sfx={{ text: sfx, def, extra, read, tls, language: lang ?? "en" }}
           updateSFX={(sfx_) => {
             if (typeof sfx_ === "function") {
               const updated = sfx_({
@@ -207,6 +340,7 @@ const CreatorPage = () => {
                 extra,
                 read,
                 tls,
+                language: lang ?? "en",
               });
               updateSFX(updated);
             } else {
@@ -216,19 +350,12 @@ const CreatorPage = () => {
         />
         <button
           className={cn(
-            "rounded bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none dark:bg-blue-700 dark:hover:bg-blue-600 dark:focus:ring-blue-400 dark:focus:ring-offset-slate-800",
+            "cursor-pointer rounded bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none dark:bg-blue-700 dark:hover:bg-blue-600 dark:focus:ring-blue-400 dark:focus:ring-offset-slate-800",
+            !validation.isValid && "cursor-not-allowed opacity-50",
           )}
-          onClick={() =>
-            createSFX.mutate({
-              text: sfx,
-              def,
-              extra: extra ?? null,
-              read,
-              tls: tls ?? {},
-            })
-          }
+          onClick={handleCreate}
         >
-          Create
+          {createSFX.isPending ? "Creating..." : "Creates"}
         </button>
       </div>
       {/* Side panel with SFX list */}

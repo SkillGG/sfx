@@ -1,8 +1,11 @@
 "use client";
 
 import { type SFXData, cn } from "@/utils";
+import { useSFXLangs } from "../hooks/langs";
 
 export const SFXCard = ({ sfx }: { sfx: SFXData }) => {
+  const { langs } = useSFXLangs();
+
   return (
     <div
       className={cn(
@@ -15,10 +18,20 @@ export const SFXCard = ({ sfx }: { sfx: SFXData }) => {
         >
           {sfx.text}
         </div>
-        <div className={cn("text-sm text-blue-500 dark:text-blue-400")}>
-          {sfx.read}
+        {sfx.read && (
+          <div className={cn("text-sm text-blue-500 dark:text-blue-400")}>
+            {sfx.read}
+          </div>
+        )}
+        <div
+          className={cn(
+            "flex-1 text-right text-sm text-blue-500 dark:text-blue-400",
+          )}
+        >
+          ({langs.find((l) => l.code === sfx.language)?.name})
         </div>
       </div>
+
       <div>
         <div className={cn("text-blue-700 dark:text-blue-300")}>{sfx.def}</div>
         <div className={cn("text-sm text-blue-400 dark:text-blue-500")}>

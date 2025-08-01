@@ -45,19 +45,27 @@ export const EditableSelect = ({
   const [items, setItems] = useState<SelectOption[]>(
     values ?? [{ label: "None", value: "" }],
   );
-
   const [selectedValue, setSelectedValue] = useState(value);
 
+  const [hideValuesState, setHideValuesState] = useState(hideValues);
+
   const dialogRef = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    if (value !== selectedValue) {
+      setSelectedValue(value);
+    }
+  }, [value, selectedValue]);
 
   useEffect(() => {
-    setItems(values ?? [{ label: "None", value: "" }]);
-    if (!value || hideValues?.includes(value)) {
-      const firstValue = values?.find((v) => !hideValues?.includes(v.value));
-      setSelectedValue(firstValue?.value ?? "");
-      onChange?.(firstValue?.value ?? "");
+    setHideValuesState(hideValues);
+  }, [hideValues]);
+
+  useEffect(() => {
+    if (!value) {
+      setSelectedValue(items[0]?.value ?? "");
+      onChange?.(items[0]?.value ?? "");
     }
-  }, [values, value, onChange, hideValues]);
+  }, [value, items, onChange]);
 
   return (
     <>
@@ -70,7 +78,7 @@ export const EditableSelect = ({
       >
         <dialog
           className={cn(
-            "m-auto rounded-lg p-4 dark:bg-slate-800 dark:text-white",
+            "m-auto rounded-xl border border-blue-200 bg-white/95 p-6 shadow-lg backdrop-blur-sm dark:border-blue-700 dark:bg-slate-800/95 dark:text-white",
             classNames?.dialog,
           )}
           ref={dialogRef}
@@ -149,17 +157,16 @@ export const EditableSelect = ({
             setSelectedValue(e.target.value);
           }}
         >
-          {items
-            .filter(({ value }) => !hideValues?.includes(value))
-            .map(({ label, value }) => (
-              <option
-                key={value}
-                className={cn("hover:text-red-500")}
-                value={value}
-              >
-                {label}
-              </option>
-            ))}
+          {items.map(({ label, value }) => (
+            <option
+              key={value}
+              disabled={hideValuesState?.includes(value)}
+              className={cn("hover:text-red-500")}
+              value={value}
+            >
+              {label}
+            </option>
+          ))}
         </select>
         <button
           onClick={() => {

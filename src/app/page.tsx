@@ -6,15 +6,29 @@ import DarkModeSwitch from "./_components/darkModeSwitch";
 import { useDarkMode } from "./hooks/darkmode";
 import { cn } from "@/utils";
 import Link from "next/link";
+import SearchBar from "./_components/searchBar";
+import { useState } from "react";
+
+const validSearch = (search: string) => {
+  return search.length > 3 || search.length === 0;
+};
 
 export default function Home() {
-  const { data: sfx, isLoading } = api.sfx.listSFX.useQuery({});
+  const [search, setSearch] = useState("");
+  const { data: sfx, isLoading } = api.sfx.listSFX.useQuery(
+    {
+      query: search,
+    },
+    {
+      enabled: validSearch(search),
+    },
+  );
 
   const { mode } = useDarkMode();
 
   console.log(sfx);
 
-  if (isLoading)
+  if (isLoading && !validSearch(search))
     return (
       <div
         className={cn(
@@ -55,10 +69,13 @@ export default function Home() {
           >
             SFX Vault
           </h1>
+          <SearchBar value={search} onChange={setSearch} />
           <DarkModeSwitch />
         </div>
         <hr className={cn("mb-4 border-blue-200 dark:border-blue-700")} />
-        {!sfx || sfx.length === 0 ? (
+        {isLoading && validSearch(search) ? (
+          <div>Loading...</div>
+        ) : !sfx || sfx.length === 0 ? (
           <div
             className={cn(
               "py-12 text-center text-lg text-blue-500 dark:text-blue-300",

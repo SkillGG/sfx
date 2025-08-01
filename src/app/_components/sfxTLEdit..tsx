@@ -29,40 +29,29 @@ export const SFXTLEditor = ({
       >
         TLs
       </h1>
-      <div className={cn("mx-auto flex w-fit flex-col items-center")}>
+      <div className={cn("mx-auto flex flex-col items-center")}>
         {Object.entries(sfx.tls ?? {}).map(([code, tl]) => (
-          <div key={code} className={cn("flex flex-col gap-2")}>
-            <h2
-              className={cn(
-                "flex flex-row items-center gap-2 text-xl font-semibold text-blue-800 dark:text-blue-200",
-              )}
-            >
-              {langs.find((l) => l.code === code)?.name ?? code}
-              <button
-                className={cn(
-                  "ml-auto cursor-pointer rounded bg-red-500 px-1 py-0.5 text-[10px] text-white hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700",
-                )}
-                onClick={() => {
-                  updateSFX((prev) => {
-                    const newTLs = {
-                      ...prev.tls,
-                    };
-                    delete newTLs[code];
-                    return {
-                      ...prev,
-                      tls: newTLs,
-                    };
-                  });
-                }}
-                title="Remove"
-              >
-                ×
-              </button>
-            </h2>
+          <div key={code} className={cn("flex w-full flex-col gap-2")}>
             <div className={cn("flex flex-col gap-2")}>
               <SFXCardEditable
-                sfx={tl ?? { def: "", extra: "", read: "", text: "" }}
-                onSave={(updated) => {
+                allowLocal
+                onRemove={async () => {
+                  updateSFX((prev) => {
+                    const newTLS = { ...prev.tls };
+                    delete newTLS[code];
+                    return { ...prev, tls: newTLS };
+                  });
+                }}
+                sfx={
+                  tl ?? {
+                    def: "",
+                    extra: "",
+                    read: "",
+                    text: "",
+                    language: "en",
+                  }
+                }
+                onSave={async (updated) => {
                   updateSFX((prev) => ({
                     ...prev,
                     tls: {
@@ -72,6 +61,38 @@ export const SFXTLEditor = ({
                   }));
                 }}
                 disableTLEdition
+                labels={{
+                  main: (
+                    <>
+                      Edit {langs.find((l) => l.code === code)?.name ?? code} TL{" "}
+                      <button
+                        className={cn(
+                          "ml-auto cursor-pointer rounded bg-red-500 px-1 py-0.5 text-[10px] text-white hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700",
+                        )}
+                        onClick={() => {
+                          updateSFX((prev) => {
+                            const newTLs = {
+                              ...prev.tls,
+                            };
+                            delete newTLs[code];
+                            return {
+                              ...prev,
+                              tls: newTLs,
+                            };
+                          });
+                        }}
+                        title="Remove"
+                      >
+                        ×
+                      </button>
+                    </>
+                  ),
+                  empty: (
+                    <div className={cn("flex flex-row items-center gap-2")}>
+                      No {langs.find((l) => l.code === code)?.name ?? code} TL
+                    </div>
+                  ),
+                }}
               />
             </div>
           </div>
@@ -94,7 +115,13 @@ export const SFXTLEditor = ({
                 ...prev,
                 tls: {
                   ...prev.tls,
-                  [addCurLang]: { def: "", extra: "", read: "", text: "" },
+                  [addCurLang]: {
+                    def: "",
+                    extra: "",
+                    read: "",
+                    text: "",
+                    language: addCurLang,
+                  },
                 },
               }));
             }}

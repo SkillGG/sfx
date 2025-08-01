@@ -1,0 +1,124 @@
+---
+description: Project structure and important files for the jpsfx SFX store application
+globs: **/*
+alwaysApply: true
+---
+
+# Project Structure Overview
+
+**jpsfx** is a Next.js 15 application built with the T3 stack (TypeScript, tRPC, Prisma) for managing and storing SFX (sound effects) with multilingual support.
+
+## **Root Directory Structure**
+
+- **Configuration Files:**
+  - [package.json](mdc:package.json) - Project dependencies and scripts
+  - [tsconfig.json](mdc:tsconfig.json) - TypeScript configuration
+  - [next.config.js](mdc:next.config.js) - Next.js configuration
+  - [tailwind.config.ts](mdc:tailwind.config.ts) - Tailwind CSS configuration
+  - [eslint.config.js](mdc:eslint.config.js) - ESLint configuration
+  - [prettier.config.js](mdc:prettier.config.js) - Prettier configuration
+  - [postcss.config.js](mdc:postcss.config.js) - PostCSS configuration
+
+- **Database & Development:**
+  - [prisma/schema.prisma](mdc:prisma/schema.prisma) - Database schema definition
+  - [start-database.sh](mdc:start-database.sh) - Database startup script
+
+## **Source Code Structure (`src/`)**
+
+### **App Directory (`src/app/`)**
+
+- **Core Pages:**
+  - [layout.tsx](mdc:src/app/layout.tsx) - Root layout component
+  - [page.tsx](mdc:src/app/page.tsx) - Main homepage
+  - [creator/page.tsx](mdc:src/app/creator/page.tsx) - SFX creator page
+
+- **Components (`src/app/_components/`):**
+  - [editableSFX.tsx](mdc:src/app/_components/editableSFX.tsx) - Main SFX editing component
+  - [editableSelect.tsx](mdc:src/app/_components/editableSelect.tsx) - Editable select component
+  - [sfx.tsx](mdc:src/app/_components/sfx.tsx) - SFX display component
+  - [sfxTLEdit..tsx](mdc:src/app/_components/sfxTLEdit..tsx) - Translation editing component
+  - [sfxLangSelect.tsx](mdc:src/app/_components/sfxLangSelect.tsx) - Language selection component
+  - [darkModeSwitch.tsx](mdc:src/app/_components/darkModeSwitch.tsx) - Dark mode toggle
+
+- **Hooks (`src/app/hooks/`):**
+  - [darkmode.tsx](mdc:src/app/hooks/darkmode.tsx) - Dark mode hook
+  - [langs.tsx](mdc:src/app/hooks/langs.tsx) - Language management hook
+
+- **API Routes (`src/app/api/`):**
+  - [trpc/[trpc]/route.ts](mdc:src/app/api/trpc/[trpc]/route.ts) - tRPC API endpoint
+
+### **Server Directory (`src/server/`)**
+
+- **Database:**
+  - [db.ts](mdc:src/server/db.ts) - Prisma client initialization
+
+- **API (`src/server/api/`):**
+  - [root.ts](mdc:src/server/api/root.ts) - tRPC root router
+  - [trpc.ts](mdc:src/server/api/trpc.ts) - tRPC server configuration
+  - **Routers (`src/server/api/routers/`):**
+    - [sfx.ts](mdc:src/server/api/routers/sfx.ts) - SFX-related API routes
+
+### **tRPC Configuration (`src/trpc/`)**
+
+- [server.ts](mdc:src/trpc/server.ts) - tRPC server setup
+- [react.tsx](mdc:src/trpc/react.tsx) - tRPC React provider
+- [query-client.ts](mdc:src/trpc/query-client.ts) - React Query client configuration
+
+### **Utilities & Configuration**
+
+- [utils.ts](mdc:src/utils.ts) - Utility functions
+- [env.js](mdc:src/env.js) - Environment variable validation
+- [styles/globals.css](mdc:src/styles/globals.css) - Global styles
+
+## **Key Architectural Patterns**
+
+### **Technology Stack**
+
+- **Frontend:** Next.js 15 with App Router, React 19, TypeScript
+- **Styling:** Tailwind CSS v4 with PostCSS
+- **Backend:** tRPC for type-safe APIs
+- **Database:** Prisma ORM with SQLite/PostgreSQL
+- **State Management:** TanStack React Query
+- **Validation:** Zod schema validation
+
+### **File Organization Principles**
+
+- **Components:** Use `_components/` prefix for shared components
+- **API Routes:** Follow Next.js App Router conventions
+- **Type Safety:** Leverage tRPC for end-to-end type safety
+- **Database:** Centralized schema in [schema.prisma](mdc:prisma/schema.prisma)
+
+### **Development Workflow**
+
+- **Database:** Use `npm run db:push` for schema changes (includes generate)
+- **Type Checking:** `npm run typecheck` for TypeScript validation
+- **Linting:** `npm run lint` for code quality
+- **Formatting:** `npm run format:write` for consistent code style
+
+### **Database Development Notes**
+
+- **Schema Changes:** Always use `npm run db:push` instead of separate generate commands
+- **EPERM Error:** Occurs when trying to update schema while dev server is running - stop dev server first
+- **No Manual Generate:** `npm run db:push` automatically runs `prisma generate` - don't run it separately
+
+## **Important Development Notes**
+
+- **Dark Mode:** Implemented with custom hook in [darkmode.tsx](mdc:src/app/hooks/darkmode.tsx)
+- **SFX Management:** Core functionality revolves around SFX storage and translation editing
+- **Optional Reading:** SFX reading field is optional with toggle controls in creator and editor components
+- **Type Safety:** Full end-to-end type safety through tRPC and Prisma integration
+
+## **Common Development Tasks**
+
+### **Adding New SFX Features**
+
+1. Update [schema.prisma](mdc:prisma/schema.prisma) for database changes
+2. Add tRPC procedures in [sfx.ts](mdc:src/server/api/routers/sfx.ts)
+3. Create React components in `src/app/_components/`
+4. Update types and validation schemas
+
+### **Database Changes**
+
+1. Modify [schema.prisma](mdc:prisma/schema.prisma)
+2. Run `npm run db:push` to create migration
+3. Update related tRPC procedures and components

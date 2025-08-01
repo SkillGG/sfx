@@ -1,0 +1,191 @@
+---
+description: Always use cn utility function for className attributes to ensure proper class merging and conditional styling
+globs: src/**/*.tsx, src/**/*.ts
+alwaysApply: true
+---
+
+# **CN Utility Function Usage**
+
+## **Main Points in Bold**
+
+- **Always use `cn` utility for className attributes**
+- **Import `cn` from `@/utils` in all component files**
+- **Use `cn` for conditional classes and class merging**
+- **Avoid direct string concatenation for className**
+
+## **Implementation Requirements**
+
+### **Import Statement**
+
+```typescript
+// ✅ DO: Import cn from utils
+import { cn } from "@/utils";
+
+// ❌ DON'T: Import from individual libraries
+import { twMerge } from "tailwind-merge";
+import clsx from "clsx";
+```
+
+### **Basic Usage**
+
+```typescript
+// ✅ DO: Use cn for all className attributes
+<div className={cn("flex items-center gap-2")}>
+  <span className={cn("text-blue-500")}>Content</span>
+</div>
+
+// ❌ DON'T: Use direct strings
+<div className="flex items-center gap-2">
+  <span className="text-blue-500">Content</span>
+</div>
+```
+
+### **Conditional Classes**
+
+```typescript
+// ✅ DO: Use cn for conditional styling
+<div className={cn(
+  "base-class",
+  isActive && "active-class",
+  isDisabled && "disabled-class"
+)}>
+
+// ❌ DON'T: Use template literals or string concatenation
+<div className={`base-class ${isActive ? 'active-class' : ''}`}>
+```
+
+### **Props with className**
+
+```typescript
+// ✅ DO: Merge props className with base classes
+const Component = ({ className, ...props }) => (
+  <div className={cn("base-styles", className)} {...props}>
+    Content
+  </div>
+);
+
+// ❌ DON'T: Override className prop
+const Component = ({ className, ...props }) => (
+  <div className="base-styles" {...props}>
+    Content
+  </div>
+);
+```
+
+### **Complex Class Combinations**
+
+```typescript
+// ✅ DO: Use cn for complex class merging
+<div className={cn(
+  "flex flex-col gap-2",
+  "rounded-lg border border-blue-300",
+  "bg-blue-50 dark:bg-slate-800",
+  "px-4 py-3 shadow-sm"
+)}>
+
+// ❌ DON'T: Use long template literals
+<div className={`
+  flex flex-col gap-2
+  rounded-lg border border-blue-300
+  bg-blue-50 dark:bg-slate-800
+  px-4 py-3 shadow-sm
+`}>
+```
+
+## **Examples from Codebase**
+
+### **Good Examples**
+
+- [darkModeSwitch.tsx](mdc:src/app/_components/darkModeSwitch.tsx) - Proper cn usage with props
+- [sfx.tsx](mdc:src/app/_components/sfx.tsx) - Complex class combinations
+- [validationError.tsx](mdc:src/app/_components/validationError.tsx) - Conditional error styling
+
+### **Files Needing Updates**
+
+- [searchBar.tsx](mdc:src/app/_components/searchBar.tsx) - Missing cn usage
+- Some instances in [editableSFX.tsx](mdc:src/app/_components/editableSFX.tsx) and [creator/page.tsx](mdc:src/app/creator/page.tsx)
+
+## **Benefits**
+
+- **Automatic class deduplication** via twMerge
+- **Consistent conditional styling** patterns
+- **Better maintainability** with centralized class logic
+- **Type safety** with proper TypeScript integration
+
+## **Common Patterns**
+
+### **Component with className prop**
+
+```typescript
+interface ComponentProps {
+  className?: string;
+  children: React.ReactNode;
+}
+
+const Component = ({ className, children }: ComponentProps) => (
+  <div className={cn("base-styles", className)}>
+    {children}
+  </div>
+);
+```
+
+### **Conditional styling**
+
+```typescript
+<div className={cn(
+  "base-class",
+  variant === "primary" && "bg-blue-500 text-white",
+  variant === "secondary" && "bg-gray-500 text-gray-900",
+  size === "large" && "px-6 py-3 text-lg",
+  size === "small" && "px-3 py-1 text-sm"
+)}>
+```
+
+### **Dark mode classes**
+
+```typescript
+<div className={cn(
+  "text-blue-900 dark:text-blue-100",
+  "bg-blue-50 dark:bg-slate-800",
+  "border-blue-300 dark:border-blue-600"
+)}>
+```
+
+## **Migration Guide**
+
+### **Step 1: Add import**
+
+```typescript
+// Add to existing imports
+import { cn } from "@/utils";
+```
+
+### **Step 2: Replace direct className strings**
+
+```typescript
+// Before
+<div className="flex items-center gap-2">
+
+// After
+<div className={cn("flex items-center gap-2")}>
+```
+
+### **Step 3: Update conditional classes**
+
+```typescript
+// Before
+<div className={`base-class ${isActive ? 'active' : ''}`}>
+
+// After
+<div className={cn("base-class", isActive && "active")}>
+```
+
+## **Related Rules**
+
+- Follow [cursor_rules.mdc](mdc:.cursor/rules/cursor_rules.mdc) for rule formatting
+- See [utils.ts](mdc:src/utils.ts) for cn implementation details
+  description:
+  globs:
+  alwaysApply: false
+
+---

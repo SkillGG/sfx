@@ -11,14 +11,16 @@ datasource db {
     directUrl = env("DIRECT_URL")
 }
 
-model SFX {
+model Onomatopoeia {
     id Int @id @default(autoincrement())
 
     text String
-    read String
+    read String?
     def  String
 
     extra String?
+
+    language String
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -34,10 +36,10 @@ model Translation {
     id Int @id @default(autoincrement())
 
     sfx1Id Int
-    ogSFX  SFX @relation("ogSFX", fields: [sfx1Id], references: [id])
+    ogSFX  Onomatopoeia @relation("ogSFX", fields: [sfx1Id], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
     sfx2Id Int
-    tlSFX  SFX @relation("tlSFX", fields: [sfx2Id], references: [id])
+    tlSFX  Onomatopoeia @relation("tlSFX", fields: [sfx2Id], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
