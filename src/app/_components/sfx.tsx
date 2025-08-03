@@ -1,9 +1,9 @@
 "use client";
 
-import { type SFXData, cn } from "@/utils";
+import { type CollapsedOnomatopoeia, cn } from "@/utils";
 import { useSFXLangs } from "../hooks/langs";
 
-export const SFXCard = ({ sfx }: { sfx: SFXData }) => {
+export const SFXCard = ({ sfx }: { sfx: CollapsedOnomatopoeia }) => {
   const { langs } = useSFXLangs();
 
   return (
@@ -38,6 +38,8 @@ export const SFXCard = ({ sfx }: { sfx: SFXData }) => {
           {sfx.extra ?? ""}
         </div>
       </div>
+
+      <div className={cn("flex")}>{/** Translations */}Translations</div>
     </div>
   );
 };

@@ -1,6 +1,11 @@
 "use client";
 
-import { makeDialogBackdropExitable, type SFXData, cn } from "@/utils";
+import {
+  makeDialogBackdropExitable,
+  type SFXData,
+  cn,
+  type CollapsedOnomatopoeia,
+} from "@/utils";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { SFXCard } from "./sfx";
 import { api } from "@/trpc/react";
@@ -8,8 +13,8 @@ import { SFXLangSelect } from "./sfxLangSelect";
 import { SFXTLEditor } from "./sfxTLEdit.";
 
 type SFXCardEditableProps = {
-  sfx: SFXData;
-  onSave?: (updated: SFXData) => Promise<void>;
+  sfx: CollapsedOnomatopoeia;
+  onSave?: (updated: CollapsedOnomatopoeia) => Promise<void>;
   disableTLEdition?: boolean;
   labels?: {
     main?: React.ReactNode;
@@ -20,6 +25,7 @@ type SFXCardEditableProps = {
   };
   allowLocal?: boolean;
   onRemove?: () => Promise<void> | void;
+  noLang?: boolean;
 };
 
 export function SFXCardEditable({
@@ -29,6 +35,7 @@ export function SFXCardEditable({
   classNames,
   labels,
   allowLocal,
+  noLang,
   onRemove,
 }: SFXCardEditableProps) {
   const assocSFX = api.sfx.getSFX.useQuery(
@@ -37,14 +44,18 @@ export function SFXCardEditable({
   );
 
   const sfxData = useMemo(() => {
-    if (assocSFX.isLoading) return { ...sfx, id: -1, temp: true };
+    if (assocSFX.isLoading)
+      return { ...sfx, id: -1, temp: true } as CollapsedOnomatopoeia;
+
+    if (assocSFX.data && "err" in assocSFX.data)
+      return { ...sfx, id: -1, temp: true } as CollapsedOnomatopoeia;
 
     return typeof sfx.id === "number"
       ? assocSFX.data
       : allowLocal
         ? { ...sfx, id: -1 }
         : sfx;
-  }, [assocSFX.isLoading, assocSFX.data, sfx, allowLocal]);
+  }, [assocSFX, sfx, allowLocal]);
 
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState(sfxData?.text ?? "");
@@ -203,9 +214,8 @@ export function SFXCardEditable({
         </div>
       );
 
-    console.log(sfxData, "temp" in sfxData);
     return (
-      <div className={cn("flex flex-col gap-2")}>
+      <div className={cn("mb-2 flex flex-col gap-2")}>
         <SFXCard sfx={sfxData} />
         <div className={cn("mx-auto flex w-full max-w-[50%] gap-2")}>
           <button
@@ -241,9 +251,12 @@ export function SFXCardEditable({
               setRemoving(false);
               setRemoveSure(false);
             }}
+            onBlur={() => {
+              setRemoveSure(false);
+            }}
             disabled={"temp" in sfxData}
           >
-            Remove
+            {removing ? "Removing..." : removeSure ? "Are you sure?" : "Remove"}
           </button>
         </div>
       </div>
@@ -386,6 +399,7 @@ export function SFXCardEditable({
               def,
               extra,
               language,
+              prime: sfx.prime,
             });
             setEditing(false);
             setSaving(false);
@@ -415,6 +429,7 @@ export function SFXCardEditable({
                     def,
                     extra,
                     language,
+                    prime: sfx.prime,
                   });
                   tlEditDialogRef.current?.close();
                   setSaving(false);

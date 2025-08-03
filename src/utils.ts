@@ -1,20 +1,55 @@
-import type { Onomatopoeia, Translation } from "@prisma/client";
-import type { SFXLang } from "./app/hooks/langs";
+import type { Translation } from "@prisma/client";
 import { twMerge } from "tailwind-merge";
 import clsx, { type ClassValue } from "clsx";
+import type z from "zod/v4";
+import { array, boolean, number, object, string } from "zod/v4";
 
-type SFXTranslationObject = Record<SFXLang["code"], SFXData>;
+export type CollapsedTL = Omit<
+  Translation & { tlSFX: Omit<CollapsedOnomatopoeia, "tls"> },
+  "createdAt" | "updatedAt"
+>;
 
-export type SFXData = Omit<Onomatopoeia, "id" | "createdAt" | "updatedAt"> & {
-  id?: Onomatopoeia["id"];
-} & {
-  tls?: SFXTranslationObject;
+export type CollapsedOnomatopoeia = SFXData & {
+  tls: CollapsedTL[];
 };
 
 export type TranslationData = Omit<
   Translation,
   "id" | "createdAt" | "updatedAt"
 >;
+
+export type SFXData = z.infer<typeof SFXData>;
+
+export const CollapsedTL = object({
+  id: number(),
+  sfx1Id: number(),
+  sfx2Id: number(),
+  additionalInfo: string().nullable(),
+  get tlSFX() {
+    return CollapsedOnomatopoeia.omit({ tls: true });
+  },
+});
+
+export const CollapsedOnomatopoeia = object({
+  id: number(),
+  text: string(),
+  read: string().nullable(),
+  def: string(),
+  extra: string().nullable(),
+  language: string(),
+  prime: boolean(),
+  tls: array(CollapsedTL),
+});
+
+export const SFXData = object({
+  id: number(),
+  text: string(),
+  read: string().nullable(),
+  def: string(),
+  extra: string().nullable(),
+  language: string(),
+  prime: boolean(),
+});
 
 // Simple validation error types
 export type ValidationError = {

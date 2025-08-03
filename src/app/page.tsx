@@ -7,26 +7,51 @@ import { useDarkMode } from "./hooks/darkmode";
 import { cn } from "@/utils";
 import Link from "next/link";
 import SearchBar from "./_components/searchBar";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
-const validSearch = (search: string) => {
-  return search.length > 3 || search.length === 0;
+export type SearchQuery = {
+  value: string;
+  langs: string[];
+};
+
+const validSearch = (search: SearchQuery) => {
+  return search.value.length > 3 || search.value.length === 0;
 };
 
 export default function Home() {
-  const [search, setSearch] = useState("");
+  const queryParams = useSearchParams();
+
+  const [search, setSearch] = useState<SearchQuery>({
+    value: "",
+    langs: [],
+  });
+
+  const [lastValidSearch, setLastValidSearch] = useState<SearchQuery>(search);
+
   const { data: sfx, isLoading } = api.sfx.listSFX.useQuery(
-    {
-      query: search,
-    },
+    { query: lastValidSearch.value, langs: lastValidSearch.langs },
     {
       enabled: validSearch(search),
     },
   );
 
-  const { mode } = useDarkMode();
+  useEffect(() => {
+    const value = queryParams.get("search");
+    const langs = queryParams.get("langs");
+    setSearch({
+      value: value ?? "",
+      langs: langs?.split(",") ?? [],
+    });
+  }, [queryParams]);
 
-  console.log(sfx);
+  useEffect(() => {
+    if (validSearch(search)) {
+      setLastValidSearch(search);
+    }
+  }, [search]);
+
+  const { mode } = useDarkMode();
 
   if (isLoading && !validSearch(search))
     return (

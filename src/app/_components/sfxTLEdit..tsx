@@ -1,16 +1,21 @@
 import { useState } from "react";
-import type { SFXData } from "@/utils";
+import type { CollapsedOnomatopoeia, SFXData } from "@/utils";
 import { cn } from "@/utils";
 import { SFXCardEditable } from "./editableSFX";
 import { useSFXLangs } from "@/app/hooks/langs";
 import { SFXLangSelect } from "./sfxLangSelect";
+import { performServerHandshake } from "http2";
 
 export const SFXTLEditor = ({
   sfx,
   updateSFX,
 }: {
-  sfx: SFXData;
-  updateSFX: (sfx: SFXData | ((sfx: SFXData) => SFXData)) => void;
+  sfx: CollapsedOnomatopoeia;
+  updateSFX: (
+    sfx:
+      | CollapsedOnomatopoeia
+      | ((sfx: CollapsedOnomatopoeia) => CollapsedOnomatopoeia),
+  ) => void;
 }) => {
   const { langs } = useSFXLangs();
 
@@ -35,20 +40,21 @@ export const SFXTLEditor = ({
             <div className={cn("flex flex-col gap-2")}>
               <SFXCardEditable
                 allowLocal
+                noLang
                 onRemove={async () => {
                   updateSFX((prev) => {
-                    const newTLS = { ...prev.tls };
-                    delete newTLS[code];
-                    return { ...prev, tls: newTLS };
+                    alert("TODO: TL removal");
+                    return prev;
                   });
                 }}
                 sfx={
-                  tl ?? {
+                  tl?.tlSFX ?? {
                     def: "",
                     extra: "",
                     read: "",
                     text: "",
                     language: "en",
+                    prime: false,
                   }
                 }
                 onSave={async (updated) => {
@@ -71,13 +77,11 @@ export const SFXTLEditor = ({
                         )}
                         onClick={() => {
                           updateSFX((prev) => {
-                            const newTLs = {
-                              ...prev.tls,
-                            };
-                            delete newTLs[code];
                             return {
                               ...prev,
-                              tls: newTLs,
+                              tls: prev.tls.filter(
+                                (tl) => tl.tlSFX.language !== code,
+                              ),
                             };
                           });
                         }}

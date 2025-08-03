@@ -28,6 +28,8 @@ model Onomatopoeia {
     ogTranslations Translation[] @relation("ogSFX")
     tlTranslations Translation[] @relation("tlSFX")
 
+    prime Boolean
+
     @@index([text])
     @@index([read])
 }

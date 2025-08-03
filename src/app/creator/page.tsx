@@ -8,8 +8,12 @@ import { useDarkMode } from "../hooks/darkmode";
 import DarkModeSwitch from "../_components/darkModeSwitch";
 import { SFXLangSelect } from "../_components/sfxLangSelect";
 import { useRouter } from "next/navigation";
-import type { SFXData } from "@/utils";
-import { cn } from "@/utils";
+import {
+  cn,
+  type CollapsedOnomatopoeia,
+  type CollapsedTL,
+  type SFXData,
+} from "@/utils";
 import { useValidation } from "../hooks/validation";
 import { ValidationErrorDisplay } from "../_components/validationError";
 
@@ -18,9 +22,10 @@ const SFXListPanel = () => {
   const utils = api.useUtils();
 
   const updateSFX = api.sfx.updateSFX.useMutation();
+  const removeSFX = api.sfx.removeSFX.useMutation();
 
   if (sfx.isLoading) {
-    return <div>Loading SFX List</div>;
+    return <div className={cn("")}>Loading SFX List</div>;
   }
 
   return (
@@ -33,14 +38,26 @@ const SFXListPanel = () => {
           onSave={async (newSFX) => {
             await updateSFX.mutateAsync({
               id: sfx.id,
-              text: newSFX.text,
-              def: newSFX.def,
-              extra: newSFX.extra,
-              read: newSFX.read,
-              language: newSFX.language,
+              sfx: {
+                text: newSFX.text,
+                def: newSFX.def,
+                extra: newSFX.extra,
+                read: newSFX.read,
+                language: newSFX.language,
+                prime: newSFX.prime,
+                tls: newSFX.tls,
+              },
             });
             await utils.sfx.listSFX.invalidate();
             await utils.sfx.getSFX.invalidate();
+          }}
+          onRemove={async () => {
+            if (sfx.id || sfx.id === 0) {
+              console.log("removing sfx", sfx);
+              await removeSFX.mutateAsync({ id: sfx.id });
+              await utils.sfx.listSFX.invalidate();
+              await utils.sfx.getSFX.invalidate();
+            }
           }}
         />
       ))}
@@ -58,7 +75,7 @@ const CreatorPage = () => {
   const [read, setRead] = useState<string>("");
   const [readingEnabled, setReadingEnabled] = useState<boolean>(true);
 
-  const [tls, setTLs] = useState<SFXData["tls"]>({});
+  const [tls, setTLs] = useState<CollapsedTL[]>([]);
 
   const router = useRouter();
 
@@ -69,12 +86,12 @@ const CreatorPage = () => {
   // Initialize validation hook
   const validation = useValidation();
 
-  const updateSFX = useCallback((sfx: SFXData) => {
+  const updateSFX = useCallback((sfx: CollapsedOnomatopoeia) => {
     setSFX(sfx.text);
     setDef(sfx.def);
     setExtra(sfx.extra ?? "");
     setRead(sfx.read ?? "");
-    setTLs(sfx.tls ?? {});
+    setTLs(sfx.tls ?? []);
     setLang(sfx.language);
   }, []);
 
@@ -98,7 +115,8 @@ const CreatorPage = () => {
         extra: extra ?? null,
         read: readingEnabled ? read : null,
         language: lang ?? "en",
-        tls: tls ?? {},
+        tls: tls ?? [],
+        prime: true,
       });
     }
   };
@@ -331,7 +349,15 @@ const CreatorPage = () => {
           />
         </div>
         <SFXTLEditor
-          sfx={{ text: sfx, def, extra, read, tls, language: lang ?? "en" }}
+          sfx={{
+            text: sfx,
+            def,
+            extra,
+            read,
+            tls,
+            language: lang ?? "en",
+            prime: true,
+          }}
           updateSFX={(sfx_) => {
             if (typeof sfx_ === "function") {
               const updated = sfx_({
@@ -341,6 +367,7 @@ const CreatorPage = () => {
                 read,
                 tls,
                 language: lang ?? "en",
+                prime: true,
               });
               updateSFX(updated);
             } else {
