@@ -1,10 +1,9 @@
-import { useState } from "react";
-import type { CollapsedOnomatopoeia, SFXData } from "@/utils";
+import React, { useState } from "react";
+import type { CollapsedOnomatopoeia } from "@/utils";
 import { cn } from "@/utils";
 import { SFXCardEditable } from "./editableSFX";
 import { useSFXLangs } from "@/app/hooks/langs";
 import { SFXLangSelect } from "./sfxLangSelect";
-import { performServerHandshake } from "http2";
 
 export const SFXTLEditor = ({
   sfx,
@@ -21,6 +20,8 @@ export const SFXTLEditor = ({
 
   const [addCurLang, setAddCurLang] = useState<string>("");
 
+  console.log(sfx);
+
   return (
     <div
       className={cn(
@@ -35,42 +36,42 @@ export const SFXTLEditor = ({
         TLs
       </h1>
       <div className={cn("mx-auto flex flex-col items-center")}>
-        {Object.entries(sfx.tls ?? {}).map(([code, tl]) => (
-          <div key={code} className={cn("flex w-full flex-col gap-2")}>
+        {sfx.tls.map((tl) => (
+          <div key={tl.id} className={cn("flex w-full flex-col gap-2")}>
             <div className={cn("flex flex-col gap-2")}>
               <SFXCardEditable
                 allowLocal
                 noLang
                 onRemove={async () => {
                   updateSFX((prev) => {
-                    alert("TODO: TL removal");
-                    return prev;
+                    return {
+                      ...prev,
+                      tls: prev.tls.filter((tlx) => tlx.id !== tl.id),
+                    };
                   });
                 }}
-                sfx={
-                  tl?.tlSFX ?? {
-                    def: "",
-                    extra: "",
-                    read: "",
-                    text: "",
-                    language: "en",
-                    prime: false,
-                  }
-                }
+                sfx={tl.tlSFX ?? null}
                 onSave={async (updated) => {
+                  console.log("updating SFX TLs", updated);
                   updateSFX((prev) => ({
                     ...prev,
-                    tls: {
-                      ...prev.tls,
-                      [code]: updated,
-                    },
+                    tls: [
+                      ...prev.tls.filter((tl) => tl.id !== updated.id),
+                      {
+                        additionalInfo: "",
+                        id: updated.id,
+                        sfx1Id: sfx.id,
+                        sfx2Id: updated.id,
+                        tlSFX: updated,
+                      },
+                    ],
                   }));
                 }}
                 disableTLEdition
                 labels={{
                   main: (
                     <>
-                      Edit {langs.find((l) => l.code === code)?.name ?? code} TL{" "}
+                      Edit {tl.tlSFX.language} TL ({tl.sfx2Id})
                       <button
                         className={cn(
                           "ml-auto cursor-pointer rounded bg-red-500 px-1 py-0.5 text-[10px] text-white hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700",
@@ -80,7 +81,7 @@ export const SFXTLEditor = ({
                             return {
                               ...prev,
                               tls: prev.tls.filter(
-                                (tl) => tl.tlSFX.language !== code,
+                                (tlx) => tlx.tlSFX.id !== tl.tlSFX.id,
                               ),
                             };
                           });
@@ -93,7 +94,10 @@ export const SFXTLEditor = ({
                   ),
                   empty: (
                     <div className={cn("flex flex-row items-center gap-2")}>
-                      No {langs.find((l) => l.code === code)?.name ?? code} TL
+                      No{" "}
+                      {langs.find((l) => l.code === tl.tlSFX.language)?.name ??
+                        tl.tlSFX.language}{" "}
+                      TL
                     </div>
                   ),
                 }}
@@ -105,7 +109,7 @@ export const SFXTLEditor = ({
       <div>
         <div className={cn("mt-2 flex flex-row gap-2")}>
           <SFXLangSelect
-            hideValues={Object.keys(sfx.tls ?? {})}
+            hideValues={sfx.tls.map((tl) => tl.tlSFX.language)}
             value={addCurLang}
             onChange={setAddCurLang}
           />
@@ -115,19 +119,30 @@ export const SFXTLEditor = ({
             )}
             onClick={() => {
               if (!addCurLang) throw new Error("No curlang selected!");
-              updateSFX((prev) => ({
-                ...prev,
-                tls: {
-                  ...prev.tls,
-                  [addCurLang]: {
-                    def: "",
-                    extra: "",
-                    read: "",
-                    text: "",
-                    language: addCurLang,
-                  },
-                },
-              }));
+              updateSFX((prev) => {
+                const newID = prev.tls.length + 1;
+                return {
+                  ...prev,
+                  tls: [
+                    ...prev.tls,
+                    {
+                      additionalInfo: "",
+                      id: newID,
+                      sfx1Id: prev.id,
+                      sfx2Id: newID,
+                      tlSFX: {
+                        def: "",
+                        extra: "",
+                        id: newID,
+                        language: addCurLang,
+                        prime: false,
+                        read: "",
+                        text: "",
+                      },
+                    },
+                  ],
+                };
+              });
             }}
           >
             Add Translation

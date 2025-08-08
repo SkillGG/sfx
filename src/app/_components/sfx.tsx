@@ -3,7 +3,13 @@
 import { type CollapsedOnomatopoeia, cn } from "@/utils";
 import { useSFXLangs } from "../hooks/langs";
 
-export const SFXCard = ({ sfx }: { sfx: CollapsedOnomatopoeia }) => {
+export const SFXCard = ({
+  sfx,
+  disableTLs,
+}: {
+  sfx: CollapsedOnomatopoeia;
+  disableTLs?: boolean;
+}) => {
   const { langs } = useSFXLangs();
 
   return (
@@ -39,7 +45,9 @@ export const SFXCard = ({ sfx }: { sfx: CollapsedOnomatopoeia }) => {
         </div>
       </div>
 
-      <div className={cn("flex")}>{/** Translations */}Translations</div>
+      {!disableTLs && (
+        <div className={cn("flex")}>{/** Translations */}Translations</div>
+      )}
     </div>
   );
 };

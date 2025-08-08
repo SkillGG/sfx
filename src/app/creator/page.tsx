@@ -8,12 +8,7 @@ import { useDarkMode } from "../hooks/darkmode";
 import DarkModeSwitch from "../_components/darkModeSwitch";
 import { SFXLangSelect } from "../_components/sfxLangSelect";
 import { useRouter } from "next/navigation";
-import {
-  cn,
-  type CollapsedOnomatopoeia,
-  type CollapsedTL,
-  type SFXData,
-} from "@/utils";
+import { cn, type CollapsedOnomatopoeia, type CollapsedTL } from "@/utils";
 import { useValidation } from "../hooks/validation";
 import { ValidationErrorDisplay } from "../_components/validationError";
 
@@ -350,6 +345,7 @@ const CreatorPage = () => {
         </div>
         <SFXTLEditor
           sfx={{
+            id: 0,
             text: sfx,
             def,
             extra,
@@ -361,6 +357,7 @@ const CreatorPage = () => {
           updateSFX={(sfx_) => {
             if (typeof sfx_ === "function") {
               const updated = sfx_({
+                id: 0,
                 text: sfx,
                 def,
                 extra,

@@ -2,9 +2,9 @@
 
 import {
   makeDialogBackdropExitable,
-  type SFXData,
   cn,
   type CollapsedOnomatopoeia,
+  type CollapsedTL,
 } from "@/utils";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { SFXCard } from "./sfx";
@@ -12,10 +12,25 @@ import { api } from "@/trpc/react";
 import { SFXLangSelect } from "./sfxLangSelect";
 import { SFXTLEditor } from "./sfxTLEdit.";
 
-type SFXCardEditableProps = {
-  sfx: CollapsedOnomatopoeia;
-  onSave?: (updated: CollapsedOnomatopoeia) => Promise<void>;
-  disableTLEdition?: boolean;
+type NoTLOnom = Omit<CollapsedOnomatopoeia, "tls">;
+
+export function SFXCardEditable<
+  DT extends boolean,
+  Q extends DT extends false ? CollapsedOnomatopoeia : NoTLOnom,
+  NotQ extends DT extends true ? CollapsedOnomatopoeia : NoTLOnom,
+>({
+  sfx,
+  onSave,
+  disableTLEdition,
+  classNames,
+  labels,
+  allowLocal,
+  noLang,
+  onRemove,
+}: {
+  sfx: Q | null;
+  onSave?: (updated: Q | NotQ) => Promise<void>;
+  disableTLEdition?: DT;
   labels?: {
     main?: React.ReactNode;
     empty?: React.ReactNode;
@@ -26,36 +41,52 @@ type SFXCardEditableProps = {
   allowLocal?: boolean;
   onRemove?: () => Promise<void> | void;
   noLang?: boolean;
-};
+}) {
+  const [jSFX, setjsfx] = useState<Q | null>(sfx);
 
-export function SFXCardEditable({
-  sfx,
-  onSave,
-  disableTLEdition,
-  classNames,
-  labels,
-  allowLocal,
-  noLang,
-  onRemove,
-}: SFXCardEditableProps) {
-  const assocSFX = api.sfx.getSFX.useQuery(
-    { id: sfx.id ?? 0 },
-    { enabled: typeof sfx.id === "number" },
+  const emptySFX = useMemo(
+    () =>
+      ({
+        def: "",
+        extra: "",
+        id: -1,
+        language: "en",
+        prime: false,
+        read: "",
+        text: "",
+      }) as Q,
+    [],
   );
 
-  const sfxData = useMemo(() => {
-    if (assocSFX.isLoading)
-      return { ...sfx, id: -1, temp: true } as CollapsedOnomatopoeia;
+  const nSFX = jSFX ?? emptySFX;
+
+  const assocSFX = api.sfx.getSFX.useQuery(
+    { id: nSFX.id ?? 0 },
+    { enabled: typeof nSFX.id === "number" },
+  );
+
+  const sfxData: Q | undefined = useMemo(() => {
+    console.log("Changed SFX");
+    if (assocSFX.isLoading) return { ...nSFX, id: -1, temp: true } as Q;
 
     if (assocSFX.data && "err" in assocSFX.data)
-      return { ...sfx, id: -1, temp: true } as CollapsedOnomatopoeia;
+      return { ...nSFX, id: -1, temp: true } as Q;
 
-    return typeof sfx.id === "number"
-      ? assocSFX.data
+    return typeof nSFX.id === "number"
+      ? (assocSFX.data as Q)
       : allowLocal
-        ? { ...sfx, id: -1 }
-        : sfx;
-  }, [assocSFX, sfx, allowLocal]);
+        ? { ...nSFX, id: -1 }
+        : nSFX;
+  }, [assocSFX, nSFX, allowLocal]);
+
+  const collOnom: CollapsedOnomatopoeia = useMemo(() => {
+    return (
+      sfxData &&
+      ("tls" in sfxData
+        ? (sfxData as Q & { tls: CollapsedTL[] })
+        : { ...sfxData, tls: [] })
+    );
+  }, [sfxData]);
 
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState(sfxData?.text ?? "");
@@ -77,18 +108,20 @@ export function SFXCardEditable({
   const [removing, setRemoving] = useState(false);
 
   useEffect(() => {
-    setText(sfxData?.text ?? "");
-    setRead(sfxData?.read ?? "");
-    setDef(sfxData?.def ?? "");
-    setExtra(sfxData?.extra ?? "");
-    setReadingEnabled(!!sfxData?.read);
-  }, [sfxData]);
+    setText(sfxData?.text || text);
+    setRead(!sfxData?.read ? read : "");
+    setDef(sfxData?.def || def);
+    setExtra(!sfxData?.extra ? extra : "");
+    setReadingEnabled(readingEnabled || !!sfxData?.read);
+  }, [def, extra, read, readingEnabled, sfxData, text]);
 
-  if (assocSFX.isFetched && !sfxData?.id)
+  if (assocSFX.isFetched && !collOnom?.id)
     return <div>Something went wrong fetching SFX from DB</div>;
 
   if (!editing) {
-    if (!sfxData || !text)
+    console.log("not edit");
+    if (!collOnom || !text) {
+      console.log("no collOnom / empty text");
       return (
         <div
           className={cn(
@@ -195,7 +228,7 @@ export function SFXCardEditable({
             {removeSure ? (
               "Are you sure?"
             ) : removing ? (
-              "Raemoving..."
+              "Removing..."
             ) : (
               <>
                 <svg
@@ -213,10 +246,13 @@ export function SFXCardEditable({
           </button>
         </div>
       );
+    }
+
+    console.log("collOnom", collOnom);
 
     return (
       <div className={cn("mb-2 flex flex-col gap-2")}>
-        <SFXCard sfx={sfxData} />
+        <SFXCard sfx={collOnom} disableTLs />
         <div className={cn("mx-auto flex w-full max-w-[50%] gap-2")}>
           <button
             className={cn(
@@ -227,7 +263,7 @@ export function SFXCardEditable({
             )}
             onClick={() => setEditing(true)}
             type="button"
-            disabled={"temp" in sfxData}
+            disabled={!allowLocal && "temp" in collOnom}
           >
             Edit
           </button>
@@ -254,7 +290,7 @@ export function SFXCardEditable({
             onBlur={() => {
               setRemoveSure(false);
             }}
-            disabled={"temp" in sfxData}
+            disabled={!allowLocal && "temp" in collOnom}
           >
             {removing ? "Removing..." : removeSure ? "Are you sure?" : "Remove"}
           </button>
@@ -276,14 +312,16 @@ export function SFXCardEditable({
         )}
       >
         {labels?.main ?? "Edit SFX"}{" "}
-        <SFXLangSelect
-          classNames={{
-            main: "ml-2 text-sm",
-          }}
-          hideValues={[language]}
-          value={language}
-          onChange={(e) => setLanguage(e)}
-        />
+        {!noLang && (
+          <SFXLangSelect
+            classNames={{
+              main: "ml-2 text-sm",
+            }}
+            hideValues={[language]}
+            value={language}
+            onChange={(e) => setLanguage(e)}
+          />
+        )}
       </h2>
       <div
         className={cn(
@@ -393,14 +431,17 @@ export function SFXCardEditable({
           )}
           onClick={async () => {
             setSaving(true);
-            await onSave?.({
+            const newSFX = {
+              ...nSFX,
               text,
               read: readingEnabled ? read : null,
               def,
               extra,
               language,
-              prime: sfx.prime,
-            });
+              prime: nSFX.prime,
+            } as Q;
+            await onSave?.(newSFX);
+            setjsfx(newSFX);
             setEditing(false);
             setSaving(false);
           }}
@@ -420,17 +461,21 @@ export function SFXCardEditable({
               }}
             >
               <SFXTLEditor
-                sfx={sfxData}
+                sfx={collOnom}
                 updateSFX={async () => {
+                  if (!sfxData?.id) throw new Error("No sfxData id!");
                   setSaving(true);
-                  await onSave?.({
+                  const newSFX = {
+                    ...sfxData,
                     text,
                     read: readingEnabled ? read : null,
                     def,
                     extra,
                     language,
-                    prime: sfx.prime,
-                  });
+                    prime: nSFX.prime,
+                  };
+                  await onSave?.(newSFX);
+                  setjsfx(newSFX);
                   tlEditDialogRef.current?.close();
                   setSaving(false);
                 }}
