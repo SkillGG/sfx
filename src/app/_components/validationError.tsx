@@ -31,7 +31,8 @@ export const ValidationErrorDisplay = ({
           <div
             key={`${error.field}-${index}`}
             className={cn(
-              "flex items-center gap-1 text-xs text-red-600 dark:text-red-400",
+              "flex items-center gap-1 text-xs",
+              "text-red-600 dark:text-red-400",
             )}
           >
             <svg
@@ -60,7 +61,8 @@ export const ValidationErrorDisplay = ({
         <div
           key={`${error.field}-${index}`}
           className={cn(
-            "flex items-start gap-2 rounded-md bg-red-50 p-2 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400",
+            "flex items-start gap-2 rounded-md bg-red-50 p-2",
+            "text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400",
           )}
         >
           <svg
@@ -101,14 +103,16 @@ export const ValidationErrorSummary = ({
   return (
     <div
       className={cn(
-        "rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20",
+        "rounded-lg border border-red-200 bg-red-50 p-4",
+        "dark:border-red-800 dark:bg-red-900/20",
         className,
       )}
     >
       <div className="flex items-start gap-3">
         <svg
           className={cn(
-            "mt-0.5 h-5 w-5 flex-shrink-0 text-red-600 dark:text-red-400",
+            "mt-0.5 h-5 w-5 flex-shrink-0",
+            "text-red-600 dark:text-red-400",
           )}
           fill="none"
           stroke="currentColor"
@@ -123,7 +127,10 @@ export const ValidationErrorSummary = ({
         </svg>
         <div className="flex-1">
           <h3
-            className={cn("text-sm font-medium text-red-800 dark:text-red-200")}
+            className={cn(
+              "text-sm font-medium",
+              "text-red-800 dark:text-red-200",
+            )}
           >
             {title}
           </h3>
@@ -131,7 +138,7 @@ export const ValidationErrorSummary = ({
             {errors.map((error, index) => (
               <div
                 key={`${error.field}-${index}`}
-                className={cn("text-sm text-red-700 dark:text-red-300")}
+                className={cn("text-sm", "text-red-700 dark:text-red-300")}
               >
                 <span className="font-medium capitalize">
                   {error.field.replace(/([A-Z])/g, " $1").toLowerCase()}:

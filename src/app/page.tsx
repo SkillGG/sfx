@@ -1,7 +1,7 @@
 "use client";
 
 import { api } from "@/trpc/react";
-import { SFXCard } from "./_components/sfx";
+import { SFXCard } from "./_components/_legacycomponents/sfx";
 import DarkModeSwitch from "./_components/darkModeSwitch";
 import { useDarkMode } from "./hooks/darkmode";
 import { cn } from "@/utils";
@@ -64,7 +64,9 @@ export default function Home() {
       >
         <div
           className={cn(
-            "mx-auto mt-16 w-fit rounded border border-blue-200 bg-white p-8 text-lg text-blue-700 shadow dark:border-blue-700 dark:bg-slate-800/80 dark:text-blue-200",
+            "mx-auto mt-16 w-fit rounded border border-blue-200 bg-white p-8",
+            "text-lg text-blue-700 shadow dark:border-blue-700",
+            "dark:bg-slate-800/80 dark:text-blue-200",
             mode,
           )}
         >
@@ -83,13 +85,16 @@ export default function Home() {
     >
       <div
         className={cn(
-          "z-10 mx-auto flex w-full max-w-2xl flex-col gap-8 rounded-xl border border-blue-200 bg-white/80 p-8 shadow-lg dark:border-blue-700 dark:bg-slate-800/80 dark:text-blue-100",
+          "z-10 mx-auto flex w-full max-w-2xl flex-col gap-8 rounded-xl",
+          "border border-blue-200 bg-white/80 p-8 shadow-lg",
+          "dark:border-blue-700 dark:bg-slate-800/80 dark:text-blue-100",
         )}
       >
         <div className={cn("mb-2 flex items-center justify-between")}>
           <h1
             className={cn(
-              "m-0 text-4xl font-extrabold tracking-tight text-blue-900 dark:text-blue-100",
+              "m-0 text-4xl font-extrabold tracking-tight",
+              "text-blue-900 dark:text-blue-100",
             )}
           >
             SFX Vault
@@ -103,14 +108,15 @@ export default function Home() {
         ) : !sfx || sfx.length === 0 ? (
           <div
             className={cn(
-              "py-12 text-center text-lg text-blue-500 dark:text-blue-300",
+              "py-12 text-center text-lg",
+              "text-blue-500 dark:text-blue-300",
             )}
           >
             No SFX found.
             <br />
             <Link
               href="/creator"
-              className={cn("text-blue-700 dark:text-blue-500")}
+              className={cn("text-blue-700", "dark:text-blue-500")}
             >
               Create one!
             </Link>
@@ -121,7 +127,8 @@ export default function Home() {
               <li
                 key={sfx.id}
                 className={cn(
-                  "transition hover:scale-[1.02] hover:shadow-md dark:rounded-lg dark:hover:bg-slate-700/60",
+                  "transition hover:scale-[1.02] hover:shadow-md",
+                  "dark:rounded-lg dark:hover:bg-slate-700/60",
                 )}
               >
                 <SFXCard sfx={sfx} />

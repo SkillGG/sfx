@@ -9,7 +9,7 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 import { SFXCard } from "./sfx";
 import { api } from "@/trpc/react";
-import { SFXLangSelect } from "./sfxLangSelect";
+import { SFXLangSelect } from "../sfxLangSelect";
 import { SFXTLEditor } from "./sfxTLEdit.";
 
 type NoTLOnom = Omit<CollapsedOnomatopoeia, "tls">;

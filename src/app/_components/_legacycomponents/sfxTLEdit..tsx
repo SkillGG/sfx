@@ -3,7 +3,7 @@ import type { CollapsedOnomatopoeia } from "@/utils";
 import { cn } from "@/utils";
 import { SFXCardEditable } from "./editableSFX";
 import { useSFXLangs } from "@/app/hooks/langs";
-import { SFXLangSelect } from "./sfxLangSelect";
+import { SFXLangSelect } from "../sfxLangSelect";
 
 export const SFXTLEditor = ({
   sfx,
@@ -25,12 +25,14 @@ export const SFXTLEditor = ({
   return (
     <div
       className={cn(
-        "rounded-xl border-2 border-blue-300 bg-blue-50 p-2 dark:border-blue-600 dark:bg-slate-800",
+        "rounded-xl border-2 border-blue-300 bg-blue-50 p-2",
+        "dark:border-blue-600 dark:bg-slate-800",
       )}
     >
       <h1
         className={cn(
-          "border-b border-blue-200 text-center text-2xl font-semibold text-blue-800 dark:border-blue-700 dark:text-blue-200",
+          "border-b border-blue-200 text-center text-2xl font-semibold",
+          "text-blue-800 dark:border-blue-700 dark:text-blue-200",
         )}
       >
         TLs
@@ -74,7 +76,9 @@ export const SFXTLEditor = ({
                       Edit {tl.tlSFX.language} TL ({tl.sfx2Id})
                       <button
                         className={cn(
-                          "ml-auto cursor-pointer rounded bg-red-500 px-1 py-0.5 text-[10px] text-white hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700",
+                          "ml-auto cursor-pointer rounded bg-red-500 px-1 py-0.5",
+                          "text-[10px] text-white hover:bg-red-600",
+                          "dark:bg-red-600 dark:hover:bg-red-700",
                         )}
                         onClick={() => {
                           updateSFX((prev) => {
@@ -115,7 +119,9 @@ export const SFXTLEditor = ({
           />
           <button
             className={cn(
-              "inline-block flex-1 rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700",
+              "inline-block flex-1 rounded bg-blue-500 px-4 py-2",
+              "text-white hover:bg-blue-600",
+              "dark:bg-blue-600 dark:hover:bg-blue-700",
             )}
             onClick={() => {
               if (!addCurLang) throw new Error("No curlang selected!");

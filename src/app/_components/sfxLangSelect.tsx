@@ -6,18 +6,24 @@ import { useEffect, useState } from "react";
 
 export const SFXLangSelect = ({
   hideValues,
+  removeValues,
   value,
   onChange,
   classNames,
 }: {
   hideValues: string[];
+  removeValues?: string[];
   value: string;
   onChange: (lang: string) => void;
   classNames?: React.ComponentProps<typeof EditableSelect>["classNames"];
 }) => {
   const { langs, setLangs } = useSFXLangs();
 
-  const [selectedValue, setSelectedValue] = useState(value);
+  const [selectedValue, setSelectedValue] = useState(
+    removeValues?.includes(value)
+      ? (langs.find((lang) => !removeValues.includes(lang.code))?.code ?? "??")
+      : value,
+  );
 
   useEffect(() => {
     setSelectedValue(value);
@@ -28,6 +34,14 @@ export const SFXLangSelect = ({
   useEffect(() => {
     setHideValuesState(hideValues);
   }, [hideValues]);
+
+  useEffect(() => {
+    if (removeValues?.includes(selectedValue)) {
+      setSelectedValue(
+        langs.find((p) => !removeValues.includes(p.code))?.code ?? "??",
+      );
+    }
+  }, [langs, removeValues, selectedValue]);
 
   return (
     <EditableSelect

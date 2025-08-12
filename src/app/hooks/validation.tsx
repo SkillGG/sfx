@@ -48,6 +48,13 @@ export const useValidation = () => {
     });
   }, []);
 
+  const clearError = useCallback((errField: ValidationError["field"]) => {
+    setValidationState((prev) => {
+      const newErrs = prev.errors.filter((err) => err.field !== errField);
+      return { errors: newErrs, isValid: newErrs.length === 0 };
+    });
+  }, []);
+
   const getFieldErrors = useCallback(
     (field: string): string[] => {
       return validationState.errors
@@ -85,6 +92,7 @@ export const useValidation = () => {
 
     // Error management
     clearErrors,
+    clearError,
     getFieldErrors,
     hasFieldError,
     getFirstFieldError,
