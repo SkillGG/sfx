@@ -7,12 +7,90 @@ import {
   type TranslationData,
   validateSFX,
   validateTranslation,
+  type ValidationResult,
 } from "@/utils";
 
 export type ValidationState = {
   errors: ValidationError[];
   isValid: boolean;
 };
+
+export class Validation {
+  validateSFXData: (sfxData: Partial<SFXData>) => ValidationResult;
+  get errors() {
+    return this.validationState.errors;
+  }
+  set errors(value) {
+    this.validationState.errors = value;
+  }
+  get isValid() {
+    return this.validationState.isValid;
+  }
+  set isValid(value) {
+    this.validationState.isValid = value;
+  }
+  validateTranslationData: (
+    translationData: Partial<TranslationData>,
+  ) => ValidationResult;
+  clearErrors: () => ValidationResult;
+  clearError: (errField: ValidationError["field"]) => ValidationResult;
+  getFieldErrors: (field: string) => string[];
+  hasFieldError: (field: string) => boolean;
+  getFirstFieldError: (field: string) => string | null;
+  validationState: ValidationState;
+  constructor(results?: ValidationResult) {
+    this.validationState = results ?? { errors: [], isValid: true };
+    this.validateSFXData = (sfxData: Partial<SFXData>) => {
+      const result = validateSFX(sfxData);
+      this.validationState = {
+        errors: result.errors,
+        isValid: result.isValid,
+      };
+      return result;
+    };
+
+    this.validateTranslationData = (
+      translationData: Partial<TranslationData>,
+    ) => {
+      const result = validateTranslation(translationData);
+      this.validationState = {
+        errors: result.errors,
+        isValid: result.isValid,
+      };
+      return result;
+    };
+
+    this.clearErrors = () => {
+      return (this.validationState = {
+        errors: [],
+        isValid: true,
+      });
+    };
+
+    this.clearError = (errField: ValidationError["field"]) => {
+      const newErrs = this.validationState.errors.filter(
+        (err) => err.field !== errField,
+      );
+      return { errors: newErrs, isValid: newErrs.length === 0 };
+    };
+    this.getFieldErrors = (field: string): string[] => {
+      return this.validationState.errors
+        .filter((error) => error.field === field)
+        .map((error) => error.message);
+    };
+
+    this.hasFieldError = (field: string): boolean => {
+      return this.validationState.errors.some((error) => error.field === field);
+    };
+
+    this.getFirstFieldError = (field: string): string | null => {
+      const error = this.validationState.errors.find(
+        (error) => error.field === field,
+      );
+      return error?.message ?? null;
+    };
+  }
+}
 
 export const useValidation = () => {
   const [validationState, setValidationState] = useState<ValidationState>({

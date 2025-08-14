@@ -58,5 +58,7 @@ model UserSession {
     createdAt DateTime @default(now())
     maxTime   Int      @default(1800000) // 30 mins
 
-    token String @unique
+    token String @unique @default(uuid())
+
+    username String @unique
 }

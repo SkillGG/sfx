@@ -1,8 +1,14 @@
-import { cn, type CollapsedOnomatopoeia, type CollapsedTL } from "@/utils";
+import {
+  cn,
+  type CollapsedOnomatopoeia,
+  type CollapsedTL,
+  type Promisable,
+} from "@/utils";
 import { SFX, SFXEdit, type NoTLOnom, type SaveState } from "./sfx";
 import { SFXLangSelect } from "./sfxLangSelect";
 import React, { useState } from "react";
 import { useSFXLangs } from "../hooks/langs";
+import { Validation } from "../hooks/validation";
 
 export const TL = ({
   tl,
@@ -16,8 +22,8 @@ export const TL = ({
 
   removeLangs?: string[];
 
-  onSave?: (tl: CollapsedTL | null) => void | Promise<void>;
-  onChange?: (tl: CollapsedTL) => void | Promise<void>;
+  onSave?: (tl: CollapsedTL | null) => Promisable<void>;
+  onChange?: (tl: CollapsedTL) => Promisable<void>;
 }) => {
   const { langs } = useSFXLangs();
 
@@ -25,21 +31,35 @@ export const TL = ({
     tl.tlSFX.id === Infinity ? "edit" : "view",
   );
 
+  const [onceSaved, setOnceSaved] = useState(false);
+
+  const [cancelData, setCancelData] = useState<NoTLOnom | null>(null);
+
   if (mode === "edit") {
     return (
       <>
         <SFXEdit
           removeLangs={removeLangs}
           labels={{
-            main: `New ${langs.find((l) => l.code === tl.tlSFX.language)?.name ?? "unknown"} TL`,
+            main: `New ${langs.find((l) => l.code === tl.tlSFX.language)?.name ?? "unknown"} TL (${tl.id})`,
+          }}
+          onValidate={(sfx) => {
+            return new Validation().validateSFXData(sfx);
           }}
           sfx={tl.tlSFX}
-          onCancel={() => onSave?.(null)}
+          onCancel={async () => {
+            if (onceSaved && cancelData) {
+              await onChange?.({ ...tl, tlSFX: cancelData });
+              setMode("view");
+            } else await onSave?.(null);
+          }}
           onChange={async (action) => {
             await onChange?.({ ...tl, tlSFX: action(tl.tlSFX) });
           }}
           onSaveClicked={async () => {
             await onSave?.(tl);
+            setOnceSaved(true);
+            setCancelData(tl.tlSFX);
             setMode("view");
           }}
         />
@@ -48,13 +68,16 @@ export const TL = ({
   }
 
   return (
-    <>
+    <div className="relative">
+      <div className="absolute right-2 bottom-11 dark:text-yellow-300">
+        {tl.id}
+      </div>
       <SFX sfx={tl.tlSFX} editable={false} withTL={false} />
       <div className={cn("flex flex-row gap-2")}>
         <button
           className={cn(
-            "inline-block flex-1 rounded bg-blue-500 px-4 py-2",
-            "text-white hover:bg-blue-600",
+            "inline-block flex-1 cursor-pointer rounded bg-blue-500 px-4 py-2 text-white",
+            "hover:bg-blue-600",
             "dark:bg-blue-600 dark:hover:bg-blue-700",
           )}
           onClick={() => {
@@ -64,11 +87,11 @@ export const TL = ({
           Edit
         </button>
       </div>
-    </>
+    </div>
   );
 };
 
-export const TLCreator = ({
+export const TLEditorDirect = ({
   tls,
 
   sfx,
@@ -77,7 +100,7 @@ export const TLCreator = ({
 }: {
   tls: CollapsedTL[];
   sfx?: NoTLOnom;
-  onChange: (tls: CollapsedTL[]) => void | Promise<void>;
+  onChange: (tls: CollapsedTL[]) => Promisable<void>;
 }) => {
   const [newTL, setNewTL] = useState<CollapsedTL>({
     additionalInfo: "",
@@ -95,6 +118,8 @@ export const TLCreator = ({
     },
   });
 
+  console.log(tls);
+
   return (
     <div
       className={cn(
@@ -107,8 +132,10 @@ export const TLCreator = ({
     >
       <div
         className={cn(
-          "border-b border-blue-200 dark:border-blue-700",
-          "text-bold text-center text-xl text-blue-900 dark:text-blue-100",
+          "border-b border-blue-200",
+          "dark:border-blue-700 dark:text-blue-100",
+          "text-center text-xl font-bold",
+          "text-blue-900",
         )}
       >
         Translations
@@ -145,9 +172,11 @@ export const TLCreator = ({
         />
         <button
           className={cn(
-            "inline-block flex-1 rounded bg-blue-500 px-4 py-2",
-            "text-white hover:bg-blue-600",
-            "dark:bg-blue-600 dark:hover:bg-blue-700",
+            "inline-block flex-1 cursor-pointer rounded bg-blue-500 px-4 py-2",
+            "text-white",
+            "hover:bg-blue-600",
+            "dark:bg-blue-600",
+            "dark:hover:bg-blue-700",
           )}
           onClick={async () => {
             const newTLs = [...tls, newTL];
@@ -165,19 +194,19 @@ export const TLCreator = ({
   );
 };
 
-export const TLEditorv2 = ({
+export const TLEditorSaveable = ({
   sfx,
 
-  saveState: _saveState,
+  saveState,
   onChange: _onChange,
+  onSave,
 }: {
   sfx: CollapsedOnomatopoeia;
 
   saveState?: SaveState;
-  onChange?: (tls: CollapsedTL[]) => void | Promise<void>;
+  onChange?: (tls: CollapsedTL[]) => Promisable<void>;
+  onSave?: (tls: CollapsedTL[]) => Promisable<void>;
 }) => {
-  console.log("SFX", sfx);
-
   const [newTL, setNewTL] = useState<CollapsedTL>({
     additionalInfo: "",
     sfx1Id: sfx.id,
@@ -194,9 +223,11 @@ export const TLEditorv2 = ({
     },
   });
 
+  const [tls, setTLs] = useState([...sfx.tls]);
+
   return (
     <>
-      {sfx.tls.map((tl) => (
+      {tls.map((tl) => (
         <TL tl={tl} key={tl.id} />
       ))}
       <div>
@@ -210,13 +241,33 @@ export const TLEditorv2 = ({
           />
           <button
             className={cn(
-              "inline-block flex-1 rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700",
+              "inline-block flex-1 rounded bg-blue-500 px-4 py-2 text-white",
+              "hover:bg-blue-600",
+              "dark:bg-blue-600",
+              "dark:hover:bg-blue-700",
             )}
             onClick={() => {
-              //
+              setTLs((prev) => [...prev, newTL]);
+              setNewTL((prev) => ({ ...prev, id: prev.id + 1 }));
             }}
           >
             Add Translation
+          </button>
+          <button
+            onClick={async () => await onSave?.(tls)}
+            className={cn(
+              "inline-block flex-1 rounded bg-green-500 px-4 py-2 text-white",
+              "hover:bg-green-600",
+              "dark:bg-green-600",
+              "dark:hover:bg-green-700",
+            )}
+            disabled={saveState === "waiting"}
+          >
+            {saveState === "waiting"
+              ? "Saving..."
+              : saveState === "done"
+                ? "Saved!"
+                : "Save"}
           </button>
         </div>
       </div>

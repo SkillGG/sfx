@@ -1,4 +1,4 @@
-import { z } from "zod/v4";
+import { object, string, number, array } from "zod/v4";
 
 import { createTRPCRouter, publicProcedure } from "@/server/api/trpc";
 import { CollapsedOnomatopoeia, type CollapsedTL, type SFXData } from "@/utils";
@@ -23,14 +23,12 @@ const collapseSFX = (
 export const sfxRouter = createTRPCRouter({
   listSFX: publicProcedure
     .input(
-      z
-        .object({
-          limit: z.number().default(100).optional(),
-          skip: z.number().default(0).optional(),
-          query: z.string(),
-          langs: z.array(z.string()).optional(),
-        })
-        .optional(),
+      object({
+        limit: number().default(100).optional(),
+        skip: number().default(0).optional(),
+        query: string(),
+        langs: array(string()).optional(),
+      }).optional(),
     )
     .query(async ({ ctx, input }): Promise<CollapsedOnomatopoeia[]> => {
       if (input?.query || input?.langs?.length) {
@@ -102,7 +100,7 @@ export const sfxRouter = createTRPCRouter({
       return collapsed;
     }),
   getSFX: publicProcedure
-    .input(z.object({ id: z.number() }))
+    .input(object({ id: number() }))
     .query(
       async ({
         ctx,
@@ -132,8 +130,8 @@ export const sfxRouter = createTRPCRouter({
 
   updateSFX: publicProcedure
     .input(
-      z.object({
-        id: z.number(),
+      object({
+        id: number(),
         sfx: CollapsedOnomatopoeia.omit({ id: true }),
       }),
     )
@@ -195,7 +193,7 @@ export const sfxRouter = createTRPCRouter({
     ),
 
   removeSFX: publicProcedure
-    .input(z.object({ id: z.number() }))
+    .input(object({ id: number() }))
     .mutation(async ({ ctx, input: { id } }) => {
       return await ctx.db.onomatopoeia.delete({
         where: { id },

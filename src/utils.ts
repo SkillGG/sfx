@@ -3,6 +3,7 @@ import { twMerge } from "tailwind-merge";
 import clsx, { type ClassValue } from "clsx";
 import type z from "zod/v4";
 import { array, boolean, number, object, string } from "zod/v4";
+import { generate } from "random-words";
 
 export type CollapsedTL = Omit<
   Translation & { tlSFX: Omit<CollapsedOnomatopoeia, "tls"> },
@@ -19,6 +20,23 @@ export type TranslationData = Omit<
 >;
 
 export type SFXData = z.infer<typeof SFXData>;
+
+export type Promisable<T> = T | Promise<T>;
+
+export const getRandomWordString = (length = 2) => {
+  const wordString = [
+    ...generate({
+      exactly: length,
+      formatter(word) {
+        return word.substring(0, 1).toLocaleUpperCase() + word.substring(1);
+      },
+    }),
+  ]
+    .flat()
+    .join("");
+
+  return wordString;
+};
 
 export const CollapsedTL = object({
   id: number(),

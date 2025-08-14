@@ -5,6 +5,7 @@ import {
   cn,
   type CollapsedOnomatopoeia,
   type CollapsedTL,
+  type Promisable,
 } from "@/utils";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { SFXCard } from "./sfx";
@@ -39,7 +40,7 @@ export function SFXCardEditable<
     main?: string;
   };
   allowLocal?: boolean;
-  onRemove?: () => Promise<void> | void;
+  onRemove?: () => Promisable<void>;
   noLang?: boolean;
 }) {
   const [jSFX, setjsfx] = useState<Q | null>(sfx);

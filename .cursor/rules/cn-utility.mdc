@@ -12,7 +12,8 @@ alwaysApply: true
 - **Import `cn` from `@/utils` in all component files**
 - **Use `cn` for conditional classes and class merging**
 - **Avoid direct string concatenation for className**
-- **Maximum 5 classes per line in cn calls for readability**
+- **Maximum 90 characters per line in cn calls for readability**
+- **Only one Tailwind subclass (hover:, disabled:, dark:, focus:, etc.) per line**
 
 ## **Implementation Requirements**
 
@@ -73,33 +74,42 @@ const Component = ({ className, ...props }) => (
 );
 ```
 
-### **5-Class Limit Rule**
+### **90-Character & Single Subclass Rule**
 
 ```typescript
-// ✅ DO: Maximum 5 classes per line for readability
+// ✅ DO: Maximum 90 characters per line with single subclass per line
 <div className={cn(
-  "flex flex-col gap-2 rounded-lg border",
-  "border-blue-300 bg-blue-50 px-4 py-3",
-  "shadow-sm dark:bg-slate-800"
+  "flex flex-col gap-2 rounded-lg border border-blue-300 bg-blue-50 px-4 py-3",
+  "shadow-sm dark:bg-slate-800",
+  "hover:shadow-lg",
+  "focus:ring-2 focus:ring-blue-500",
+  "disabled:cursor-not-allowed disabled:opacity-50"
 )}>
 
-// ❌ DON'T: Exceed 5 classes per line
+// ❌ DON'T: Exceed 90 characters or mix subclasses on same line
 <div className={cn(
-  "flex flex-col gap-2 rounded-lg border border-blue-300 bg-blue-50 px-4 py-3 shadow-sm dark:bg-slate-800"
+  "flex flex-col gap-2 rounded-lg border border-blue-300 bg-blue-50 px-4 py-3 shadow-sm dark:bg-slate-800 hover:shadow-lg focus:ring-2 focus:ring-blue-500"
+)}>
+
+// ❌ DON'T: Multiple subclasses on same line
+<div className={cn(
+  "flex flex-col gap-2 rounded-lg border border-blue-300 bg-blue-50 px-4 py-3",
+  "shadow-sm dark:bg-slate-800 hover:shadow-lg focus:ring-2 focus:ring-blue-500"
 )}>
 ```
 
 ### **Complex Class Combinations**
 
 ```typescript
-// ✅ DO: Use cn for complex class merging with max 5 classes per line
+// ✅ DO: Use cn for complex class merging with max 90 characters and single subclass per line
 <div className={cn(
-  "flex flex-col gap-2 rounded-lg border",
-  "border-blue-300 bg-blue-50 px-4 py-3",
-  "shadow-sm dark:bg-slate-800"
+  "flex flex-col gap-2 rounded-lg border border-blue-300 bg-blue-50 px-4 py-3",
+  "shadow-sm dark:bg-slate-800",
+  "hover:shadow-lg",
+  "focus:ring-2 focus:ring-blue-500"
 )}>
 
-// ❌ DON'T: Use long template literals or exceed 5 classes per line
+// ❌ DON'T: Use long template literals or exceed 90 characters per line
 <div className={`
   flex flex-col gap-2
   rounded-lg border border-blue-300
@@ -113,9 +123,9 @@ const Component = ({ className, ...props }) => (
 ### **Good Examples**
 
 - [darkModeSwitch.tsx](mdc:src/app/_components/darkModeSwitch.tsx) - Proper cn usage with props
-- [sfx.tsx](mdc:src/app/_components/sfx.tsx) - Complex class combinations (follows 5-class limit)
+- [sfx.tsx](mdc:src/app/_components/sfx.tsx) - Complex class combinations (follows 90-char & single subclass rule)
 - [validationError.tsx](mdc:src/app/_components/validationError.tsx) - Conditional error styling
-- [sfxv2.tsx](mdc:src/app/_components/sfxv2.tsx) - Properly formatted with 5-class limit
+- [sfxv2.tsx](mdc:src/app/_components/sfxv2.tsx) - Properly formatted with 90-char & single subclass rule
 
 ### **Files Needing Updates**
 
@@ -155,6 +165,25 @@ const Component = ({ className, children }: ComponentProps) => (
   variant === "secondary" && "bg-gray-500 text-gray-900",
   size === "large" && "px-6 py-3 text-lg",
   size === "small" && "px-3 py-1 text-sm"
+)}>
+```
+
+### **Subclass organization**
+
+```typescript
+// ✅ DO: One subclass type per line for clarity
+<div className={cn(
+  "flex flex-col gap-2 rounded-lg border border-blue-300 bg-blue-50 px-4 py-3",
+  "shadow-sm dark:bg-slate-800",
+  "hover:shadow-lg",
+  "focus:ring-2 focus:ring-blue-500",
+  "disabled:cursor-not-allowed disabled:opacity-50"
+)}>
+
+// ❌ DON'T: Mix different subclass types on same line
+<div className={cn(
+  "flex flex-col gap-2 rounded-lg border border-blue-300 bg-blue-50 px-4 py-3",
+  "shadow-sm dark:bg-slate-800 hover:shadow-lg focus:ring-2 focus:ring-blue-500"
 )}>
 ```
 

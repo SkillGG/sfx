@@ -2,12 +2,17 @@ import {
   cn,
   type CollapsedOnomatopoeia,
   makeDialogBackdropExitable,
+  type Promisable,
+  type ValidationResult,
 } from "@/utils";
 import { useMemo, useRef, useState } from "react";
 import { useSFXLangs } from "../hooks/langs";
 import { SFXLangSelect } from "./sfxLangSelect";
 import { SFXTLEditor } from "./_legacycomponents/sfxTLEdit.";
 import { env } from "@/env";
+import { Validation } from "../hooks/validation";
+import { ValidationErrorDisplay } from "./validationError";
+import { TLEditorDirect, TLEditorSaveable } from "./TLEditor";
 
 export type NoTLOnom = Omit<CollapsedOnomatopoeia, "tls">;
 
@@ -48,6 +53,7 @@ const SFXCard = ({ sfx, withTL }: SFXTLDiscriminator) => {
           className={cn(
             "flex-1 text-right text-sm",
             "text-blue-500 dark:text-blue-400",
+            !Number.isFinite(sfx.id) && "text-orange-700 dark:text-orange-200",
           )}
         >
           ({langs.find((l) => l.code === usedSFX.language)?.name})
@@ -86,6 +92,7 @@ export const SFXEdit = ({
   saveBtnState = "default",
   onSaveClicked,
 
+  onValidate,
   onChange,
   onCancel,
 }: SFXTLDiscriminator & {
@@ -100,18 +107,21 @@ export const SFXEdit = ({
   };
 
   saveBtnState?: SaveState;
-  onSaveClicked?: () => Promise<void> | void;
+  onSaveClicked?: () => Promisable<void>;
 
   onChange?: (
     action: <Q extends CollapsedOnomatopoeia | NoTLOnom>(prev: Q) => Q,
   ) => void;
   onCancel: () => void;
+  onValidate?: <Q extends CollapsedOnomatopoeia | NoTLOnom>(
+    sfx: Q,
+  ) => ValidationResult;
 }) => {
   const [tempRead, setTempRead] = useState(sfx.read ?? "");
 
-  console.log("editing SFX", { ...sfx, tempRead });
-
   const tlEditDialogRef = useRef<HTMLDialogElement>(null);
+
+  const [validation, setValidation] = useState<Validation>(new Validation());
 
   return (
     <>
@@ -145,13 +155,15 @@ export const SFXEdit = ({
             />
           )}
         </h2>
+
+        {/** Edit fields */}
         <div
           className={cn(
             "flex w-full flex-col gap-2",
             "text-base font-medium text-blue-700 dark:text-blue-300",
           )}
         >
-          <div className={cn("flex flex-row items-center gap-2")}>
+          <div className={cn("flex flex-row items-start gap-2")}>
             <label
               htmlFor="sfx"
               className={cn(
@@ -161,46 +173,72 @@ export const SFXEdit = ({
             >
               SFX
             </label>
-            <input
-              className={cn(
-                "ml-auto flex-3 rounded border border-blue-300 bg-white px-2 py-1",
-                "focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none",
-                "dark:border-blue-600 dark:bg-slate-700 dark:text-white",
-                "dark:placeholder-gray-400 dark:focus:border-blue-400 dark:focus:ring-blue-400",
-              )}
-              placeholder="SFX"
-              type="text"
-              value={sfx.text}
-              onChange={(e) => {
-                onChange?.((s) => ({ ...s, text: e.currentTarget.value }));
-              }}
-            />
+            <div className={cn("ml-auto flex flex-3 flex-col gap-2")}>
+              <input
+                className={cn(
+                  "rounded border bg-white px-2 py-1",
+                  "focus:ring-1 focus:outline-none dark:bg-slate-700 dark:text-white",
+                  "dark:placeholder-gray-400",
+                  validation.hasFieldError("text")
+                    ? "border-red-500 focus:border-red-500 focus:ring-red-500 dark:border-red-400 dark:focus:border-red-400 dark:focus:ring-red-400"
+                    : "border-blue-300 focus:border-blue-500 focus:ring-blue-500 dark:border-blue-600 dark:focus:border-blue-400 dark:focus:ring-blue-400",
+                )}
+                placeholder="SFX"
+                type="text"
+                value={sfx.text}
+                onChange={(e) => {
+                  onChange?.((s) => ({ ...s, text: e.currentTarget.value }));
+                  setValidation(new Validation(validation.clearError("text")));
+                }}
+              />
+              <ValidationErrorDisplay
+                className="self-end"
+                errors={validation.errors}
+                field="text"
+                compact
+              />
+            </div>
           </div>
-          <div className={cn("flex flex-row items-center gap-2")}>
+
+          <div className={cn("items-top flex flex-row gap-2")}>
             <label
               htmlFor="def"
               className={cn(
-                "flex-1 font-medium whitespace-nowrap",
+                "mt-1 flex-1 font-medium whitespace-nowrap",
                 "text-blue-700 dark:text-blue-300",
+                validation.hasFieldError("def") &&
+                  "text-red-600 dark:text-red-400",
               )}
             >
               Definition
             </label>
-            <input
-              className={cn(
-                "ml-auto flex-3 rounded border border-blue-300 bg-white px-2 py-1",
-                "focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none",
-                "dark:border-blue-600 dark:bg-slate-700 dark:text-white",
-                "dark:placeholder-gray-400 dark:focus:border-blue-400 dark:focus:ring-blue-400",
-              )}
-              placeholder="Definition"
-              type="text"
-              value={sfx.def}
-              onChange={(e) =>
-                onChange?.((p) => ({ ...p, def: e.currentTarget.value }))
-              }
-            />
+            <div className={cn("ml-auto flex flex-3 flex-col gap-2")}>
+              <input
+                className={cn(
+                  "flex-3 rounded border bg-white px-2 py-1",
+                  "focus:ring-1 focus:outline-none dark:bg-slate-700 dark:text-white",
+                  "dark:placeholder-gray-400",
+                  validation.hasFieldError("def")
+                    ? "border-red-500 focus:border-red-500 focus:ring-red-500 dark:border-red-400 dark:focus:border-red-400 dark:focus:ring-red-400"
+                    : "border-blue-300 focus:border-blue-500 focus:ring-blue-500 dark:border-blue-600 dark:focus:border-blue-400 dark:focus:ring-blue-400",
+                )}
+                placeholder="Definition"
+                type="text"
+                value={sfx.def}
+                onChange={(e) => {
+                  onChange?.((p) => ({ ...p, def: e.currentTarget.value }));
+                  setValidation(new Validation(validation.clearError("def")));
+                }}
+              />
+              <ValidationErrorDisplay
+                className="self-end"
+                errors={validation.errors}
+                field="def"
+                compact
+              />
+            </div>
           </div>
+
           <div className={cn("flex flex-row items-center gap-2")}>
             <label
               htmlFor="extra"
@@ -211,24 +249,34 @@ export const SFXEdit = ({
             >
               Extra
             </label>
-            <input
-              className={cn(
-                "ml-auto flex-3 rounded border border-blue-300 bg-white px-2 py-1",
-                "focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none",
-                "dark:border-blue-600 dark:bg-slate-700 dark:text-white",
-                "dark:placeholder-gray-400 dark:focus:border-blue-400 dark:focus:ring-blue-400",
-              )}
-              placeholder="Extra"
-              type="text"
-              value={sfx.extra ?? ""}
-              onChange={(e) =>
-                onChange?.((p) => ({
-                  ...p,
-                  extra: e.currentTarget.value || null,
-                }))
-              }
-            />
+            <div className={cn("ml-auto flex w-full flex-3 flex-col gap-2")}>
+              <input
+                className={cn(
+                  "ml-auto w-full rounded border bg-white px-2 py-1",
+                  "focus:ring-1 focus:outline-none dark:bg-slate-700 dark:text-white",
+                  "dark:placeholder-gray-400",
+                  validation.hasFieldError("extra")
+                    ? "border-red-500 focus:border-red-500 focus:ring-red-500 dark:border-red-400 dark:focus:border-red-400 dark:focus:ring-red-400"
+                    : "border-blue-300 focus:border-blue-500 focus:ring-blue-500 dark:border-blue-600 dark:focus:border-blue-400 dark:focus:ring-blue-400",
+                )}
+                placeholder="Extra"
+                type="text"
+                value={sfx.extra ?? ""}
+                onChange={(e) =>
+                  onChange?.((p) => ({
+                    ...p,
+                    extra: e.currentTarget.value || null,
+                  }))
+                }
+              />
+              <ValidationErrorDisplay
+                errors={validation.errors}
+                field="extra"
+                compact
+              />
+            </div>
           </div>
+
           <div className={cn("flex flex-row items-center gap-2")}>
             <div className={cn("flex flex-1 items-center gap-2")}>
               <label
@@ -236,13 +284,16 @@ export const SFXEdit = ({
                 className={cn(
                   "font-medium whitespace-nowrap",
                   "text-blue-700 dark:text-blue-300",
+                  validation.hasFieldError("read") &&
+                    "text-red-600 dark:text-red-400",
                 )}
               >
                 Reading
               </label>
               <label
                 className={cn(
-                  "flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400",
+                  "flex items-center gap-1 text-sm",
+                  "text-blue-600 dark:text-blue-400",
                 )}
               >
                 <input
@@ -262,38 +313,53 @@ export const SFXEdit = ({
                 />
               </label>
             </div>
-            <input
-              className={cn(
-                "ml-auto flex-3 rounded border border-blue-300 bg-white px-2 py-1",
-                "focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none",
-                "dark:border-blue-600 dark:bg-slate-700 dark:text-white",
-                "dark:placeholder-gray-400 dark:focus:border-blue-400 dark:focus:ring-blue-400",
-                "disabled:cursor-not-allowed disabled:opacity-50",
-              )}
-              placeholder="Reading"
-              type="text"
-              value={sfx.read ?? tempRead}
-              onChange={(e) => {
-                onChange?.((prev) => ({
-                  ...prev,
-                  read: e.currentTarget.value,
-                }));
-                setTempRead(e.currentTarget.value);
-              }}
-              disabled={sfx.read === null}
-            />
+            <div className={cn("ml-auto flex flex-3 flex-col gap-2")}>
+              <input
+                className={cn(
+                  "ml-auto w-full rounded border bg-white px-2 py-1",
+                  "focus:ring-1 focus:outline-none",
+                  "dark:bg-slate-700 dark:text-white dark:placeholder-gray-400",
+                  "disabled:cursor-not-allowed disabled:opacity-50",
+                  validation.hasFieldError("read")
+                    ? "border-red-500 focus:border-red-500 focus:ring-red-500 dark:border-red-400 dark:focus:border-red-400 dark:focus:ring-red-400"
+                    : "border-blue-300 focus:border-blue-500 focus:ring-blue-500 dark:border-blue-600 dark:focus:border-blue-400 dark:focus:ring-blue-400",
+                )}
+                placeholder="Reading"
+                type="text"
+                value={sfx.read ?? tempRead}
+                onChange={(e) => {
+                  onChange?.((prev) => ({
+                    ...prev,
+                    read: e.currentTarget.value,
+                  }));
+                  setTempRead(e.currentTarget.value);
+                }}
+                disabled={sfx.read === null}
+              />
+              <ValidationErrorDisplay
+                errors={validation.errors}
+                field="read"
+                compact
+              />
+            </div>
           </div>
         </div>
+
         <div className={cn("mt-2 flex flex-row gap-2")}>
           <button
             className={cn(
               "rounded bg-blue-600 px-4 py-2 text-white transition-colors",
-              "hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2",
-              "focus:outline-none dark:bg-blue-700 dark:hover:bg-blue-600",
-              "dark:focus:ring-blue-400 dark:focus:ring-offset-slate-800",
+              "cursor-pointer hover:bg-blue-700",
+              "focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none",
+              "dark:bg-blue-700 dark:hover:bg-blue-600 dark:focus:ring-blue-400 dark:focus:ring-offset-slate-800",
             )}
             onClick={async () => {
-              await onSaveClicked?.();
+              const validation = onValidate?.(sfx);
+              if (!validation || validation?.isValid) {
+                await onSaveClicked?.();
+                return;
+              }
+              setValidation(new Validation(validation));
             }}
             type="button"
             disabled={saveBtnState === "waiting"}
@@ -317,14 +383,10 @@ export const SFXEdit = ({
                   tlEditDialogRef.current?.close();
                 }}
               >
-                {
-                  <SFXTLEditor
-                    sfx={sfx}
-                    updateSFX={async (sfx) => {
-                      return sfx;
-                    }}
-                  />
-                }
+                <TLEditorDirect
+                  tls={sfx.tls}
+                  onChange={() => console.log("sfx.tls changed")}
+                />
               </dialog>
               <button
                 className={cn(
@@ -346,6 +408,7 @@ export const SFXEdit = ({
           <button
             className={cn(
               "rounded bg-gray-200 px-2 py-1 text-xs",
+              "cursor-pointer",
               "hover:bg-gray-300 dark:bg-slate-600 dark:text-white",
               "dark:hover:bg-slate-500",
             )}

@@ -7,6 +7,7 @@ const DarkModeSwitch = ({ className }: { className?: string }) => {
     <button
       className={cn("cursor-pointer", className)}
       onClick={() => setMode(mode === "light" ? "dark" : "light")}
+      type={"button"}
     >
       {mode === "light" ? "🌙" : "☀️"}
     </button>

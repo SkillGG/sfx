@@ -1,5 +1,6 @@
 import { sfxRouter } from "@/server/api/routers/sfx";
 import { createCallerFactory, createTRPCRouter } from "@/server/api/trpc";
+import { userRouter } from "./routers/user";
 
 /**
  * This is the primary router for your server.
@@ -8,6 +9,7 @@ import { createCallerFactory, createTRPCRouter } from "@/server/api/trpc";
  */
 export const appRouter = createTRPCRouter({
   sfx: sfxRouter,
+  user: userRouter,
 });
 
 // export type definition of API

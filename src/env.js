@@ -3,6 +3,11 @@ import { z } from "zod";
 
 const { NODE_ENV } = process.env;
 
+console.log(
+  "Using DB @ ",
+  new URL(process.env.DATABASE_URL ?? "https://undefined").hostname,
+);
+
 export const env = createEnv({
   /**
    * Specify your server-side environment variables schema here. This way you can ensure the app
@@ -27,6 +32,7 @@ export const env = createEnv({
     NEXT_PUBLIC_DEVENV: z
       .enum(["development", "test", "production"])
       .default("development"),
+    NEXT_PUBLIC_SESSIONTOKEN: z.string(),
   },
 
   /**
@@ -39,6 +45,7 @@ export const env = createEnv({
     CREATOR_PASSWORD: process.env.CREATOR_PASSWORD,
     NODE_ENV,
     NEXT_PUBLIC_DEVENV: NODE_ENV,
+    NEXT_PUBLIC_SESSIONTOKEN: process.env.NEXT_PUBLIC_SESSIONTOKEN,
     // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
   },
   /**
