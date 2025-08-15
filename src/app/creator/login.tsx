@@ -5,15 +5,12 @@ import { cn } from "@/utils";
 import { useState } from "react";
 import { useDarkMode } from "../hooks/darkmode";
 import DarkModeSwitch from "../_components/darkModeSwitch";
-import { useRouter } from "next/navigation";
 
 const LoginPage = () => {
   const [pass, setPass] = useState<string>("");
   const login = api.user.logIn.useMutation();
 
   const { mode } = useDarkMode();
-
-  const router = useRouter();
 
   const [err, setError] = useState("");
 
