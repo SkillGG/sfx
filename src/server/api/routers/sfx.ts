@@ -3,6 +3,7 @@ import { object, string, number, array } from "zod/v4";
 import { createTRPCRouter, publicProcedure } from "@/server/api/trpc";
 import { CollapsedOnomatopoeia, type CollapsedTL, type SFXData } from "@/utils";
 import type { Onomatopoeia } from "@prisma/client";
+import { checkSession } from "./user";
 
 type SimpleCollapsedTL = Omit<CollapsedTL, "tlSFX"> & { tlSFX: SFXData };
 
@@ -19,6 +20,9 @@ const collapseSFX = (
   };
   return sfx;
 };
+
+const authShape = object({ token: string(), deviceName: string() });
+const USER_AUTH_ERR = { err: "User not logged in!", errcode: "NO_AUTH" };
 
 export const sfxRouter = createTRPCRouter({
   listSFX: publicProcedure
@@ -131,6 +135,7 @@ export const sfxRouter = createTRPCRouter({
   updateSFX: publicProcedure
     .input(
       object({
+        auth: authShape,
         id: number(),
         sfx: CollapsedOnomatopoeia.omit({ id: true }),
       }),
@@ -139,20 +144,32 @@ export const sfxRouter = createTRPCRouter({
       async ({
         ctx,
         input: {
+          auth: { token, deviceName },
           id,
           sfx: { text, def, extra, read, language },
         },
       }) => {
-        return await ctx.db.onomatopoeia.update({
-          where: { id },
-          data: { text, def, extra, read, language },
-        });
+        const loggedIn = await checkSession(ctx.db, { token, deviceName });
+
+        if (loggedIn.ok)
+          return await ctx.db.onomatopoeia.update({
+            where: { id },
+            data: { text, def, extra, read, language },
+          });
+        else return loggedIn;
       },
     ),
   createSFX: publicProcedure
-    .input(CollapsedOnomatopoeia.omit({ id: true }))
+    .input(
+      CollapsedOnomatopoeia.omit({ id: true }).and(object({ auth: authShape })),
+    )
     .mutation(
-      async ({ ctx, input: { text, def, extra, read, tls, language } }) => {
+      async ({
+        ctx,
+        input: { auth, text, def, extra, read, tls, language },
+      }) => {
+        const loggedIn = await checkSession(ctx.db, auth);
+        if (!loggedIn.ok) return loggedIn;
         // create og SFX
         const ogSFX = await ctx.db.onomatopoeia.create({
           data: {
@@ -193,8 +210,10 @@ export const sfxRouter = createTRPCRouter({
     ),
 
   removeSFX: publicProcedure
-    .input(object({ id: number() }))
-    .mutation(async ({ ctx, input: { id } }) => {
+    .input(object({ id: number(), auth: authShape }))
+    .mutation(async ({ ctx, input: { id, auth } }) => {
+      const loggedIn = await checkSession(ctx.db, auth);
+      if (!loggedIn.ok) return loggedIn;
       return await ctx.db.onomatopoeia.delete({
         where: { id },
       });

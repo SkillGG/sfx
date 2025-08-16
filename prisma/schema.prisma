@@ -55,8 +55,9 @@ model Translation {
 model UserSession {
     id Int @id @default(autoincrement())
 
-    createdAt DateTime @default(now())
-    maxTime   Int      @default(1800000) // 30 mins
+    createdAt     DateTime @default(now())
+    lastUpdatedAt DateTime @default(now())
+    maxTime       Int      @default(1800000) // 30 mins
 
     token String @unique @default(uuid())
 

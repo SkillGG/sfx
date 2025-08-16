@@ -8,11 +8,10 @@ import {
 import { useMemo, useRef, useState } from "react";
 import { useSFXLangs } from "../hooks/langs";
 import { SFXLangSelect } from "./sfxLangSelect";
-import { SFXTLEditor } from "./_legacycomponents/sfxTLEdit.";
 import { env } from "@/env";
 import { Validation } from "../hooks/validation";
 import { ValidationErrorDisplay } from "./validationError";
-import { TLEditorDirect, TLEditorSaveable } from "./TLEditor";
+import { TLEditorDirect } from "./TLEditor";
 
 export type NoTLOnom = Omit<CollapsedOnomatopoeia, "tls">;
 

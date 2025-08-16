@@ -198,13 +198,11 @@ export const TLEditorSaveable = ({
   sfx,
 
   saveState,
-  onChange: _onChange,
   onSave,
 }: {
   sfx: CollapsedOnomatopoeia;
 
   saveState?: SaveState;
-  onChange?: (tls: CollapsedTL[]) => Promisable<void>;
   onSave?: (tls: CollapsedTL[]) => Promisable<void>;
 }) => {
   const [newTL, setNewTL] = useState<CollapsedTL>({

@@ -12,8 +12,12 @@ import { ValidationErrorDisplay } from "../_components/validationError";
 import { SFX } from "../_components/sfx";
 import { TLEditorDirect } from "../_components/TLEditor";
 import type { SFXLang } from "../hooks/langs";
+import { useUser } from "../hooks/userlogin";
 
 const SFXListPanel = () => {
+  const auth = useUser();
+  if (!auth) return <>User not logged in!</>;
+
   const sfx = api.sfx.listSFX.useQuery();
   const utils = api.useUtils();
 
@@ -33,12 +37,12 @@ const SFXListPanel = () => {
           editable
           key={sfx.id}
           onRemove={async () => {
-            await removeSFX.mutateAsync({ id: sfx.id });
+            await removeSFX.mutateAsync({ id: sfx.id, auth });
             await utils.sfx.listSFX.invalidate();
             await utils.sfx.getSFX.invalidate();
           }}
           onSave={async (fx) => {
-            await updateSFX.mutateAsync({ id: sfx.id, sfx: fx });
+            await updateSFX.mutateAsync({ id: sfx.id, sfx: fx, auth });
             await utils.sfx.listSFX.invalidate();
             await utils.sfx.getSFX.invalidate();
           }}
@@ -50,6 +54,8 @@ const SFXListPanel = () => {
 
 // SFX creator page
 const CreatorPage = () => {
+  const auth = useUser();
+
   const createSFX = api.sfx.createSFX.useMutation();
   const utils = api.useUtils();
 
@@ -68,6 +74,8 @@ const CreatorPage = () => {
 
   // Initialize validation hook
   const validation = useValidation();
+
+  if (!auth) return <>Loading...</>;
 
   // Validate form data before submission
   const handleCreate = () => {
@@ -91,6 +99,7 @@ const CreatorPage = () => {
         language: lang ?? "en",
         tls: tls ?? [],
         prime: true,
+        auth,
       });
       void utils.sfx.listSFX.invalidate();
       void utils.sfx.getSFX.invalidate();
