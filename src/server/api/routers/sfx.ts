@@ -1,11 +1,14 @@
+import type z from "zod/v4";
 import { object, string, number, array } from "zod/v4";
 
 import { createTRPCRouter, publicProcedure } from "@/server/api/trpc";
 import { CollapsedOnomatopoeia, type CollapsedTL, type SFXData } from "@/utils";
 import type { Onomatopoeia } from "@prisma/client";
 import { checkSession } from "./user";
+import type { PrismaClient } from "@prisma/client";
 
-type SimpleCollapsedTL = Omit<CollapsedTL, "tlSFX"> & { tlSFX: SFXData };
+type SimpleCollapsedTL = Omit<CollapsedTL, "tlSFX"> &
+  ({ tlSFX: SFXData } | { ogSFX: SFXData });
 
 const collapseSFX = (
   ogSFX: Onomatopoeia | SFXData,
@@ -15,122 +18,119 @@ const collapseSFX = (
     ...ogSFX,
     tls:
       tls?.map((tl): CollapsedTL => {
-        return { ...tl, tlSFX: collapseSFX(tl.tlSFX) };
+        return {
+          ...tl,
+          tlSFX: "tlSFX" in tl ? collapseSFX(tl.tlSFX) : collapseSFX(tl.ogSFX),
+        };
       }) ?? [],
   };
   return sfx;
 };
 
 const authShape = object({ token: string(), deviceName: string() });
-const USER_AUTH_ERR = { err: "User not logged in!", errcode: "NO_AUTH" };
+
+const SearchOptions = object({
+  limit: number().default(100).optional(),
+  skip: number().default(0).optional(),
+  query: string(),
+  langs: array(string()).optional(),
+});
+
+const searchDBForSFX = async (
+  db: PrismaClient,
+  search: z.infer<typeof SearchOptions>,
+) => {
+  console.log("Searching for", search);
+  const sfx = await db.onomatopoeia.findMany({
+    take: search.limit,
+    skip: search.skip,
+    orderBy: { id: "asc" },
+    include: {
+      ogTranslations: {
+        include: {
+          tlSFX: true,
+        },
+      },
+    },
+    where: {
+      AND: [
+        { prime: true },
+        {
+          OR: [
+            {
+              language: { in: search.langs },
+            },
+            { id: { gte: search.langs?.length === 0 ? 0 : 999999999 } },
+          ],
+        },
+        {
+          OR: [
+            {
+              text: { contains: search.query, mode: "insensitive" },
+            },
+            {
+              read: { contains: search.query, mode: "insensitive" },
+            },
+            {
+              extra: { contains: search.query, mode: "insensitive" },
+            },
+            {
+              def: { contains: search.query, mode: "insensitive" },
+            },
+          ],
+        },
+      ],
+    },
+  });
+
+  const collapsedSFXs = sfx.map((pSFX) => {
+    return collapseSFX(pSFX, pSFX.ogTranslations);
+  });
+
+  return collapsedSFXs;
+};
 
 export const sfxRouter = createTRPCRouter({
   listSFX: publicProcedure
-    .input(
-      object({
-        limit: number().default(100).optional(),
-        skip: number().default(0).optional(),
-        query: string(),
-        langs: array(string()).optional(),
-      }).optional(),
-    )
+    .input(SearchOptions.optional())
     .query(async ({ ctx, input }): Promise<CollapsedOnomatopoeia[]> => {
       if (input?.query || input?.langs?.length) {
-        console.log("Searching for", input);
-        const sfx = await ctx.db.onomatopoeia.findMany({
-          take: input.limit,
-          skip: input.skip,
-          orderBy: { id: "asc" },
-          include: {
-            tlTranslations: {
-              include: {
-                tlSFX: true,
-              },
-            },
-          },
-          where: {
-            AND: [
-              { prime: true },
-              {
-                OR: [
-                  {
-                    language: { in: input.langs },
-                  },
-                  { id: { gte: input.langs?.length === 0 ? 0 : 999999999 } },
-                ],
-              },
-              {
-                OR: [
-                  {
-                    text: { contains: input.query, mode: "insensitive" },
-                  },
-                  {
-                    read: { contains: input.query, mode: "insensitive" },
-                  },
-                  {
-                    extra: { contains: input.query, mode: "insensitive" },
-                  },
-                  {
-                    def: { contains: input.query, mode: "insensitive" },
-                  },
-                ],
-              },
-            ],
-          },
-        });
-
-        const collapsedSFXs = sfx.map((pSFX) => {
-          return collapseSFX(pSFX, pSFX.tlTranslations);
-        });
-
-        console.log(collapsedSFXs);
-
-        return collapsedSFXs;
+        return await searchDBForSFX(ctx.db, input);
       }
 
       const sfx = await ctx.db.onomatopoeia.findMany({
         orderBy: { id: "asc" },
-        include: {
-          tlTranslations: {
+        select: {
+          def: true,
+          extra: true,
+          id: true,
+          language: true,
+          prime: true,
+          read: true,
+          text: true,
+          ogTranslations: {
             include: {
               tlSFX: true,
+            },
+          },
+          tlTranslations: {
+            include: {
+              ogSFX: true,
             },
           },
         },
       });
 
-      const collapsed = sfx.map((s) => collapseSFX(s, s.tlTranslations));
+      const collapsed = sfx.map((s) => {
+        const collapsed = collapseSFX(s, [
+          ...s.ogTranslations,
+          ...s.tlTranslations,
+        ]);
+        return collapsed;
+      });
 
       return collapsed;
     }),
-  getSFX: publicProcedure
-    .input(object({ id: number() }))
-    .query(
-      async ({
-        ctx,
-        input: { id },
-      }): Promise<CollapsedOnomatopoeia | { err: string }> => {
-        const primeSFX = await ctx.db.onomatopoeia.findFirst({
-          where: {
-            OR: [
-              { id, prime: true },
-              { prime: false, tlTranslations: { some: { tlSFX: { id } } } },
-            ],
-          },
-          include: {
-            tlTranslations: {
-              include: {
-                tlSFX: true,
-              },
-            },
-          },
-        });
-
-        if (!primeSFX) return { err: `No SFX with id ${id}` };
-
-        return collapseSFX(primeSFX, primeSFX?.tlTranslations);
-      },
-    ),
 
   updateSFX: publicProcedure
     .input(

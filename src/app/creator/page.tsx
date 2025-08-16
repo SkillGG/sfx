@@ -8,17 +8,41 @@ import LoginPage from "./login";
 import { UserSessionProvider } from "../hooks/userlogin";
 import { useDarkMode } from "../hooks/darkmode";
 
+const LoadPageSpinner = () => {
+  const { mode } = useDarkMode();
+  return (
+    <div
+      className={cn(
+        "flex h-screen w-full items-center justify-center bg-blue-50",
+        "dark:bg-slate-900",
+        mode,
+      )}
+    >
+      <div
+        className={cn(
+          "flex flex-col items-center gap-4 rounded-xl bg-white px-8 py-8 shadow-lg",
+          "dark:bg-slate-800",
+        )}
+      >
+        <div
+          className={cn(
+            "h-8 w-8 animate-spin rounded-full border-4 border-blue-400 border-t-transparent",
+            "dark:border-blue-300 dark:border-t-transparent",
+          )}
+          aria-label="Loading spinner"
+        />
+      </div>
+    </div>
+  );
+};
+
 const CheckCreatorLoginPage = () => {
   const [userToken, setUserToken] = useState<string | null>(null);
   const [deviceName, setDeviceName] = useState<string | null>(null);
 
-  const { mode } = useDarkMode();
+  const [firstLoad, setFirstLoad] = useState(false);
 
-  const {
-    isFetching,
-    data: userLoggedIn,
-    isEnabled,
-  } = api.user.checkLogin.useQuery(
+  const { isFetching, data: userLoggedIn } = api.user.checkLogin.useQuery(
     {
       token: userToken ?? "",
       deviceName: deviceName ?? "",
@@ -33,6 +57,7 @@ const CheckCreatorLoginPage = () => {
     const dName = sessionStorage.getItem("dnam");
     setUserToken(usertok);
     setDeviceName(dName);
+    setFirstLoad(true);
   }, []);
 
   useEffect(() => {
@@ -47,43 +72,11 @@ const CheckCreatorLoginPage = () => {
         sessionStorage.removeItem("stk");
       }
     }
-
-    const closeTimeout = setTimeout(() => {
-      setErr("");
-    }, 3000);
-
-    return () => {
-      clearTimeout(closeTimeout);
-    };
   }, [userLoggedIn]);
 
   console.log(deviceName, userToken, userLoggedIn, isFetching);
 
-  if (isFetching || !isEnabled)
-    return (
-      <div
-        className={cn(
-          "flex h-screen w-full items-center justify-center bg-blue-50",
-          "dark:bg-slate-900",
-          mode,
-        )}
-      >
-        <div
-          className={cn(
-            "flex flex-col items-center gap-4 rounded-xl bg-white px-8 py-8 shadow-lg",
-            "dark:bg-slate-800",
-          )}
-        >
-          <div
-            className={cn(
-              "h-8 w-8 animate-spin rounded-full border-4 border-blue-400 border-t-transparent",
-              "dark:border-blue-300",
-            )}
-            aria-label="Loading spinner"
-          />
-        </div>
-      </div>
-    );
+  if (isFetching) return <LoadPageSpinner key={"lps"} />;
 
   if (userLoggedIn?.ok)
     return (
@@ -91,7 +84,7 @@ const CheckCreatorLoginPage = () => {
         <CreatorPage />
       </UserSessionProvider>
     );
-  else
+  else if (firstLoad)
     return (
       <>
         {err && (
@@ -111,6 +104,8 @@ const CheckCreatorLoginPage = () => {
         <LoginPage />
       </>
     );
+
+  return <LoadPageSpinner key={"lps"} />;
 };
 
 export default CheckCreatorLoginPage;

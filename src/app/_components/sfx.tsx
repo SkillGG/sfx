@@ -11,7 +11,7 @@ import { SFXLangSelect } from "./sfxLangSelect";
 import { env } from "@/env";
 import { Validation } from "../hooks/validation";
 import { ValidationErrorDisplay } from "./validationError";
-import { TLEditorDirect } from "./TLEditor";
+import { TL, TLEditorDirect } from "./TLEditor";
 
 export type NoTLOnom = Omit<CollapsedOnomatopoeia, "tls">;
 
@@ -70,7 +70,7 @@ const SFXCard = ({ sfx, withTL }: SFXTLDiscriminator) => {
       </div>
 
       {withTL === true && usedSFX.tls.length > 0 && (
-        <div className={cn("flex")}>
+        <div className={cn("flex flex-1 justify-center")}>
           {usedSFX.tls.map((tl) => {
             return <SFX key={tl.sfx1Id + "." + tl.sfx2Id} sfx={tl.tlSFX} />;
           })}
@@ -438,7 +438,6 @@ export const SFX = ({
   const [sfxCopy, setSFXCopy] = useState<CollapsedOnomatopoeia>(
     withTL ? sfx : { ...sfx, tls: [] },
   );
-
   const [mode, setMode] = useState<"edit" | "view">("view");
 
   const [removing, setRemoving] = useState(false);
@@ -450,7 +449,7 @@ export const SFX = ({
     if (mode === "view")
       return (
         <div className={cn("mb-2 flex flex-col gap-2")}>
-          <SFX sfx={sfxCopy} />
+          <SFX sfx={sfxCopy} withTL={withTL} />
           <div className={cn("mx-auto flex w-full max-w-[50%] gap-2")}>
             <button
               className={cn(
@@ -501,7 +500,7 @@ export const SFX = ({
     return (
       <SFXEdit
         sfx={sfxCopy}
-        withTL
+        withTL={withTL}
         onCancel={() => {
           setSFXCopy(withTL ? sfx : { ...sfx, tls: [] });
           setMode("view");
@@ -520,5 +519,5 @@ export const SFX = ({
     );
   }
 
-  return <SFXCard sfx={sfxCopy} withTL />;
+  return <SFXCard sfx={sfxCopy} withTL={withTL} />;
 };

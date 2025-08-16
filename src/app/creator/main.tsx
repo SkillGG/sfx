@@ -9,45 +9,46 @@ import { useRouter } from "next/navigation";
 import { cn, type CollapsedTL } from "@/utils";
 import { useValidation } from "../hooks/validation";
 import { ValidationErrorDisplay } from "../_components/validationError";
-import { SFX } from "../_components/sfx";
 import { TLEditorDirect } from "../_components/TLEditor";
 import type { SFXLang } from "../hooks/langs";
 import { useUser } from "../hooks/userlogin";
+import { SFX } from "../_components/sfx";
 
 const SFXListPanel = () => {
   const auth = useUser();
   if (!auth) return <>User not logged in!</>;
 
-  const sfx = api.sfx.listSFX.useQuery();
+  const sfxs = api.sfx.listSFX.useQuery();
   const utils = api.useUtils();
 
   const updateSFX = api.sfx.updateSFX.useMutation();
   const removeSFX = api.sfx.removeSFX.useMutation();
 
-  if (sfx.isLoading) {
+  if (sfxs.isLoading || !sfxs.data) {
     return <div className={cn("")}>Loading SFX List</div>;
   }
 
   return (
     <div>
-      {sfx.data?.map((sfx) => (
-        <SFX
-          sfx={sfx}
-          withTL
-          editable
-          key={sfx.id}
-          onRemove={async () => {
-            await removeSFX.mutateAsync({ id: sfx.id, auth });
-            await utils.sfx.listSFX.invalidate();
-            await utils.sfx.getSFX.invalidate();
-          }}
-          onSave={async (fx) => {
-            await updateSFX.mutateAsync({ id: sfx.id, sfx: fx, auth });
-            await utils.sfx.listSFX.invalidate();
-            await utils.sfx.getSFX.invalidate();
-          }}
-        />
-      ))}
+      {sfxs.data.map((sfx) => {
+        console.log("single SFX", sfx);
+        return (
+          <SFX
+            sfx={sfx}
+            withTL
+            editable
+            key={sfx.id}
+            onRemove={async () => {
+              await removeSFX.mutateAsync({ id: sfx.id, auth });
+              await utils.sfx.listSFX.invalidate();
+            }}
+            onSave={async (fx) => {
+              await updateSFX.mutateAsync({ id: sfx.id, sfx: fx, auth });
+              await utils.sfx.listSFX.invalidate();
+            }}
+          />
+        );
+      })}
     </div>
   );
 };
@@ -102,7 +103,6 @@ const CreatorPage = () => {
         auth,
       });
       void utils.sfx.listSFX.invalidate();
-      void utils.sfx.getSFX.invalidate();
     }
   };
 
