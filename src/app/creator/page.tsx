@@ -74,8 +74,6 @@ const CheckCreatorLoginPage = () => {
     }
   }, [userLoggedIn]);
 
-  console.log(deviceName, userToken, userLoggedIn, isFetching);
-
   if (isFetching) return <LoadPageSpinner key={"lps"} />;
 
   if (userLoggedIn?.ok)

@@ -5,13 +5,14 @@ import {
   type Promisable,
   type ValidationResult,
 } from "@/utils";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSFXLangs } from "../hooks/langs";
 import { SFXLangSelect } from "./sfxLangSelect";
 import { env } from "@/env";
 import { Validation } from "../hooks/validation";
 import { ValidationErrorDisplay } from "./validationError";
-import { TL, TLEditorDirect } from "./TLEditor";
+import { TLEditorDirect } from "./TLEditor";
+import type { ClassValue } from "clsx";
 
 export type NoTLOnom = Omit<CollapsedOnomatopoeia, "tls">;
 
@@ -21,7 +22,30 @@ type SFXTLDiscriminator =
   | { sfx: CollapsedOnomatopoeia; withTL: true }
   | { sfx: NoTLOnom; withTL?: false };
 
-const SFXCard = ({ sfx, withTL }: SFXTLDiscriminator) => {
+type SFXCardClasses = {
+  container?: ClassValue;
+  topinfo?: {
+    container?: ClassValue;
+    text?: ClassValue;
+    reading?: ClassValue;
+    language?: ClassValue;
+  };
+  bottominfo?: {
+    container?: ClassValue;
+    def?: ClassValue;
+    extra?: ClassValue;
+  };
+  tls?: {
+    container?: ClassValue;
+    sfx?: SFXClasses;
+  };
+};
+
+const SFXCard = ({
+  sfx,
+  withTL,
+  classNames,
+}: SFXTLDiscriminator & { classNames?: SFXCardClasses }) => {
   const { langs } = useSFXLangs();
 
   const usedSFX = useMemo(
@@ -35,16 +59,30 @@ const SFXCard = ({ sfx, withTL }: SFXTLDiscriminator) => {
         "flex flex-col gap-2 rounded-lg border border-dashed border-blue-300",
         "bg-blue-50 px-4 py-3 shadow-sm",
         "dark:border-blue-600 dark:bg-slate-800",
+        classNames?.container,
       )}
     >
-      <div className={cn("flex flex-row items-baseline gap-2")}>
+      <div
+        className={cn(
+          "flex flex-row items-baseline gap-2",
+          classNames?.topinfo?.container,
+        )}
+      >
         <div
-          className={cn("text-lg font-bold text-blue-900 dark:text-blue-100")}
+          className={cn(
+            "text-lg font-bold text-blue-900 dark:text-blue-100",
+            classNames?.topinfo?.text,
+          )}
         >
           {usedSFX.text}
         </div>
         {usedSFX.read && (
-          <div className={cn("text-sm text-blue-500 dark:text-blue-400")}>
+          <div
+            className={cn(
+              "text-sm text-blue-500 dark:text-blue-400",
+              classNames?.topinfo?.reading,
+            )}
+          >
             {usedSFX.read}
           </div>
         )}
@@ -53,6 +91,7 @@ const SFXCard = ({ sfx, withTL }: SFXTLDiscriminator) => {
             "flex-1 text-right text-sm",
             "text-blue-500 dark:text-blue-400",
             !Number.isFinite(sfx.id) && "text-orange-700 dark:text-orange-200",
+            classNames?.topinfo?.language,
           )}
         >
           ({langs.find((l) => l.code === usedSFX.language)?.name})
@@ -60,24 +99,52 @@ const SFXCard = ({ sfx, withTL }: SFXTLDiscriminator) => {
         </div>
       </div>
 
-      <div>
-        <div className={cn("text-blue-700 dark:text-blue-300")}>
+      <div className={cn(classNames?.bottominfo?.container)}>
+        <div
+          className={cn(
+            "text-blue-700 dark:text-blue-300",
+            classNames?.bottominfo?.def,
+          )}
+        >
           {usedSFX.def}
         </div>
-        <div className={cn("text-sm text-blue-400 dark:text-blue-500")}>
+        <div
+          className={cn(
+            "text-sm text-blue-400 dark:text-blue-500",
+            classNames?.bottominfo?.extra,
+          )}
+        >
           {usedSFX.extra ?? ""}
         </div>
       </div>
 
       {withTL === true && usedSFX.tls.length > 0 && (
-        <div className={cn("flex flex-1 justify-center")}>
+        <div
+          className={cn(
+            "flex flex-1 justify-center",
+            classNames?.tls?.container,
+          )}
+        >
           {usedSFX.tls.map((tl) => {
-            return <SFX key={tl.sfx1Id + "." + tl.sfx2Id} sfx={tl.tlSFX} />;
+            return (
+              <SFX
+                key={tl.sfx1Id + "." + tl.sfx2Id}
+                sfx={tl.tlSFX}
+                classNames={classNames?.tls?.sfx}
+              />
+            );
           })}
         </div>
       )}
     </div>
   );
+};
+
+type SFXEditClassNames = {
+  main?: ClassValue;
+  btns?: {
+    cancel?: ClassValue;
+  };
 };
 
 export const SFXEdit = ({
@@ -100,10 +167,17 @@ export const SFXEdit = ({
   labels?: {
     main?: React.ReactNode;
     empty?: React.ReactNode;
+    btns?: {
+      edittl?: string;
+      cancel?: string;
+      save?: {
+        save?: string;
+        saving?: string;
+        saved?: string;
+      };
+    };
   };
-  classNames?: {
-    main?: string;
-  };
+  classNames?: SFXEditClassNames;
 
   saveBtnState?: SaveState;
   onSaveClicked?: () => Promisable<void>;
@@ -364,16 +438,16 @@ export const SFXEdit = ({
             disabled={saveBtnState === "waiting"}
           >
             {saveBtnState === "default"
-              ? "Save"
+              ? (labels?.btns?.save?.save ?? "Save")
               : saveBtnState === "waiting"
-                ? "Saving"
-                : "Saved"}
+                ? (labels?.btns?.save?.saving ?? "Saving")
+                : (labels?.btns?.save?.saved ?? "Saved")}
           </button>
           {withTL === true && (
             <>
               <dialog
                 className={cn(
-                  "m-auto rounded-xl border border-blue-200 bg-white/95 p-6",
+                  "m-auto min-w-[50%] rounded-xl border border-blue-200 bg-white/95 p-6",
                   "shadow-lg backdrop-blur-sm dark:border-blue-700",
                   "dark:bg-slate-800/95 dark:text-white",
                 )}
@@ -384,7 +458,11 @@ export const SFXEdit = ({
               >
                 <TLEditorDirect
                   tls={sfx.tls}
-                  onChange={() => console.log("sfx.tls changed")}
+                  removeOnCancel={false}
+                  sfx={sfx}
+                  onChange={(tls) => {
+                    onChange?.((prev) => ({ ...prev, tls }));
+                  }}
                 />
               </dialog>
               <button
@@ -400,7 +478,7 @@ export const SFXEdit = ({
                   }
                 }}
               >
-                Edit translations
+                {labels?.btns?.edittl ?? "Edit TLs"}
               </button>
             </>
           )}
@@ -410,11 +488,12 @@ export const SFXEdit = ({
               "cursor-pointer",
               "hover:bg-gray-300 dark:bg-slate-600 dark:text-white",
               "dark:hover:bg-slate-500",
+              classNames?.btns?.cancel,
             )}
             onClick={() => onCancel?.()}
             type="button"
           >
-            Cancel
+            {labels?.btns?.cancel ?? "Cancel"}
           </button>
         </div>
       </div>
@@ -422,22 +501,46 @@ export const SFXEdit = ({
   );
 };
 
+export type SFXClasses = {
+  default?: SFXCardClasses;
+  edit?: SFXEditClassNames;
+  editable?: {
+    main?: ClassValue;
+    sfx?: SFXClasses;
+    edit?: {
+      main?: ClassValue;
+      buttonEdit?: ClassValue;
+      buttonRemove?: ClassValue;
+    };
+  };
+};
+
 export const SFX = ({
   sfx,
   editable,
+
+  classNames,
+
   onSave,
   onRemove,
   withTL,
 }: SFXTLDiscriminator & {
+  classNames?: SFXClasses;
+
   onSave?: (
     prev: CollapsedOnomatopoeia,
-  ) => CollapsedOnomatopoeia | void | Promise<CollapsedOnomatopoeia | void>;
-  onRemove?: () => Promise<void>;
+  ) => Promisable<CollapsedOnomatopoeia | void>;
+  onRemove?: () => Promisable<void>;
   editable?: boolean | undefined;
 }) => {
   const [sfxCopy, setSFXCopy] = useState<CollapsedOnomatopoeia>(
     withTL ? sfx : { ...sfx, tls: [] },
   );
+
+  useEffect(() => {
+    setSFXCopy(withTL ? sfx : { ...sfx, tls: [] });
+  }, [sfx, withTL]);
+
   const [mode, setMode] = useState<"edit" | "view">("view");
 
   const [removing, setRemoving] = useState(false);
@@ -448,9 +551,22 @@ export const SFX = ({
   if (editable) {
     if (mode === "view")
       return (
-        <div className={cn("mb-2 flex flex-col gap-2")}>
-          <SFX sfx={sfxCopy} withTL={withTL} />
-          <div className={cn("mx-auto flex w-full max-w-[50%] gap-2")}>
+        <div
+          className={cn("mb-2 flex flex-col gap-2", classNames?.editable?.main)}
+        >
+          <SFX
+            sfx={sfxCopy}
+            withTL={withTL}
+            classNames={
+              classNames?.editable?.sfx ?? { default: classNames?.default }
+            }
+          />
+          <div
+            className={cn(
+              "mx-auto flex w-full max-w-[50%] gap-2",
+              classNames?.editable?.edit?.main,
+            )}
+          >
             <button
               className={cn(
                 "flex-1 cursor-pointer rounded bg-blue-600 px-4 py-2 text-white transition-colors",
@@ -458,6 +574,7 @@ export const SFX = ({
                 "focus:outline-none dark:bg-blue-700 dark:hover:bg-blue-600",
                 "dark:focus:ring-blue-400 dark:focus:ring-offset-slate-800",
                 "disabled:bg-slate-200 disabled:text-black dark:disabled:bg-slate-700 dark:disabled:text-white",
+                classNames?.editable?.edit?.buttonEdit,
               )}
               onClick={() => (setMode("edit"), setSaveState("default"))}
               type="button"
@@ -472,6 +589,7 @@ export const SFX = ({
                 "focus:outline-none dark:bg-red-700 dark:hover:bg-red-600",
                 "dark:focus:ring-red-400 dark:focus:ring-offset-slate-800",
                 "disabled:bg-slate-200 disabled:text-black dark:disabled:bg-slate-700 dark:disabled:text-white",
+                classNames?.editable?.edit?.buttonRemove,
               )}
               onClick={async () => {
                 if (!removeSure) {
@@ -501,6 +619,7 @@ export const SFX = ({
       <SFXEdit
         sfx={sfxCopy}
         withTL={withTL}
+        classNames={classNames?.edit}
         onCancel={() => {
           setSFXCopy(withTL ? sfx : { ...sfx, tls: [] });
           setMode("view");
@@ -519,5 +638,7 @@ export const SFX = ({
     );
   }
 
-  return <SFXCard sfx={sfxCopy} withTL={withTL} />;
+  return (
+    <SFXCard sfx={sfxCopy} withTL={withTL} classNames={classNames?.default} />
+  );
 };

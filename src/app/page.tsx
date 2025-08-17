@@ -1,7 +1,6 @@
 "use client";
 
 import { api } from "@/trpc/react";
-import { SFXCard } from "./_components/_legacycomponents/sfx";
 import DarkModeSwitch from "./_components/darkModeSwitch";
 import { useDarkMode } from "./hooks/darkmode";
 import { cn } from "@/utils";
@@ -9,6 +8,7 @@ import Link from "next/link";
 import SearchBar from "./_components/searchBar";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { SFXListPanel } from "./_components/sfxList.";
 
 export type SearchQuery = {
   value: string;
@@ -29,7 +29,7 @@ export default function Home() {
 
   const [lastValidSearch, setLastValidSearch] = useState<SearchQuery>(search);
 
-  const { data: sfx, isLoading } = api.sfx.listSFX.useQuery(
+  const { data: sfxs, isLoading } = api.sfx.listSFX.useQuery(
     { query: lastValidSearch.value, langs: lastValidSearch.langs },
     {
       enabled: validSearch(search),
@@ -105,7 +105,7 @@ export default function Home() {
         <hr className={cn("mb-4 border-blue-200 dark:border-blue-700")} />
         {isLoading && validSearch(search) ? (
           <div>Loading...</div>
-        ) : !sfx || sfx.length === 0 ? (
+        ) : !sfxs || sfxs.length === 0 ? (
           <div
             className={cn(
               "py-12 text-center text-lg",
@@ -122,19 +122,22 @@ export default function Home() {
             </Link>
           </div>
         ) : (
-          <ul className={cn("flex flex-col gap-6")}>
-            {sfx.map((sfx) => (
-              <li
-                key={sfx.id}
-                className={cn(
-                  "transition hover:scale-[1.02] hover:shadow-md",
-                  "dark:rounded-lg dark:hover:bg-slate-700/60",
-                )}
-              >
-                <SFXCard sfx={sfx} />
-              </li>
-            ))}
-          </ul>
+          <SFXListPanel
+            sfxList={sfxs}
+            classNames={{
+              sfxs: {
+                default: {
+                  tls: {
+                    sfx: {
+                      default: {
+                        container: "w-full",
+                      },
+                    },
+                  },
+                },
+              },
+            }}
+          />
         )}
       </div>
     </div>

@@ -1,19 +1,29 @@
 import {
   cn,
+  makeDialogBackdropExitable,
   type CollapsedOnomatopoeia,
   type CollapsedTL,
   type Promisable,
 } from "@/utils";
 import { SFX, SFXEdit, type NoTLOnom, type SaveState } from "./sfx";
 import { SFXLangSelect } from "./sfxLangSelect";
-import React, { useState } from "react";
+import React, {
+  forwardRef,
+  useImperativeHandle,
+  useRef,
+  useState,
+  type RefObject,
+} from "react";
 import { useSFXLangs } from "../hooks/langs";
 import { Validation } from "../hooks/validation";
+import { api } from "@/trpc/react";
 
 export const TL = ({
   tl,
 
   removeLangs,
+
+  removeOnCancel,
 
   onChange,
   onSave,
@@ -21,6 +31,7 @@ export const TL = ({
   tl: CollapsedTL;
 
   removeLangs?: string[];
+  removeOnCancel?: boolean;
 
   onSave?: (tl: CollapsedTL | null) => Promisable<void>;
   onChange?: (tl: CollapsedTL) => Promisable<void>;
@@ -40,18 +51,32 @@ export const TL = ({
       <>
         <SFXEdit
           removeLangs={removeLangs}
+          classNames={{
+            btns: {
+              cancel:
+                removeOnCancel &&
+                !onceSaved &&
+                "bg-red-300/75 text-white dark:bg-red-600/75",
+            },
+          }}
           labels={{
             main: `New ${langs.find((l) => l.code === tl.tlSFX.language)?.name ?? "unknown"} TL (${tl.id})`,
+            btns: {
+              cancel: removeOnCancel && !onceSaved ? "Remove" : "Cancel",
+            },
           }}
           onValidate={(sfx) => {
             return new Validation().validateSFXData(sfx);
           }}
           sfx={tl.tlSFX}
           onCancel={async () => {
-            if (onceSaved && cancelData) {
-              await onChange?.({ ...tl, tlSFX: cancelData });
-              setMode("view");
-            } else await onSave?.(null);
+            if (removeOnCancel && !onceSaved) {
+              await onSave?.(null);
+              return;
+            }
+
+            await onChange?.({ ...tl, tlSFX: cancelData ?? tl.tlSFX });
+            setMode("view");
           }}
           onChange={async (action) => {
             await onChange?.({ ...tl, tlSFX: action(tl.tlSFX) });
@@ -68,26 +93,124 @@ export const TL = ({
   }
 
   return (
-    <div className="relative">
-      <div className="absolute right-2 bottom-11 dark:text-yellow-300">
+    <div className={cn("relative")}>
+      <div className={cn("absolute right-2 bottom-11 dark:text-yellow-300")}>
         {tl.id}
       </div>
-      <SFX sfx={tl.tlSFX} editable={false} withTL={false} />
+      <SFX
+        sfx={tl.tlSFX}
+        key={`tl_${tl.id}:${tl.tlSFX.id}_${tl.forDeletion}`}
+        editable={false}
+        withTL={false}
+        classNames={{
+          default: {
+            container: tl.forDeletion && "border-red-400 dark:border-red-400",
+            topinfo: {
+              text: tl.forDeletion && "text-red-400 dark:text-red-400",
+            },
+          },
+        }}
+      />
       <div className={cn("flex flex-row gap-2")}>
         <button
           className={cn(
             "inline-block flex-1 cursor-pointer rounded bg-blue-500 px-4 py-2 text-white",
             "hover:bg-blue-600",
             "dark:bg-blue-600 dark:hover:bg-blue-700",
+            "disabled:cursor-not-allowed disabled:bg-gray-400",
+            "disabled:hover:bg-gray-400",
           )}
           onClick={() => {
-            setMode("edit");
+            if (!tl.forDeletion) setMode("edit");
           }}
+          disabled={tl.forDeletion}
         >
           Edit
         </button>
+        <button
+          className={cn(
+            "inline-block flex-1 cursor-pointer rounded bg-red-500 px-4 py-2 text-white",
+            "hover:bg-red-600",
+            "dark:bg-red-600 dark:hover:bg-red-700",
+          )}
+          onClick={async () => {
+            await onSave?.(null);
+          }}
+        >
+          Remove
+        </button>
       </div>
     </div>
+  );
+};
+
+const ConnectSFXDialog = ({
+  onChange,
+  ref,
+}: {
+  onChange?: (tls: CollapsedTL[]) => Promisable<void>;
+  ref: RefObject<HTMLDialogElement | null>;
+}) => {
+  const sfxs = api.sfx.listSFX.useQuery({ order: "desc" });
+
+  return (
+    <dialog
+      ref={ref}
+      className={cn(
+        "m-auto min-w-[50%] rounded-xl border border-blue-200 bg-white/95 p-6",
+        "shadow-lg backdrop-blur-sm dark:border-blue-700",
+        "dark:bg-slate-800/95 dark:text-white",
+      )}
+    >
+      {sfxs.isFetching && (
+        <div
+          className={cn("py-4 text-center text-blue-700 dark:text-blue-200")}
+        >
+          Loading...
+        </div>
+      )}
+      {sfxs.isFetched && (
+        <div>
+          <div
+            className={cn(
+              "mb-4 text-lg font-semibold text-blue-900 dark:text-blue-100",
+            )}
+          >
+            Connect to another SFX:
+          </div>
+          <div className={cn("max-h-96 overflow-y-auto")}>
+            <ul className={cn("flex flex-col gap-4")}>
+              {sfxs.data?.map((sfx) => (
+                <li
+                  key={sfx.id}
+                  className={cn(
+                    "flex flex-row items-center gap-4 rounded-lg border border-blue-100",
+                    "bg-blue-50 p-3 shadow-sm dark:border-blue-700 dark:bg-slate-700",
+                  )}
+                >
+                  <div className={cn("flex-1")}>
+                    <SFX sfx={sfx} />
+                  </div>
+                  <button
+                    className={cn(
+                      "cursor-pointer rounded bg-blue-600 px-3 py-1 text-sm text-white",
+                      "transition-colors hover:bg-blue-700",
+                      "focus:ring-2 focus:ring-blue-500 focus:outline-none",
+                      "dark:bg-blue-700 dark:hover:bg-blue-600 dark:focus:ring-blue-400",
+                    )}
+                    onClick={() => {
+                      ref.current?.close();
+                    }}
+                  >
+                    Connect
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
+    </dialog>
   );
 };
 
@@ -95,16 +218,18 @@ export const TLEditorDirect = ({
   tls,
 
   sfx,
+  removeOnCancel,
 
   onChange,
 }: {
   tls: CollapsedTL[];
   sfx?: NoTLOnom;
+  removeOnCancel?: boolean;
   onChange: (tls: CollapsedTL[]) => Promisable<void>;
 }) => {
   const [newTL, setNewTL] = useState<CollapsedTL>({
     additionalInfo: "",
-    sfx1Id: Infinity,
+    sfx1Id: sfx?.id ?? Infinity,
     sfx2Id: Infinity,
     id: tls.length + 1,
     tlSFX: {
@@ -118,7 +243,9 @@ export const TLEditorDirect = ({
     },
   });
 
-  console.log(tls);
+  const [freshTLs, setFreshTLs] = useState<number[]>([]);
+
+  const connectSFXDialogRef = useRef<HTMLDialogElement>(null);
 
   return (
     <div
@@ -149,13 +276,28 @@ export const TLEditorDirect = ({
             tl={tl}
             removeLangs={[sfx?.language ?? ""]}
             key={tl.id}
+            removeOnCancel={freshTLs.includes(tl.id) ? true : removeOnCancel}
             onChange={async (tl) => {
               const newTLs = tls.map((t) => (t.id === tl.id ? tl : t));
               await onChange?.(newTLs);
             }}
             onSave={async (ntl) => {
+              setFreshTLs((prev) => prev.filter((q) => q !== ntl?.tlSFX.id));
               if (!ntl) {
-                await onChange?.(tls.filter((t) => t.id !== tl.id));
+                if (removeOnCancel || freshTLs.includes(tl.id)) {
+                  await onChange?.(tls.filter((t) => t.id !== tl.id));
+                } else {
+                  await onChange?.(
+                    tls.map((t) =>
+                      t.id === tl.id
+                        ? {
+                            ...t,
+                            forDeletion: !t.forDeletion,
+                          }
+                        : t,
+                    ),
+                  );
+                }
               }
             }}
           />
@@ -181,6 +323,7 @@ export const TLEditorDirect = ({
           onClick={async () => {
             const newTLs = [...tls, newTL];
             await onChange?.(newTLs);
+            setFreshTLs((prev) => [...prev, newTL.id]);
             setNewTL((p) => ({
               ...p,
               id: p.id + 1,
@@ -188,6 +331,24 @@ export const TLEditorDirect = ({
           }}
         >
           Add Translation
+        </button>
+        <ConnectSFXDialog ref={connectSFXDialogRef} />
+        <button
+          className={cn(
+            "inline-block flex-1 cursor-pointer rounded bg-blue-500 px-4 py-2",
+            "text-white",
+            "hover:bg-blue-600",
+            "dark:bg-blue-600",
+            "dark:hover:bg-blue-700",
+          )}
+          onClick={() => {
+            if (connectSFXDialogRef.current) {
+              makeDialogBackdropExitable(connectSFXDialogRef.current);
+              connectSFXDialogRef.current.showModal();
+            }
+          }}
+        >
+          Connect SFX
         </button>
       </div>
     </div>

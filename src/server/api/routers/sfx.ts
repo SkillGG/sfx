@@ -1,8 +1,8 @@
 import type z from "zod/v4";
-import { object, string, number, array } from "zod/v4";
+import { object, string, number, array, literal } from "zod/v4";
 
 import { createTRPCRouter, publicProcedure } from "@/server/api/trpc";
-import { CollapsedOnomatopoeia, type CollapsedTL, type SFXData } from "@/utils";
+import { CollapsedOnomatopoeia, CollapsedTL, type SFXData } from "@/utils";
 import type { Onomatopoeia } from "@prisma/client";
 import { checkSession } from "./user";
 import type { PrismaClient } from "@prisma/client";
@@ -34,13 +34,16 @@ const SearchOptions = object({
   skip: number().default(0).optional(),
   query: string(),
   langs: array(string()).optional(),
-});
+}).or(object({ order: literal("asc").or(literal("desc")).default("asc") }));
 
 const searchDBForSFX = async (
   db: PrismaClient,
   search: z.infer<typeof SearchOptions>,
 ) => {
   console.log("Searching for", search);
+
+  if ("order" in search) return [];
+
   const sfx = await db.onomatopoeia.findMany({
     take: search.limit,
     skip: search.skip,
@@ -51,10 +54,14 @@ const searchDBForSFX = async (
           tlSFX: true,
         },
       },
+      tlTranslations: {
+        include: {
+          ogSFX: true,
+        },
+      },
     },
     where: {
       AND: [
-        { prime: true },
         {
           OR: [
             {
@@ -84,7 +91,7 @@ const searchDBForSFX = async (
   });
 
   const collapsedSFXs = sfx.map((pSFX) => {
-    return collapseSFX(pSFX, pSFX.ogTranslations);
+    return collapseSFX(pSFX, [...pSFX.ogTranslations, ...pSFX.tlTranslations]);
   });
 
   return collapsedSFXs;
@@ -94,12 +101,17 @@ export const sfxRouter = createTRPCRouter({
   listSFX: publicProcedure
     .input(SearchOptions.optional())
     .query(async ({ ctx, input }): Promise<CollapsedOnomatopoeia[]> => {
-      if (input?.query || input?.langs?.length) {
-        return await searchDBForSFX(ctx.db, input);
-      }
+      const search = !input
+        ? undefined
+        : "order" in input
+          ? input.order
+          : input;
+
+      if (typeof search === "object")
+        return await searchDBForSFX(ctx.db, search);
 
       const sfx = await ctx.db.onomatopoeia.findMany({
-        orderBy: { id: "asc" },
+        orderBy: { id: search ?? "asc" },
         select: {
           def: true,
           extra: true,
@@ -137,7 +149,19 @@ export const sfxRouter = createTRPCRouter({
       object({
         auth: authShape,
         id: number(),
-        sfx: CollapsedOnomatopoeia.omit({ id: true }),
+        sfx: object({
+          ...CollapsedOnomatopoeia.shape,
+          tls: array(
+            object({
+              ...CollapsedTL.shape,
+              sfx2Id: number().or(literal(Infinity)),
+              tlSFX: object({
+                ...CollapsedOnomatopoeia.shape,
+                id: number().or(literal(Infinity)),
+              }).omit({ tls: true }),
+            }),
+          ),
+        }),
       }),
     )
     .mutation(
@@ -146,19 +170,135 @@ export const sfxRouter = createTRPCRouter({
         input: {
           auth: { token, deviceName },
           id,
-          sfx: { text, def, extra, read, language },
+          sfx: { text, def, extra, read, language, tls },
         },
       }) => {
         const loggedIn = await checkSession(ctx.db, { token, deviceName });
 
-        if (loggedIn.ok)
-          return await ctx.db.onomatopoeia.update({
+        if (loggedIn.ok) {
+          const ogUpdates = tls.filter((q) => q.tlSFX.prime);
+          const tlUpdates = tls.filter((q) => !q.tlSFX.prime);
+
+          console.log(
+            "forDeletion",
+            [...ogUpdates, ...tlUpdates].filter((q) => q.forDeletion),
+          );
+
+          await ctx.db.onomatopoeia.update({
             where: { id },
-            data: { text, def, extra, read, language },
+            data: {
+              text,
+              def,
+              extra,
+              read,
+              language,
+              tlTranslations: {
+                delete: ogUpdates
+                  .filter((up) => up.forDeletion)
+                  .map((fd) => ({ id: fd.id })),
+                upsert: ogUpdates
+                  .filter((up) => !up.forDeletion)
+                  .map((tlu) => ({
+                    where: { id: tlu.id },
+                    create: {
+                      additionalInfo: tlu.additionalInfo,
+                      createdAt: new Date(),
+                      ogSFX: {
+                        create: {
+                          updatedAt: new Date(),
+                          prime: false,
+                          def: tlu.tlSFX.def,
+                          text: tlu.tlSFX.text,
+                          read: tlu.tlSFX.read,
+                          extra: tlu.tlSFX.extra,
+                          language: tlu.tlSFX.language,
+                        },
+                      },
+                    },
+                    update: {
+                      additionalInfo: tlu.additionalInfo,
+                      createdAt: new Date(),
+                      ogSFX: {
+                        upsert: {
+                          create: {
+                            updatedAt: new Date(),
+                            prime: false,
+                            def: tlu.tlSFX.def,
+                            text: tlu.tlSFX.text,
+                            read: tlu.tlSFX.read,
+                            extra: tlu.tlSFX.extra,
+                            language: tlu.tlSFX.language,
+                          },
+                          update: {
+                            updatedAt: new Date(),
+                            def: tlu.tlSFX.def,
+                            text: tlu.tlSFX.text,
+                            read: tlu.tlSFX.read,
+                            extra: tlu.tlSFX.extra,
+                            language: tlu.tlSFX.language,
+                          },
+                        },
+                      },
+                    },
+                  })),
+              },
+              ogTranslations: {
+                delete: tlUpdates
+                  .filter((up) => up.forDeletion)
+                  .map((fd) => ({ id: fd.id })),
+                upsert: tlUpdates
+                  .filter((up) => !up.forDeletion)
+                  .map((tlu) => ({
+                    where: { id: tlu.id },
+                    create: {
+                      additionalInfo: tlu.additionalInfo,
+                      createdAt: new Date(),
+                      tlSFX: {
+                        create: {
+                          updatedAt: new Date(),
+                          prime: false,
+                          def: tlu.tlSFX.def,
+                          text: tlu.tlSFX.text,
+                          read: tlu.tlSFX.read,
+                          extra: tlu.tlSFX.extra,
+                          language: tlu.tlSFX.language,
+                        },
+                      },
+                    },
+                    update: {
+                      additionalInfo: tlu.additionalInfo,
+                      createdAt: new Date(),
+                      tlSFX: {
+                        upsert: {
+                          create: {
+                            updatedAt: new Date(),
+                            prime: false,
+                            def: tlu.tlSFX.def,
+                            text: tlu.tlSFX.text,
+                            read: tlu.tlSFX.read,
+                            extra: tlu.tlSFX.extra,
+                            language: tlu.tlSFX.language,
+                          },
+                          update: {
+                            updatedAt: new Date(),
+                            def: tlu.tlSFX.def,
+                            text: tlu.tlSFX.text,
+                            read: tlu.tlSFX.read,
+                            extra: tlu.tlSFX.extra,
+                            language: tlu.tlSFX.language,
+                          },
+                        },
+                      },
+                    },
+                  })),
+              },
+            },
           });
-        else return loggedIn;
+          return;
+        } else return loggedIn;
       },
     ),
+
   createSFX: publicProcedure
     .input(
       CollapsedOnomatopoeia.omit({ id: true }).and(object({ auth: authShape })),
@@ -179,33 +319,24 @@ export const sfxRouter = createTRPCRouter({
             prime: true,
             read: read ?? null,
             language,
+            ogTranslations: {
+              create: tls.map((tl) => ({
+                tlSFX: {
+                  create: {
+                    text: tl.tlSFX.text,
+                    def: tl.tlSFX.def,
+                    prime: false,
+                    language: tl.tlSFX.language,
+                    extra: tl.tlSFX.extra,
+                    read: tl.tlSFX.read,
+                  },
+                },
+              })),
+            },
           },
         });
 
-        // create all TL SFX
-        const tlSFXs = await Promise.all(
-          Object.values(tls).map(
-            async ({ tlSFX: { def, extra, language, prime, read, text } }) => {
-              return await ctx.db.onomatopoeia.create({
-                data: {
-                  prime,
-                  text,
-                  def,
-                  extra,
-                  read: read ?? null,
-                  language,
-                  ogTranslations: {
-                    connect: {
-                      id: ogSFX.id,
-                    },
-                  },
-                },
-              });
-            },
-          ),
-        );
-
-        return { ogSFX, tlSFXs };
+        return { ogSFX };
       },
     ),
 

@@ -6,7 +6,10 @@ import { array, boolean, number, object, string } from "zod/v4";
 import { generate } from "random-words";
 
 export type CollapsedTL = Omit<
-  Translation & { tlSFX: Omit<CollapsedOnomatopoeia, "tls"> },
+  Translation & {
+    tlSFX: Omit<CollapsedOnomatopoeia, "tls">;
+    forDeletion?: boolean;
+  },
   "createdAt" | "updatedAt"
 >;
 
@@ -43,6 +46,7 @@ export const CollapsedTL = object({
   sfx1Id: number(),
   sfx2Id: number(),
   additionalInfo: string().nullable(),
+  forDeletion: boolean().optional(),
   get tlSFX() {
     return CollapsedOnomatopoeia.omit({ tls: true });
   },

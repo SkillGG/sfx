@@ -12,52 +12,16 @@ import { ValidationErrorDisplay } from "../_components/validationError";
 import { TLEditorDirect } from "../_components/TLEditor";
 import type { SFXLang } from "../hooks/langs";
 import { useUser } from "../hooks/userlogin";
-import { SFX } from "../_components/sfx";
-
-const SFXListPanel = () => {
-  const auth = useUser();
-  if (!auth) return <>User not logged in!</>;
-
-  const sfxs = api.sfx.listSFX.useQuery();
-  const utils = api.useUtils();
-
-  const updateSFX = api.sfx.updateSFX.useMutation();
-  const removeSFX = api.sfx.removeSFX.useMutation();
-
-  if (sfxs.isLoading || !sfxs.data) {
-    return <div className={cn("")}>Loading SFX List</div>;
-  }
-
-  return (
-    <div>
-      {sfxs.data.map((sfx) => {
-        console.log("single SFX", sfx);
-        return (
-          <SFX
-            sfx={sfx}
-            withTL
-            editable
-            key={sfx.id}
-            onRemove={async () => {
-              await removeSFX.mutateAsync({ id: sfx.id, auth });
-              await utils.sfx.listSFX.invalidate();
-            }}
-            onSave={async (fx) => {
-              await updateSFX.mutateAsync({ id: sfx.id, sfx: fx, auth });
-              await utils.sfx.listSFX.invalidate();
-            }}
-          />
-        );
-      })}
-    </div>
-  );
-};
+import { SFXListPanel } from "../_components/sfxList.";
 
 // SFX creator page
 const CreatorPage = () => {
   const auth = useUser();
 
   const createSFX = api.sfx.createSFX.useMutation();
+  const removeSFX = api.sfx.removeSFX.useMutation();
+  const updateSFX = api.sfx.updateSFX.useMutation();
+
   const utils = api.useUtils();
 
   const [sfx, setSFX] = useState<string>("");
@@ -102,7 +66,7 @@ const CreatorPage = () => {
         prime: true,
         auth,
       });
-      void utils.sfx.listSFX.invalidate();
+      void utils.sfx.invalidate();
     }
   };
 
@@ -363,6 +327,7 @@ const CreatorPage = () => {
         <TLEditorDirect
           tls={tls}
           onChange={(tls) => setTLs(tls)}
+          removeOnCancel
           sfx={{
             def,
             extra,
@@ -403,7 +368,34 @@ const CreatorPage = () => {
             "h-full dark:border-blue-600 dark:bg-slate-800",
           )}
         >
-          <SFXListPanel />
+          <SFXListPanel
+            editable
+            classNames={{
+              sfxs: {
+                default: {
+                  tls: {
+                    sfx: {
+                      default: {
+                        container: `w-full ml-5`,
+                      },
+                    },
+                  },
+                },
+              },
+            }}
+            onRemove={async (sfx) => {
+              if (auth) {
+                await removeSFX.mutateAsync({ id: sfx.id, auth });
+                await utils.sfx.listSFX.invalidate();
+              }
+            }}
+            onSave={async (old, sfx) => {
+              if (auth) {
+                await updateSFX.mutateAsync({ id: old.id, sfx, auth });
+                await utils.sfx.listSFX.invalidate();
+              }
+            }}
+          />
         </div>
       </div>
     </div>
