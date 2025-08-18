@@ -16,7 +16,7 @@ export type SearchQuery = {
 };
 
 const validSearch = (search: SearchQuery) => {
-  return search.value.length > 3 || search.value.length === 0;
+  return search.value.length >= 3 || search.value.length === 0;
 };
 
 export default function Home() {
@@ -125,12 +125,13 @@ export default function Home() {
           <SFXListPanel
             sfxList={sfxs}
             classNames={{
+              container: "max-h-[70dvh] overflow-auto px-2 flex flex-col gap-2",
               sfxs: {
                 default: {
                   tls: {
                     sfx: {
                       default: {
-                        container: "w-full",
+                        container: "basis-[45%] grow",
                       },
                     },
                   },

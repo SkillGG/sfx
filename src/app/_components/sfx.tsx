@@ -1,7 +1,6 @@
 import {
   cn,
   type CollapsedOnomatopoeia,
-  makeDialogBackdropExitable,
   type Promisable,
   type ValidationResult,
 } from "@/utils";
@@ -41,6 +40,15 @@ type SFXCardClasses = {
   };
 };
 
+const commaToList = (str?: string | null): string => {
+  return (
+    str
+      ?.split(";")
+      .map((q, i) => `${i + 1}. ${q}`)
+      .join("\n") ?? ""
+  );
+};
+
 const SFXCard = ({
   sfx,
   withTL,
@@ -57,21 +65,22 @@ const SFXCard = ({
     <div
       className={cn(
         "flex flex-col gap-2 rounded-lg border border-dashed border-blue-300",
-        "bg-blue-50 px-4 py-3 shadow-sm",
+        "min-w-44 bg-blue-50 px-4 py-3 shadow-sm",
         "dark:border-blue-600 dark:bg-slate-800",
         classNames?.container,
       )}
     >
       <div
         className={cn(
-          "flex flex-row items-baseline gap-2",
+          "flex-rowitems-baseline flex gap-2",
           classNames?.topinfo?.container,
         )}
       >
         <div
           className={cn(
-            "text-lg font-bold text-blue-900 dark:text-blue-100",
+            "self-center pr-2 text-lg font-bold text-blue-900 dark:text-blue-100",
             classNames?.topinfo?.text,
+            !sfx.prime && "text-orange-700 dark:text-orange-200",
           )}
         >
           {usedSFX.text}
@@ -79,11 +88,11 @@ const SFXCard = ({
         {usedSFX.read && (
           <div
             className={cn(
-              "text-sm text-blue-500 dark:text-blue-400",
+              "text-sm whitespace-pre-wrap text-blue-500 dark:text-blue-400",
               classNames?.topinfo?.reading,
             )}
           >
-            {usedSFX.read}
+            {commaToList(usedSFX.read)}
           </div>
         )}
         <div
@@ -95,33 +104,34 @@ const SFXCard = ({
           )}
         >
           ({langs.find((l) => l.code === usedSFX.language)?.name})
-          {env.NEXT_PUBLIC_DEVENV === "development" && `[${sfx.id}]`}
+          {env.NEXT_PUBLIC_DEVENV === "development" &&
+            `[${isFinite(sfx.id) ? sfx.id : "NEW"}]`}
         </div>
       </div>
 
       <div className={cn(classNames?.bottominfo?.container)}>
         <div
           className={cn(
-            "text-blue-700 dark:text-blue-300",
+            "whitespace-pre-wrap text-blue-700 dark:text-blue-300",
             classNames?.bottominfo?.def,
           )}
         >
-          {usedSFX.def}
+          {commaToList(usedSFX.def)}
         </div>
         <div
           className={cn(
-            "text-sm text-blue-400 dark:text-blue-500",
+            "pl-8 text-sm whitespace-pre-wrap text-blue-400 dark:text-blue-500",
             classNames?.bottominfo?.extra,
           )}
         >
-          {usedSFX.extra ?? ""}
+          {commaToList(usedSFX.extra)}
         </div>
       </div>
 
       {withTL === true && usedSFX.tls.length > 0 && (
         <div
           className={cn(
-            "flex flex-1 justify-center",
+            "flex flex-wrap justify-center gap-2",
             classNames?.tls?.container,
           )}
         >
@@ -155,6 +165,8 @@ export const SFXEdit = ({
   noLang,
   removeLangs,
 
+  tlAddInfoElem,
+
   saveBtnState = "default",
   onSaveClicked,
 
@@ -178,6 +190,8 @@ export const SFXEdit = ({
     };
   };
   classNames?: SFXEditClassNames;
+
+  tlAddInfoElem?: React.ReactNode;
 
   saveBtnState?: SaveState;
   onSaveClicked?: () => Promisable<void>;
@@ -418,6 +432,8 @@ export const SFXEdit = ({
           </div>
         </div>
 
+        {!withTL && tlAddInfoElem}
+
         <div className={cn("mt-2 flex flex-row gap-2")}>
           <button
             className={cn(
@@ -446,15 +462,14 @@ export const SFXEdit = ({
           {withTL === true && (
             <>
               <dialog
+                id="edittlDialog"
                 className={cn(
                   "m-auto min-w-[50%] rounded-xl border border-blue-200 bg-white/95 p-6",
                   "shadow-lg backdrop-blur-sm dark:border-blue-700",
                   "dark:bg-slate-800/95 dark:text-white",
                 )}
                 ref={tlEditDialogRef}
-                onClose={() => {
-                  tlEditDialogRef.current?.close();
-                }}
+                popover={"auto"}
               >
                 <TLEditorDirect
                   tls={sfx.tls}
@@ -466,17 +481,13 @@ export const SFXEdit = ({
                 />
               </dialog>
               <button
+                popoverTarget="edittlDialog"
+                popoverTargetAction="show"
                 className={cn(
                   "rounded bg-gray-200 px-2 py-1 text-xs",
                   "hover:bg-gray-300 dark:bg-slate-600 dark:text-white",
                   "dark:hover:bg-slate-500",
                 )}
-                onClick={() => {
-                  if (tlEditDialogRef.current) {
-                    makeDialogBackdropExitable(tlEditDialogRef.current);
-                    tlEditDialogRef.current.showModal();
-                  }
-                }}
               >
                 {labels?.btns?.edittl ?? "Edit TLs"}
               </button>

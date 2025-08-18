@@ -27,9 +27,10 @@ const CreatorPage = () => {
   const [sfx, setSFX] = useState<string>("");
   const [def, setDef] = useState<string>("");
   const [extra, setExtra] = useState<string>("");
-  const [read, setRead] = useState<string>("");
-  const [readingEnabled, setReadingEnabled] = useState<boolean>(true);
+  const [read, setRead] = useState<string | null>("");
   const [lang, setLang] = useState<SFXLang["code"]>("");
+
+  const [lastReadState, setLastReadState] = useState(false);
 
   const [tls, setTLs] = useState<CollapsedTL[]>([]);
 
@@ -43,30 +44,38 @@ const CreatorPage = () => {
   if (!auth) return <>Loading...</>;
 
   // Validate form data before submission
-  const handleCreate = () => {
+  const handleCreate = async () => {
     const sfxData = {
       text: sfx,
       def,
       extra: extra ?? null,
-      read: readingEnabled ? (read ?? null) : null,
+      read: read,
       language: lang ?? "en",
       tls: tls ?? {},
     };
 
+    setLastReadState(read !== null);
+
     const validationResult = validation.validateSFXData(sfxData);
 
     if (validationResult.isValid) {
-      createSFX.mutate({
+      await createSFX.mutateAsync({
         text: sfx,
         def,
         extra: extra ?? null,
-        read: readingEnabled ? read : null,
+        read: read,
         language: lang ?? "en",
         tls: tls ?? [],
         prime: true,
         auth,
       });
-      void utils.sfx.invalidate();
+      await utils.sfx.invalidate();
+      // reset form
+      setSFX("");
+      setRead(lastReadState ? "" : null);
+      setDef("");
+      setExtra("");
+      setTLs([]);
     }
   };
 
@@ -288,15 +297,14 @@ const CreatorPage = () => {
               >
                 <input
                   type="checkbox"
-                  checked={readingEnabled}
-                  onChange={(e) => setReadingEnabled(e.target.checked)}
+                  checked={read !== null}
+                  onChange={() => setRead(read === null ? "" : null)}
                   className={cn(
                     "h-4 w-4 rounded border-blue-300 text-blue-600",
                     "focus:ring-blue-500 dark:border-blue-600 dark:bg-slate-700",
                     "dark:focus:ring-blue-400",
                   )}
                 />
-                <span>Enable</span>
               </label>
             </div>
             <div className={cn("ml-auto flex flex-3 flex-col gap-2")}>
@@ -305,16 +313,16 @@ const CreatorPage = () => {
                   "ml-auto w-full rounded border bg-white px-2 py-1",
                   "focus:ring-1 focus:outline-none dark:bg-slate-700 dark:text-white",
                   "dark:placeholder-gray-400",
-                  !readingEnabled && "cursor-not-allowed opacity-50",
+                  "disabled:cursor-not-allowed disabled:opacity-50",
                   validation.hasFieldError("read")
                     ? "border-red-500 focus:border-red-500 focus:ring-red-500 dark:border-red-400 dark:focus:border-red-400 dark:focus:ring-red-400"
                     : "border-blue-300 focus:border-blue-500 focus:ring-blue-500 dark:border-blue-600 dark:focus:border-blue-400 dark:focus:ring-blue-400",
                 )}
                 placeholder="Reading"
                 type="text"
-                value={read}
+                value={read ?? ""}
                 onChange={handleReadChange}
-                disabled={!readingEnabled}
+                disabled={read === null}
               />
             </div>
           </div>
@@ -365,7 +373,8 @@ const CreatorPage = () => {
           className={cn(
             "flex flex-col gap-2 rounded-xl border-2 border-blue-300",
             "bg-blue-50 p-2 shadow-sm",
-            "h-full dark:border-blue-600 dark:bg-slate-800",
+            "h-full overflow-auto",
+            "dark:border-blue-600 dark:bg-slate-800",
           )}
         >
           <SFXListPanel
@@ -376,7 +385,7 @@ const CreatorPage = () => {
                   tls: {
                     sfx: {
                       default: {
-                        container: `w-full ml-5`,
+                        container: `basis-[45%] grow`,
                       },
                     },
                   },
@@ -396,6 +405,34 @@ const CreatorPage = () => {
               }
             }}
           />
+        </div>
+        <div className={cn("flex justify-around gap-3")}>
+          <button
+            className={cn(
+              "flex-1 cursor-pointer rounded bg-blue-600 px-4 py-2 text-white",
+              "transition-colors hover:bg-blue-700 focus:ring-2 focus:ring-blue-500",
+              "focus:ring-offset-2 focus:outline-none dark:bg-blue-700 dark:hover:bg-blue-600",
+              "dark:focus:ring-blue-400 dark:focus:ring-offset-slate-800",
+              "disabled:cursor-not-allowed disabled:opacity-50",
+            )}
+            onClick={handleCreate}
+            disabled
+          >
+            Prev page
+          </button>
+          <button
+            className={cn(
+              "flex-1 cursor-pointer rounded bg-blue-600 px-4 py-2 text-white",
+              "transition-colors hover:bg-blue-700 focus:ring-2 focus:ring-blue-500",
+              "focus:ring-offset-2 focus:outline-none dark:bg-blue-700 dark:hover:bg-blue-600",
+              "dark:focus:ring-blue-400 dark:focus:ring-offset-slate-800",
+              "disabled:cursor-not-allowed disabled:opacity-50",
+            )}
+            onClick={handleCreate}
+            disabled
+          >
+            Next page
+          </button>
         </div>
       </div>
     </div>

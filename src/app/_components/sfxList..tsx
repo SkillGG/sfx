@@ -8,12 +8,17 @@ export const SFXListPanel = ({
   sfxList,
 
   classNames,
+  page = 0,
+  onPage = 10,
 
   onSave,
   onRemove,
 }: {
   editable?: boolean;
   sfxList?: CollapsedOnomatopoeia[];
+
+  page?: number;
+  onPage?: number;
 
   classNames?: {
     container?: ClassValue;
@@ -28,7 +33,7 @@ export const SFXListPanel = ({
   onRemove?: (sfx: CollapsedOnomatopoeia) => Promisable<void>;
 }) => {
   const dbSFX = api.sfx.listSFX.useQuery(
-    { order: "desc" },
+    { order: "desc", limit: onPage, skip: onPage * page },
     { enabled: !sfxList },
   );
 
@@ -38,22 +43,33 @@ export const SFXListPanel = ({
     return <div className={cn(classNames?.loading)}>Loading SFX List</div>;
   }
 
+  console.log(sfxs);
+
   return (
     <div className={cn(classNames?.container)}>
       {sfxs
         .reduce<CollapsedOnomatopoeia[]>(
           (arr: CollapsedOnomatopoeia[], sfx: CollapsedOnomatopoeia) => {
             // if already in the list above, remove
-            const prevIn = arr.find((sx) =>
-              sx.tls.find((tl) => tl.tlSFX.id === sfx.id),
+            const prevIn = arr.filter(
+              (sx) => sx.tls.filter((tl) => tl.tlSFX.id === sfx.id).length > 0,
             );
-            if (prevIn) {
-              if (prevIn.prime) {
+
+            if (prevIn.length > 0) {
+              // there would be a duplicate SFX if inserted now
+
+              if (prevIn.some((q) => q.prime)) {
+                // there is already a prime SFX in the list, don't add this one
                 return arr;
               } else {
-                return [...arr.filter((q) => q.id !== prevIn.id), sfx];
+                // there is no prime SFX in the list yet, remove previous ones and make
+                return [
+                  ...arr.filter((q) => !prevIn.some((z) => q.id === z.id)),
+                  sfx,
+                ];
               }
             }
+
             return [...arr, sfx];
           },
           [],

@@ -154,10 +154,8 @@ export const sfxRouter = createTRPCRouter({
           tls: array(
             object({
               ...CollapsedTL.shape,
-              sfx2Id: number().or(literal(Infinity)),
               tlSFX: object({
                 ...CollapsedOnomatopoeia.shape,
-                id: number().or(literal(Infinity)),
               }).omit({ tls: true }),
             }),
           ),
@@ -194,24 +192,29 @@ export const sfxRouter = createTRPCRouter({
               language,
               tlTranslations: {
                 delete: ogUpdates
-                  .filter((up) => up.forDeletion)
+                  .filter((up) => up.forDeletion && isFinite(up.id))
                   .map((fd) => ({ id: fd.id })),
                 upsert: ogUpdates
                   .filter((up) => !up.forDeletion)
                   .map((tlu) => ({
-                    where: { id: tlu.id },
+                    where: { id: isFinite(tlu.id) ? tlu.id : -1 },
                     create: {
                       additionalInfo: tlu.additionalInfo,
                       createdAt: new Date(),
                       ogSFX: {
-                        create: {
-                          updatedAt: new Date(),
-                          prime: false,
-                          def: tlu.tlSFX.def,
-                          text: tlu.tlSFX.text,
-                          read: tlu.tlSFX.read,
-                          extra: tlu.tlSFX.extra,
-                          language: tlu.tlSFX.language,
+                        connectOrCreate: {
+                          create: {
+                            updatedAt: new Date(),
+                            prime: false,
+                            def: tlu.tlSFX.def,
+                            text: tlu.tlSFX.text,
+                            read: tlu.tlSFX.read,
+                            extra: tlu.tlSFX.extra,
+                            language: tlu.tlSFX.language,
+                          },
+                          where: {
+                            id: isFinite(tlu.tlSFX.id) ? tlu.tlSFX.id : -1,
+                          },
                         },
                       },
                     },
@@ -244,24 +247,29 @@ export const sfxRouter = createTRPCRouter({
               },
               ogTranslations: {
                 delete: tlUpdates
-                  .filter((up) => up.forDeletion)
+                  .filter((up) => up.forDeletion && isFinite(up.id))
                   .map((fd) => ({ id: fd.id })),
                 upsert: tlUpdates
                   .filter((up) => !up.forDeletion)
                   .map((tlu) => ({
-                    where: { id: tlu.id },
+                    where: { id: isFinite(tlu.id) ? tlu.id : -1 },
                     create: {
                       additionalInfo: tlu.additionalInfo,
                       createdAt: new Date(),
                       tlSFX: {
-                        create: {
-                          updatedAt: new Date(),
-                          prime: false,
-                          def: tlu.tlSFX.def,
-                          text: tlu.tlSFX.text,
-                          read: tlu.tlSFX.read,
-                          extra: tlu.tlSFX.extra,
-                          language: tlu.tlSFX.language,
+                        connectOrCreate: {
+                          create: {
+                            updatedAt: new Date(),
+                            prime: false,
+                            def: tlu.tlSFX.def,
+                            text: tlu.tlSFX.text,
+                            read: tlu.tlSFX.read,
+                            extra: tlu.tlSFX.extra,
+                            language: tlu.tlSFX.language,
+                          },
+                          where: {
+                            id: isFinite(tlu.tlSFX.id) ? tlu.tlSFX.id : -1,
+                          },
                         },
                       },
                     },
@@ -322,13 +330,16 @@ export const sfxRouter = createTRPCRouter({
             ogTranslations: {
               create: tls.map((tl) => ({
                 tlSFX: {
-                  create: {
-                    text: tl.tlSFX.text,
-                    def: tl.tlSFX.def,
-                    prime: false,
-                    language: tl.tlSFX.language,
-                    extra: tl.tlSFX.extra,
-                    read: tl.tlSFX.read,
+                  connectOrCreate: {
+                    create: {
+                      text: tl.tlSFX.text,
+                      def: tl.tlSFX.def,
+                      prime: false,
+                      language: tl.tlSFX.language,
+                      extra: tl.tlSFX.extra,
+                      read: tl.tlSFX.read,
+                    },
+                    where: { id: isFinite(tl.tlSFX.id) ? tl.tlSFX.id : -1 },
                   },
                 },
               })),

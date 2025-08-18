@@ -1,19 +1,12 @@
 import {
   cn,
-  makeDialogBackdropExitable,
   type CollapsedOnomatopoeia,
   type CollapsedTL,
   type Promisable,
 } from "@/utils";
 import { SFX, SFXEdit, type NoTLOnom, type SaveState } from "./sfx";
 import { SFXLangSelect } from "./sfxLangSelect";
-import React, {
-  forwardRef,
-  useImperativeHandle,
-  useRef,
-  useState,
-  type RefObject,
-} from "react";
+import React, { useRef, useState, type RefObject } from "react";
 import { useSFXLangs } from "../hooks/langs";
 import { Validation } from "../hooks/validation";
 import { api } from "@/trpc/react";
@@ -87,6 +80,27 @@ export const TL = ({
             setCancelData(tl.tlSFX);
             setMode("view");
           }}
+          tlAddInfoElem={
+            <div className={cn("flex flex-col gap-1")}>
+              <div>Additional info</div>
+              <input
+                id={`tl-additional-info-${tl.id}`}
+                className={cn(
+                  "rounded border border-blue-300 bg-blue-50 px-3 py-2 text-sm",
+                  "text-blue-900 placeholder:text-blue-400",
+                  "focus:ring-2 focus:ring-blue-500 focus:outline-none",
+                  "dark:border-blue-600 dark:bg-slate-800 dark:text-blue-100",
+                  "dark:placeholder:text-blue-400",
+                )}
+                type="text"
+                value={tl.additionalInfo ?? ""}
+                onChange={({ currentTarget: { value: additionalInfo } }) =>
+                  onChange?.({ ...tl, additionalInfo })
+                }
+                placeholder="Extra info"
+              />
+            </div>
+          }
         />
       </>
     );
@@ -146,15 +160,28 @@ export const TL = ({
 
 const ConnectSFXDialog = ({
   onChange,
+  sfx,
+  illegibleSFX,
   ref,
 }: {
-  onChange?: (tls: CollapsedTL[]) => Promisable<void>;
-  ref: RefObject<HTMLDialogElement | null>;
+  onChange?: (
+    change: (prev: CollapsedTL[]) => CollapsedTL[],
+  ) => Promisable<void>;
+  ref?: RefObject<HTMLDialogElement | null>;
+  illegibleSFX?: (() => number[]) | number[];
+  sfx: CollapsedOnomatopoeia | NoTLOnom;
 }) => {
   const sfxs = api.sfx.listSFX.useQuery({ order: "desc" });
 
+  const illegible =
+    typeof illegibleSFX === "function" ? illegibleSFX() : (illegibleSFX ?? []);
+
+  const SFXDialogID = `connectSFXDialog_${sfx.id}`;
+
   return (
     <dialog
+      popover={"auto"}
+      id={SFXDialogID}
       ref={ref}
       className={cn(
         "m-auto min-w-[50%] rounded-xl border border-blue-200 bg-white/95 p-6",
@@ -162,6 +189,19 @@ const ConnectSFXDialog = ({
         "dark:bg-slate-800/95 dark:text-white",
       )}
     >
+      <button
+        className={cn(
+          "absolute top-4 right-4 z-10 rounded-full bg-gray-200 p-2",
+          "text-blue-700 hover:bg-gray-300",
+          "dark:bg-slate-700 dark:text-blue-100 dark:hover:bg-slate-600",
+        )}
+        type="button"
+        popoverTarget={SFXDialogID}
+        popoverTargetAction="hide"
+        aria-label="Close"
+      >
+        ×
+      </button>
       {sfxs.isFetching && (
         <div
           className={cn("py-4 text-center text-blue-700 dark:text-blue-200")}
@@ -180,32 +220,46 @@ const ConnectSFXDialog = ({
           </div>
           <div className={cn("max-h-96 overflow-y-auto")}>
             <ul className={cn("flex flex-col gap-4")}>
-              {sfxs.data?.map((sfx) => (
-                <li
-                  key={sfx.id}
-                  className={cn(
-                    "flex flex-row items-center gap-4 rounded-lg border border-blue-100",
-                    "bg-blue-50 p-3 shadow-sm dark:border-blue-700 dark:bg-slate-700",
-                  )}
-                >
-                  <div className={cn("flex-1")}>
-                    <SFX sfx={sfx} />
-                  </div>
-                  <button
+              {sfxs.data
+                ?.filter((s) => !illegible.includes(s.id))
+                .map((connSFX) => (
+                  <li
+                    key={connSFX.id}
                     className={cn(
-                      "cursor-pointer rounded bg-blue-600 px-3 py-1 text-sm text-white",
-                      "transition-colors hover:bg-blue-700",
-                      "focus:ring-2 focus:ring-blue-500 focus:outline-none",
-                      "dark:bg-blue-700 dark:hover:bg-blue-600 dark:focus:ring-blue-400",
+                      "flex flex-row items-center gap-4 rounded-lg border border-blue-100",
+                      "bg-blue-50 p-3 shadow-sm dark:border-blue-700 dark:bg-slate-700",
                     )}
-                    onClick={() => {
-                      ref.current?.close();
-                    }}
                   >
-                    Connect
-                  </button>
-                </li>
-              ))}
+                    <div className={cn("flex-1")}>
+                      <SFX sfx={connSFX} />
+                    </div>
+                    <button
+                      className={cn(
+                        "cursor-pointer rounded bg-blue-600 px-3 py-1 text-sm text-white",
+                        "transition-colors hover:bg-blue-700",
+                        "focus:ring-2 focus:ring-blue-500 focus:outline-none",
+                        "dark:bg-blue-700 dark:hover:bg-blue-600 dark:focus:ring-blue-400",
+                      )}
+                      popoverTargetAction="hide"
+                      popoverTarget={SFXDialogID}
+                      onClick={async () => {
+                        console.log("Adding translation!");
+                        await onChange?.((prev) => [
+                          ...prev,
+                          {
+                            id: Infinity,
+                            sfx1Id: sfx.id,
+                            sfx2Id: connSFX.id,
+                            tlSFX: connSFX,
+                            additionalInfo: "",
+                          },
+                        ]);
+                      }}
+                    >
+                      Connect
+                    </button>
+                  </li>
+                ))}
             </ul>
           </div>
         </div>
@@ -243,9 +297,11 @@ export const TLEditorDirect = ({
     },
   });
 
-  const [freshTLs, setFreshTLs] = useState<number[]>([]);
+  const connSFXDialog = useRef<HTMLDialogElement>(null);
 
-  const connectSFXDialogRef = useRef<HTMLDialogElement>(null);
+  console.log("tls", tls);
+
+  const [freshTLs, setFreshTLs] = useState<number[]>([]);
 
   return (
     <div
@@ -268,7 +324,7 @@ export const TLEditorDirect = ({
         Translations
       </div>
       <div
-        className={cn("flex min-h-0 flex-col gap-2", "overflow-y-auto")}
+        className={cn("flex min-h-0 flex-col", "overflow-y-auto")}
         style={{ minHeight: 0 }}
       >
         {tls.map((tl) => (
@@ -332,7 +388,16 @@ export const TLEditorDirect = ({
         >
           Add Translation
         </button>
-        <ConnectSFXDialog ref={connectSFXDialogRef} />
+        {sfx && (
+          <ConnectSFXDialog
+            sfx={sfx}
+            ref={connSFXDialog}
+            illegibleSFX={[...tls.map((t) => t.tlSFX.id), sfx.id]}
+            onChange={async (change) => {
+              await onChange?.(change(tls));
+            }}
+          />
+        )}
         <button
           className={cn(
             "inline-block flex-1 cursor-pointer rounded bg-blue-500 px-4 py-2",
@@ -342,10 +407,7 @@ export const TLEditorDirect = ({
             "dark:hover:bg-blue-700",
           )}
           onClick={() => {
-            if (connectSFXDialogRef.current) {
-              makeDialogBackdropExitable(connectSFXDialogRef.current);
-              connectSFXDialogRef.current.showModal();
-            }
+            connSFXDialog.current?.showPopover();
           }}
         >
           Connect SFX

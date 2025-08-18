@@ -2,7 +2,7 @@ import type { Translation } from "@prisma/client";
 import { twMerge } from "tailwind-merge";
 import clsx, { type ClassValue } from "clsx";
 import type z from "zod/v4";
-import { array, boolean, number, object, string } from "zod/v4";
+import { array, boolean, literal, number, object, string } from "zod/v4";
 import { generate } from "random-words";
 
 export type CollapsedTL = Omit<
@@ -42,9 +42,9 @@ export const getRandomWordString = (length = 2) => {
 };
 
 export const CollapsedTL = object({
-  id: number(),
-  sfx1Id: number(),
-  sfx2Id: number(),
+  id: number().or(literal(Infinity)),
+  sfx1Id: number().or(literal(Infinity)),
+  sfx2Id: number().or(literal(Infinity)),
   additionalInfo: string().nullable(),
   forDeletion: boolean().optional(),
   get tlSFX() {
@@ -53,7 +53,7 @@ export const CollapsedTL = object({
 });
 
 export const CollapsedOnomatopoeia = object({
-  id: number(),
+  id: number().or(literal(Infinity)),
   text: string(),
   read: string().nullable(),
   def: string(),
@@ -189,41 +189,6 @@ export const validateTranslation = (
     isValid: errors.length === 0,
     errors,
   };
-};
-
-/**
- *
- * @param {HTMLDialogElement} dialog
- * @param {()=>void} [closeCallback]
- */
-export const makeDialogBackdropExitable = (
-  dialog: HTMLDialogElement,
-  closeCallback?: () => void,
-  closeCallbackOnly?: boolean,
-) => {
-  dialog.addEventListener("click", function (event) {
-    if (
-      event.target instanceof HTMLSelectElement ||
-      event.target instanceof HTMLOptionElement
-    ) {
-      console.log("Clicking a select!");
-      event.preventDefault();
-      event.stopPropagation();
-      return;
-    }
-
-    const rect = dialog.getBoundingClientRect();
-    const isInDialog =
-      rect.top <= event.clientY &&
-      event.clientY <= rect.top + rect.height &&
-      rect.left <= event.clientX &&
-      event.clientX <= rect.left + rect.width;
-    console.log("isInDialog", isInDialog);
-    if (!isInDialog) {
-      if (!closeCallbackOnly) dialog.close();
-      closeCallback?.();
-    }
-  });
 };
 
 export const cn = (...inputs: ClassValue[]) => {

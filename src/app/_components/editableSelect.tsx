@@ -1,6 +1,6 @@
 "use client";
 
-import { makeDialogBackdropExitable, cn } from "@/utils";
+import { cn } from "@/utils";
 import { useEffect, useRef, useState } from "react";
 
 type SelectOption = {
@@ -49,7 +49,10 @@ export const EditableSelect = ({
 
   const [hideValuesState, setHideValuesState] = useState(hideValues);
 
+  const dialogID = `editableSelect_${values?.map((v) => v.value).join(",") ?? ""}`;
+
   const dialogRef = useRef<HTMLDialogElement>(null);
+
   useEffect(() => {
     if (value !== selectedValue) {
       setSelectedValue(value);
@@ -78,6 +81,7 @@ export const EditableSelect = ({
         style={styles?.main}
       >
         <dialog
+          id={dialogID}
           className={cn(
             "m-auto rounded-xl border border-blue-200 bg-white/95 p-6",
             "shadow-lg backdrop-blur-sm dark:border-blue-700",
@@ -85,9 +89,7 @@ export const EditableSelect = ({
             classNames?.dialog,
           )}
           ref={dialogRef}
-          onClose={() => {
-            dialogRef.current?.close();
-          }}
+          popover="auto"
           style={styles?.dialog}
         >
           <div className={cn("flex flex-col gap-2")}>
@@ -101,6 +103,9 @@ export const EditableSelect = ({
                 const formData = new FormData(e.currentTarget);
                 const label = formData.get("label") as string;
                 const value = formData.get("value") as string;
+
+                dialogRef?.current?.hidePopover();
+
                 setItems([...items, { label, value }]);
                 onAdd?.({ label, value });
               }}
@@ -141,6 +146,8 @@ export const EditableSelect = ({
                   "rounded-md bg-blue-500 px-4 py-2 text-white",
                   "hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700",
                 )}
+                popoverTarget={dialogID}
+                popoverTargetAction="hide"
               >
                 Add
               </button>
@@ -177,12 +184,8 @@ export const EditableSelect = ({
           ))}
         </select>
         <button
-          onClick={() => {
-            if (dialogRef.current) {
-              makeDialogBackdropExitable(dialogRef.current);
-              dialogRef.current.showModal();
-            }
-          }}
+          popoverTarget={dialogID}
+          popoverTargetAction="show"
           className={cn(
             "cursor-pointer border-0 bg-transparent px-3 py-1 text-blue-500",
             "hover:bg-blue-100 focus:ring-0 focus:outline-none",
