@@ -1,17 +1,17 @@
 "use client";
 
 import { api } from "@/trpc/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDarkMode } from "../hooks/darkmode";
 import DarkModeSwitch from "../_components/darkModeSwitch";
 import { SFXLangSelect } from "../_components/sfxLangSelect";
 import { useRouter } from "next/navigation";
-import { cn, type CollapsedTL } from "@/utils";
+import { cn, type CollapsedOnomatopoeia, type CollapsedTL } from "@/utils";
 import { useValidation } from "../hooks/validation";
 import { ValidationErrorDisplay } from "../_components/validationError";
 import { TLEditorDirect } from "../_components/TLEditor";
 import type { SFXLang } from "../hooks/langs";
-import { useUser } from "../hooks/userlogin";
+import { useUser, type UserSessionData } from "../hooks/userlogin";
 import { SFXListPanel } from "../_components/sfxList.";
 
 // SFX creator page
@@ -38,12 +38,62 @@ const CreatorPage = () => {
 
   const { mode } = useDarkMode();
 
+  const [firstRun, setFirstRun] = useState(false);
+
   // Initialize validation hook
   const validation = useValidation();
 
+  // persist
+  useEffect(() => {
+    const memoryStr = localStorage.getItem("creatememory");
+    if (memoryStr) {
+      console.log(memoryStr);
+      const memory: unknown = JSON.parse(memoryStr);
+      console.log(memory);
+      if (typeof memory !== "object" || !memory) return;
+      if ("sfx" in memory && typeof memory.sfx === "string") setSFX(memory.sfx);
+      if ("def" in memory && typeof memory.def === "string") setDef(memory.def);
+      if ("read" in memory && typeof memory.read === "string")
+        setRead(memory.read);
+      if ("lang" in memory && typeof memory.lang === "string")
+        setLang(memory.lang);
+      if ("extra" in memory && typeof memory.extra === "string")
+        setExtra(memory.extra);
+      if ("tls" in memory && Array.isArray(memory.tls)) {
+        const denullifyIds = (tl: CollapsedTL): CollapsedTL => {
+          return {
+            ...tl,
+            id: tl.id ?? Infinity,
+            sfx1Id: tl.sfx1Id ?? Infinity,
+            sfx2Id: tl.sfx2Id ?? Infinity,
+            sfx: {
+              ...tl.sfx,
+              id: tl.sfx.id ?? Infinity,
+              tls: tl.sfx.tls?.map((q) => denullifyIds(q)) ?? [],
+            } as CollapsedOnomatopoeia,
+          };
+        };
+
+        const denullified = memory.tls.map((tl: CollapsedTL) => {
+          return denullifyIds(tl);
+        });
+
+        console.log("denullified: ", denullified);
+
+        setTLs(denullified);
+      }
+    }
+    setFirstRun(true);
+  }, []);
+  useEffect(() => {
+    if (!firstRun) return;
+    const memory = { sfx, def, extra, lang, read, tls };
+    console.log("saving to memory", memory);
+    localStorage.setItem("creatememory", JSON.stringify(memory));
+  }, [sfx, def, extra, lang, read, tls, firstRun]);
+
   if (!auth) return <>Loading...</>;
 
-  // Validate form data before submission
   const handleCreate = async () => {
     const sfxData = {
       text: sfx,
@@ -57,19 +107,24 @@ const CreatorPage = () => {
     setLastReadState(read !== null);
 
     const validationResult = validation.validateSFXData(sfxData);
-
     if (validationResult.isValid) {
-      await createSFX.mutateAsync({
+      const validSFX = {
         text: sfx,
         def,
         extra: extra ?? null,
         read: read,
         language: lang ?? "en",
         tls: tls ?? [],
-        prime: true,
         auth,
-      });
+      } satisfies Omit<CollapsedOnomatopoeia, "id"> & { auth: UserSessionData };
+
+      console.log("Creating sfx", validSFX);
+
+      await createSFX.mutateAsync(validSFX);
+
+      // reset the sfx list
       await utils.sfx.invalidate();
+
       // reset form
       setSFX("");
       setRead(lastReadState ? "" : null);
@@ -341,9 +396,9 @@ const CreatorPage = () => {
             extra,
             id: Infinity,
             language: lang,
-            prime: false,
             read: null,
             text: sfx,
+            tls: tls,
           }}
         />
         <button

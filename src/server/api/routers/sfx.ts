@@ -6,9 +6,12 @@ import { CollapsedOnomatopoeia, CollapsedTL, type SFXData } from "@/utils";
 import type { Onomatopoeia } from "@prisma/client";
 import { checkSession } from "./user";
 import type { PrismaClient } from "@prisma/client";
+import { api } from "@/trpc/server";
+import { inspect } from "util";
 
-type SimpleCollapsedTL = Omit<CollapsedTL, "tlSFX"> &
-  ({ tlSFX: SFXData } | { ogSFX: SFXData });
+type SimpleCollapsedTL = Omit<CollapsedTL, "sfx"> & {
+  sfx: SFXData & { tls?: SimpleCollapsedTL[] };
+};
 
 const collapseSFX = (
   ogSFX: Onomatopoeia | SFXData,
@@ -20,7 +23,7 @@ const collapseSFX = (
       tls?.map((tl): CollapsedTL => {
         return {
           ...tl,
-          tlSFX: "tlSFX" in tl ? collapseSFX(tl.tlSFX) : collapseSFX(tl.ogSFX),
+          sfx: collapseSFX(tl.sfx, tl.sfx.tls),
         };
       }) ?? [],
   };
@@ -29,25 +32,118 @@ const collapseSFX = (
 
 const authShape = object({ token: string(), deviceName: string() });
 
-const SearchOptions = object({
+const BasicSearch = object({
   limit: number().default(100).optional(),
   skip: number().default(0).optional(),
   query: string(),
   langs: array(string()).optional(),
-}).or(object({ order: literal("asc").or(literal("desc")).default("asc") }));
+});
+
+type BasicSearch = z.infer<typeof BasicSearch>;
+
+const SearchOptions = BasicSearch.or(
+  object({
+    order: literal("asc").or(literal("desc")).default("asc"),
+    limit: number().default(100).optional(),
+    skip: number().default(0).optional(),
+  }),
+).or(literal("list"));
+
+type SearchOptions = z.infer<typeof SearchOptions>;
+
+const sfxGetTLs = async (
+  db: PrismaClient,
+  sfxs: {
+    id: number;
+    text: string;
+    read: string | null;
+    def: string;
+    extra: string | null;
+    language: string;
+    showReverse?: boolean;
+    hideTLSFXs?: number[];
+  }[],
+  reverse?: boolean,
+) => {
+  const Collapsed: CollapsedOnomatopoeia[] = [];
+
+  const sfxsWithTL = await Promise.all(
+    sfxs.map(async (sfx) => {
+      return {
+        sfx,
+        tls: await db.translation.findMany({
+          where: {
+            OR: [
+              {
+                ogSFX: {
+                  id: sfx.showReverse ? -1 : sfx.id,
+                },
+              },
+              {
+                tlSFX: {
+                  id: !sfx.showReverse ? -1 : sfx.id,
+                },
+              },
+            ],
+          },
+          include: {
+            tlSFX: true,
+            ogSFX: !!sfx.showReverse,
+          },
+        }),
+      };
+    }),
+  );
+
+  for (const sfxWithTL of sfxsWithTL) {
+    const collapsedTLs: CollapsedTL[] = [];
+
+    if (sfxWithTL.sfx.showReverse) {
+      console.log(
+        "SWT",
+        inspect(sfxWithTL, { colors: true, depth: null, showHidden: false }),
+      );
+    }
+    for (const tl of sfxWithTL.tls) {
+      if (sfxWithTL.sfx.hideTLSFXs?.includes(tl.tlSFX.id)) continue;
+      collapsedTLs.push({
+        additionalInfo: tl.additionalInfo,
+        id: tl.id,
+        sfx1Id: tl.sfx1Id,
+        sfx2Id: tl.sfx2Id,
+        sfx: { ...(tl.ogSFX ?? tl.tlSFX), tls: [] },
+      });
+    }
+
+    if (
+      collapsedTLs.length === 0 &&
+      Collapsed.some((q) => q.tls.some((x) => x.sfx.id === sfxWithTL.sfx.id))
+    )
+      continue;
+
+    Collapsed.push({ ...sfxWithTL.sfx, tls: collapsedTLs });
+  }
+
+  return typeof reverse ? Collapsed.reverse() : Collapsed;
+};
+
+const sfxContains = (sfx: SFXData, search: string) => {
+  const rx = new RegExp(search, "i");
+  return (
+    rx.test(sfx.def) ||
+    rx.test(sfx.extra ?? "") ||
+    rx.test(sfx.read ?? "") ||
+    rx.test(sfx.text)
+  );
+};
 
 const searchDBForSFX = async (
   db: PrismaClient,
-  search: z.infer<typeof SearchOptions>,
-) => {
-  console.log("Searching for", search);
+  search: Required<SearchOptions>,
+): Promise<CollapsedOnomatopoeia[]> => {
+  if (search === "list" || "order" in search) return [];
 
-  if ("order" in search) return [];
-
-  const sfx = await db.onomatopoeia.findMany({
-    take: search.limit,
-    skip: search.skip,
-    orderBy: { id: "asc" },
+  const sfxs = await db.onomatopoeia.findMany({
     include: {
       ogTranslations: {
         include: {
@@ -60,29 +156,63 @@ const searchDBForSFX = async (
         },
       },
     },
+
     where: {
       AND: [
+        search.langs && search.langs.length > 0
+          ? { language: { in: search.langs } }
+          : { id: { gt: -1 } },
         {
           OR: [
             {
-              language: { in: search.langs },
-            },
-            { id: { gte: search.langs?.length === 0 ? 0 : 999999999 } },
-          ],
-        },
-        {
-          OR: [
-            {
-              text: { contains: search.query, mode: "insensitive" },
+              def: { contains: search.query },
             },
             {
-              read: { contains: search.query, mode: "insensitive" },
+              extra: { contains: search.query },
             },
             {
-              extra: { contains: search.query, mode: "insensitive" },
+              text: { contains: search.query },
+            },
+            { read: { contains: search.query } },
+            {
+              ogTranslations: {
+                some: {
+                  tlSFX: {
+                    OR: [
+                      {
+                        def: { contains: search.query },
+                      },
+                      {
+                        extra: { contains: search.query },
+                      },
+                      {
+                        text: { contains: search.query },
+                      },
+                      { read: { contains: search.query } },
+                    ],
+                  },
+                },
+              },
             },
             {
-              def: { contains: search.query, mode: "insensitive" },
+              tlTranslations: {
+                some: {
+                  ogSFX: {
+                    OR: [
+                      {
+                        def: { contains: search.query },
+                      },
+                      {
+                        extra: { contains: search.query },
+                      },
+                      {
+                        text: { contains: search.query },
+                      },
+                      { read: { contains: search.query } },
+                    ],
+                  },
+                },
+              },
             },
           ],
         },
@@ -90,11 +220,78 @@ const searchDBForSFX = async (
     },
   });
 
-  const collapsedSFXs = sfx.map((pSFX) => {
-    return collapseSFX(pSFX, [...pSFX.ogTranslations, ...pSFX.tlTranslations]);
-  });
+  const deduped = sfxs.reduce<
+    {
+      id: number;
+      text: string;
+      read: string | null;
+      def: string;
+      extra: string | null;
+      language: string;
+      ogtls: (typeof sfxs)[number]["ogTranslations"];
+      optls: (typeof sfxs)[number]["tlTranslations"];
+      showReverse?: boolean;
+      hideTLSFXs?: number[];
+    }[]
+  >((arr, sfx) => {
+    const sfxObj = {
+      createdAt: sfx.createdAt,
+      def: sfx.def,
+      extra: sfx.extra,
+      id: sfx.id,
+      language: sfx.language,
+      read: sfx.read,
+      text: sfx.text,
+      updatedAt: sfx.updatedAt,
+      ogtls: sfx.ogTranslations,
+      optls: sfx.tlTranslations,
+    };
 
-  return collapsedSFXs;
+    // get all sfx that have this as opposite sfx
+    const prevSFX = arr.filter(
+      (v) =>
+        v.ogtls.some((tl) => tl.tlSFX.id === sfx.id) ||
+        v.optls.some((tl) => tl.ogSFX.id === sfx.id),
+    );
+
+    if (prevSFX.length) {
+      const tlOgs = prevSFX.find((sx) => {
+        return (
+          !sfxContains(sx, search.query) &&
+          sx.ogtls.some((q) => q.tlSFX.id === sfx.id)
+        );
+      });
+
+      if (tlOgs && sfxContains(sfx, search.query)) {
+        return [
+          ...arr
+            .filter((q) => q.id !== tlOgs.id)
+            .map((q) => ({
+              ...q,
+              hideTLSFXs: [...(q.hideTLSFXs ?? []), sfxObj.id],
+            })),
+          { ...sfxObj, showReverse: true },
+        ];
+      }
+
+      // add reversed version
+      if (
+        prevSFX.some((q) => q.showReverse) // if there is a reversed sfx
+      ) {
+        return [...arr, { ...sfxObj, showReverse: true }];
+      }
+
+      // skip it
+      return arr;
+    }
+
+    return [...arr, sfxObj];
+  }, []);
+
+  return (await sfxGetTLs(db, deduped)).slice(
+    search.skip,
+    search.limit + search.skip,
+  );
 };
 
 export const sfxRouter = createTRPCRouter({
@@ -103,45 +300,42 @@ export const sfxRouter = createTRPCRouter({
     .query(async ({ ctx, input }): Promise<CollapsedOnomatopoeia[]> => {
       const search = !input
         ? undefined
-        : "order" in input
+        : typeof input === "object" && "order" in input
           ? input.order
-          : input;
+          : typeof input === "string"
+            ? input
+            : ({
+                langs: input.langs ?? [],
+                limit: input.limit ?? 100,
+                query: input.query,
+                skip: input.skip ?? 0,
+              } as Required<BasicSearch>);
 
-      if (typeof search === "object")
+      if (
+        typeof search === "object" &&
+        (search.query || search.langs.length > 0)
+      )
         return await searchDBForSFX(ctx.db, search);
 
-      const sfx = await ctx.db.onomatopoeia.findMany({
-        orderBy: { id: search ?? "asc" },
+      const sfxs = await ctx.db.onomatopoeia.findMany({
+        orderBy: { id: "asc" },
         select: {
           def: true,
           extra: true,
           id: true,
           language: true,
-          prime: true,
           read: true,
           text: true,
-          ogTranslations: {
-            include: {
-              tlSFX: true,
-            },
-          },
-          tlTranslations: {
-            include: {
-              ogSFX: true,
-            },
-          },
         },
       });
 
-      const collapsed = sfx.map((s) => {
-        const collapsed = collapseSFX(s, [
-          ...s.ogTranslations,
-          ...s.tlTranslations,
-        ]);
-        return collapsed;
-      });
+      if (input === "list") return sfxs.map((q) => ({ ...q, tls: [] }));
 
-      return collapsed;
+      const ret = await sfxGetTLs(ctx.db, sfxs, search === "desc");
+
+      return typeof search === "object"
+        ? ret.slice(search.skip, search.limit + search.skip)
+        : ret;
     }),
 
   updateSFX: publicProcedure
@@ -154,7 +348,7 @@ export const sfxRouter = createTRPCRouter({
           tls: array(
             object({
               ...CollapsedTL.shape,
-              tlSFX: object({
+              sfx: object({
                 ...CollapsedOnomatopoeia.shape,
               }).omit({ tls: true }),
             }),
@@ -174,134 +368,86 @@ export const sfxRouter = createTRPCRouter({
         const loggedIn = await checkSession(ctx.db, { token, deviceName });
 
         if (loggedIn.ok) {
-          const ogUpdates = tls.filter((q) => q.tlSFX.prime);
-          const tlUpdates = tls.filter((q) => !q.tlSFX.prime);
-
           console.log(
             "forDeletion",
-            [...ogUpdates, ...tlUpdates].filter((q) => q.forDeletion),
+            tls.filter((q) => q.forDeletion),
           );
 
-          await ctx.db.onomatopoeia.update({
-            where: { id },
-            data: {
-              text,
-              def,
-              extra,
-              read,
-              language,
-              tlTranslations: {
-                delete: ogUpdates
-                  .filter((up) => up.forDeletion && isFinite(up.id))
-                  .map((fd) => ({ id: fd.id })),
-                upsert: ogUpdates
-                  .filter((up) => !up.forDeletion)
-                  .map((tlu) => ({
-                    where: { id: isFinite(tlu.id) ? tlu.id : -1 },
+          const sfxUpdates = [
+            { text, def, extra, read, language, id },
+            ...tls.filter((s) => isFinite(s.sfx.id)).map((q) => q.sfx),
+          ];
+
+          // update every SFX
+          await Promise.all(
+            sfxUpdates.map(async (sfx) => {
+              if (isFinite(sfx.id))
+                return await ctx.db.onomatopoeia.update({
+                  where: { id: sfx.id },
+                  data: {
+                    def: sfx.def,
+                    extra: sfx.extra,
+                    language: sfx.language,
+                    read: sfx.read,
+                    text: sfx.text,
+                    updatedAt: new Date(),
+                  },
+                });
+            }),
+          );
+
+          for (const tl of tls) {
+            console.log("updating", tl);
+
+            // update the tls
+            if (tl.forDeletion) {
+              await ctx.db.translation.delete({ where: { id: tl.id } });
+              continue;
+            }
+
+            if (!isFinite(tl.id) || !isFinite(tl.sfx2Id)) {
+              await ctx.db.onomatopoeia.upsert({
+                where: { id: isFinite(tl.sfx.id) ? tl.sfx.id : -1 },
+                create: {
+                  def: tl.sfx.def,
+                  read: tl.sfx.read,
+                  text: tl.sfx.text,
+                  language: tl.sfx.language,
+                  extra: tl.sfx.extra,
+                  tlTranslations: {
                     create: {
-                      additionalInfo: tlu.additionalInfo,
-                      createdAt: new Date(),
-                      ogSFX: {
-                        connectOrCreate: {
-                          create: {
-                            updatedAt: new Date(),
-                            prime: false,
-                            def: tlu.tlSFX.def,
-                            text: tlu.tlSFX.text,
-                            read: tlu.tlSFX.read,
-                            extra: tlu.tlSFX.extra,
-                            language: tlu.tlSFX.language,
-                          },
-                          where: {
-                            id: isFinite(tlu.tlSFX.id) ? tlu.tlSFX.id : -1,
-                          },
-                        },
-                      },
+                      additionalInfo: tl.additionalInfo,
+                      ogSFX: { connect: { id: tl.sfx1Id } },
                     },
-                    update: {
-                      additionalInfo: tlu.additionalInfo,
-                      createdAt: new Date(),
-                      ogSFX: {
-                        upsert: {
-                          create: {
-                            updatedAt: new Date(),
-                            prime: false,
-                            def: tlu.tlSFX.def,
-                            text: tlu.tlSFX.text,
-                            read: tlu.tlSFX.read,
-                            extra: tlu.tlSFX.extra,
-                            language: tlu.tlSFX.language,
-                          },
-                          update: {
-                            updatedAt: new Date(),
-                            def: tlu.tlSFX.def,
-                            text: tlu.tlSFX.text,
-                            read: tlu.tlSFX.read,
-                            extra: tlu.tlSFX.extra,
-                            language: tlu.tlSFX.language,
-                          },
-                        },
-                      },
-                    },
-                  })),
-              },
-              ogTranslations: {
-                delete: tlUpdates
-                  .filter((up) => up.forDeletion && isFinite(up.id))
-                  .map((fd) => ({ id: fd.id })),
-                upsert: tlUpdates
-                  .filter((up) => !up.forDeletion)
-                  .map((tlu) => ({
-                    where: { id: isFinite(tlu.id) ? tlu.id : -1 },
+                  },
+                },
+                update: {
+                  updatedAt: new Date(),
+                  def: tl.sfx.def,
+                  read: tl.sfx.read,
+                  text: tl.sfx.text,
+                  language: tl.sfx.language,
+                  extra: tl.sfx.extra,
+                  tlTranslations: {
                     create: {
-                      additionalInfo: tlu.additionalInfo,
-                      createdAt: new Date(),
-                      tlSFX: {
-                        connectOrCreate: {
-                          create: {
-                            updatedAt: new Date(),
-                            prime: false,
-                            def: tlu.tlSFX.def,
-                            text: tlu.tlSFX.text,
-                            read: tlu.tlSFX.read,
-                            extra: tlu.tlSFX.extra,
-                            language: tlu.tlSFX.language,
-                          },
-                          where: {
-                            id: isFinite(tlu.tlSFX.id) ? tlu.tlSFX.id : -1,
-                          },
-                        },
-                      },
+                      additionalInfo: tl.additionalInfo,
+                      ogSFX: { connect: { id: tl.sfx1Id } },
                     },
-                    update: {
-                      additionalInfo: tlu.additionalInfo,
-                      createdAt: new Date(),
-                      tlSFX: {
-                        upsert: {
-                          create: {
-                            updatedAt: new Date(),
-                            prime: false,
-                            def: tlu.tlSFX.def,
-                            text: tlu.tlSFX.text,
-                            read: tlu.tlSFX.read,
-                            extra: tlu.tlSFX.extra,
-                            language: tlu.tlSFX.language,
-                          },
-                          update: {
-                            updatedAt: new Date(),
-                            def: tlu.tlSFX.def,
-                            text: tlu.tlSFX.text,
-                            read: tlu.tlSFX.read,
-                            extra: tlu.tlSFX.extra,
-                            language: tlu.tlSFX.language,
-                          },
-                        },
-                      },
-                    },
-                  })),
+                  },
+                },
+              });
+              continue;
+            }
+
+            await ctx.db.translation.update({
+              where: { id: tl.id },
+              data: {
+                additionalInfo: tl.additionalInfo,
+                updatedAt: new Date(),
               },
-            },
-          });
+            });
+          }
+
           return;
         } else return loggedIn;
       },
@@ -319,31 +465,73 @@ export const sfxRouter = createTRPCRouter({
         const loggedIn = await checkSession(ctx.db, auth);
         if (!loggedIn.ok) return loggedIn;
         // create og SFX
-        const ogSFX = await ctx.db.onomatopoeia.create({
-          data: {
+
+        console.log(
+          "creating TLs",
+          inspect(tls, { depth: null, colors: true, showHidden: false }),
+        );
+
+        type CreateCreateObject = {
+          def: string;
+          extra: string | null;
+          language: string;
+          read: string | null;
+          text: string;
+          ogTranslations: {
+            create: {
+              additionalInfo: string | null;
+              tlSFX: {
+                connectOrCreate: {
+                  where: { id: number };
+                  create: CreateCreateObject;
+                };
+              };
+            }[];
+          };
+        };
+
+        const createCreateObject = ({
+          def,
+          extra,
+          language,
+          read,
+          text,
+          tls,
+        }: Omit<CreateCreateObject, "ogTranslations"> & {
+          tls: CollapsedTL[];
+        }): CreateCreateObject => {
+          return {
             text,
             def,
             extra,
-            prime: true,
-            read: read ?? null,
+            read,
             language,
             ogTranslations: {
               create: tls.map((tl) => ({
+                additionalInfo: tl.additionalInfo,
                 tlSFX: {
                   connectOrCreate: {
-                    create: {
-                      text: tl.tlSFX.text,
-                      def: tl.tlSFX.def,
-                      prime: false,
-                      language: tl.tlSFX.language,
-                      extra: tl.tlSFX.extra,
-                      read: tl.tlSFX.read,
-                    },
-                    where: { id: isFinite(tl.tlSFX.id) ? tl.tlSFX.id : -1 },
+                    where: { id: isFinite(tl.sfx.id) ? tl.sfx.id : -1 },
+                    create: createCreateObject(tl.sfx),
                   },
                 },
               })),
             },
+          };
+        };
+
+        const createObject = createCreateObject({
+          def,
+          extra,
+          language,
+          read,
+          text,
+          tls,
+        });
+
+        const ogSFX = await ctx.db.onomatopoeia.create({
+          data: {
+            ...createObject,
           },
         });
 

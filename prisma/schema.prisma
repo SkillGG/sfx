@@ -2,7 +2,8 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-    provider = "prisma-client-js"
+    provider        = "prisma-client-js"
+    previewFeatures = ["typedSQL"]
 }
 
 datasource db {
@@ -27,8 +28,6 @@ model Onomatopoeia {
 
     ogTranslations Translation[] @relation("ogSFX")
     tlTranslations Translation[] @relation("tlSFX")
-
-    prime Boolean
 
     @@index([text])
     @@index([read])

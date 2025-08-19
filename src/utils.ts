@@ -7,7 +7,7 @@ import { generate } from "random-words";
 
 export type CollapsedTL = Omit<
   Translation & {
-    tlSFX: Omit<CollapsedOnomatopoeia, "tls">;
+    sfx: CollapsedOnomatopoeia;
     forDeletion?: boolean;
   },
   "createdAt" | "updatedAt"
@@ -47,8 +47,8 @@ export const CollapsedTL = object({
   sfx2Id: number().or(literal(Infinity)),
   additionalInfo: string().nullable(),
   forDeletion: boolean().optional(),
-  get tlSFX() {
-    return CollapsedOnomatopoeia.omit({ tls: true });
+  get sfx() {
+    return CollapsedOnomatopoeia;
   },
 });
 
@@ -59,7 +59,6 @@ export const CollapsedOnomatopoeia = object({
   def: string(),
   extra: string().nullable(),
   language: string(),
-  prime: boolean(),
   tls: array(CollapsedTL),
 });
 
@@ -70,7 +69,6 @@ export const SFXData = object({
   def: string(),
   extra: string().nullable(),
   language: string(),
-  prime: boolean(),
 });
 
 // Simple validation error types

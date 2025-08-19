@@ -1,8 +1,10 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
-type UserSession = { token: string; deviceName: string };
+export type UserSessionData = { token: string; deviceName: string };
 
-const UserSession = createContext<null | UserSession | undefined>(undefined);
+const UserSession = createContext<null | UserSessionData | undefined>(
+  undefined,
+);
 
 export const useUser = () => {
   const ctx = useContext(UserSession);
@@ -16,7 +18,7 @@ export const UserSessionProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
-  const [uSess, setUserSession] = useState<UserSession | null>(null);
+  const [uSess, setUserSession] = useState<UserSessionData | null>(null);
 
   useEffect(() => {
     const token = sessionStorage.getItem("stk");

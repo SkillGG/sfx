@@ -4,7 +4,7 @@ import {
   type Promisable,
   type ValidationResult,
 } from "@/utils";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useSFXLangs } from "../hooks/langs";
 import { SFXLangSelect } from "./sfxLangSelect";
 import { env } from "@/env";
@@ -13,13 +13,9 @@ import { ValidationErrorDisplay } from "./validationError";
 import { TLEditorDirect } from "./TLEditor";
 import type { ClassValue } from "clsx";
 
-export type NoTLOnom = Omit<CollapsedOnomatopoeia, "tls">;
-
 export type SaveState = "default" | "done" | "waiting";
 
-type SFXTLDiscriminator =
-  | { sfx: CollapsedOnomatopoeia; withTL: true }
-  | { sfx: NoTLOnom; withTL?: false };
+type SFXTLDiscriminator = { sfx: CollapsedOnomatopoeia };
 
 type SFXCardClasses = {
   container?: ClassValue;
@@ -40,26 +36,79 @@ type SFXCardClasses = {
   };
 };
 
-const commaToList = (str?: string | null): string => {
-  return (
+type SFXField =
+  | {
+      type: "string";
+      data: string;
+    }
+  | { type: "img"; data: string }
+  | { type: "sfxlink"; data: number }
+  | { type: "link"; data: string };
+
+type Arrayable<T> = T | T[];
+
+const sfxFieldFromString = (str: string): Arrayable<SFXField | null> => {
+  // const imgRegex = /(?<single>img:[\s])|(?<multiple>)/gi.exec(str);
+
+  if (str.startsWith("img:")) {
+    return { type: "img", data: str.split("img:")[1] ?? "" };
+  }
+
+  if (!str.includes(":")) {
+    return { type: "string", data: str };
+  }
+  return null;
+};
+
+const parseSFXText = (str?: string | null): ReactNode => {
+  const fields: SFXField[] =
     str
       ?.split(";")
-      .map((q, i) => `${i + 1}. ${q}`)
-      .join("\n") ?? ""
+      .map((fieldstr) => {
+        return sfxFieldFromString(fieldstr);
+      })
+      .flat(1)
+      .filter((q) => !!q) ?? [];
+
+  return (
+    <>
+      {fields
+        .filter((q) => q.type === "string")
+        .map((q, i, arr) => {
+          return (
+            <>
+              {arr[0]?.data.startsWith("- ") && `${i + 1}. `}
+              {i === 0 && q.data.startsWith("- ")
+                ? q.data.substring(1)
+                : q.data}
+              {"\n"}
+            </>
+          );
+        })}
+      {fields
+        .filter((q) => q.type !== "string")
+        .map((q, i) => {
+          switch (q.type) {
+            default:
+              return (
+                <>
+                  {q.type}:{q.data}
+                </>
+              );
+          }
+        })}
+    </>
   );
 };
 
 const SFXCard = ({
   sfx,
-  withTL,
+  tlExtra,
   classNames,
-}: SFXTLDiscriminator & { classNames?: SFXCardClasses }) => {
+}: SFXTLDiscriminator & { classNames?: SFXCardClasses; tlExtra?: string }) => {
   const { langs } = useSFXLangs();
 
-  const usedSFX = useMemo(
-    () => (withTL ? sfx : { ...sfx, tls: [] }),
-    [sfx, withTL],
-  );
+  const usedSFX = useMemo(() => ({ ...sfx }), [sfx]);
 
   return (
     <div
@@ -80,11 +129,11 @@ const SFXCard = ({
           className={cn(
             "self-center pr-2 text-lg font-bold text-blue-900 dark:text-blue-100",
             classNames?.topinfo?.text,
-            !sfx.prime && "text-orange-700 dark:text-orange-200",
           )}
         >
           {usedSFX.text}
         </div>
+
         {usedSFX.read && (
           <div
             className={cn(
@@ -92,7 +141,7 @@ const SFXCard = ({
               classNames?.topinfo?.reading,
             )}
           >
-            {commaToList(usedSFX.read)}
+            {parseSFXText(usedSFX.read)}
           </div>
         )}
         <div
@@ -109,14 +158,27 @@ const SFXCard = ({
         </div>
       </div>
 
-      <div className={cn(classNames?.bottominfo?.container)}>
+      {tlExtra && (
+        <div
+          className={cn(
+            "flex w-fit border-2 border-x-0 border-t-0 border-dashed border-red-300 px-1",
+            "text-base text-blue-400 dark:text-blue-300",
+          )}
+        >
+          <span>{tlExtra}</span>
+        </div>
+      )}
+
+      <div
+        className={cn(classNames?.bottominfo?.container, tlExtra && "text-xs")}
+      >
         <div
           className={cn(
             "whitespace-pre-wrap text-blue-700 dark:text-blue-300",
             classNames?.bottominfo?.def,
           )}
         >
-          {commaToList(usedSFX.def)}
+          {parseSFXText(usedSFX.def)}
         </div>
         <div
           className={cn(
@@ -124,27 +186,30 @@ const SFXCard = ({
             classNames?.bottominfo?.extra,
           )}
         >
-          {commaToList(usedSFX.extra)}
+          {parseSFXText(usedSFX.extra)}
         </div>
       </div>
 
-      {withTL === true && usedSFX.tls.length > 0 && (
-        <div
-          className={cn(
-            "flex flex-wrap justify-center gap-2",
-            classNames?.tls?.container,
-          )}
-        >
-          {usedSFX.tls.map((tl) => {
-            return (
-              <SFX
-                key={tl.sfx1Id + "." + tl.sfx2Id}
-                sfx={tl.tlSFX}
-                classNames={classNames?.tls?.sfx}
-              />
-            );
-          })}
-        </div>
+      {usedSFX.tls.length > 0 && (
+        <>
+          <div
+            className={cn(
+              "flex flex-wrap justify-center gap-2",
+              classNames?.tls?.container,
+            )}
+          >
+            {usedSFX.tls.map((tl) => {
+              return (
+                <SFX
+                  key={tl.sfx1Id + "." + tl.sfx2Id}
+                  sfx={tl.sfx}
+                  classNames={classNames?.tls?.sfx}
+                  tlExtra={tl.additionalInfo ?? undefined}
+                />
+              );
+            })}
+          </div>
+        </>
       )}
     </div>
   );
@@ -159,7 +224,6 @@ type SFXEditClassNames = {
 
 export const SFXEdit = ({
   sfx,
-  withTL,
   labels,
   classNames,
   noLang,
@@ -197,12 +261,10 @@ export const SFXEdit = ({
   onSaveClicked?: () => Promisable<void>;
 
   onChange?: (
-    action: <Q extends CollapsedOnomatopoeia | NoTLOnom>(prev: Q) => Q,
+    action: (prev: CollapsedOnomatopoeia) => CollapsedOnomatopoeia,
   ) => void;
   onCancel: () => void;
-  onValidate?: <Q extends CollapsedOnomatopoeia | NoTLOnom>(
-    sfx: Q,
-  ) => ValidationResult;
+  onValidate?: (sfx: CollapsedOnomatopoeia) => ValidationResult;
 }) => {
   const [tempRead, setTempRead] = useState(sfx.read ?? "");
 
@@ -432,7 +494,7 @@ export const SFXEdit = ({
           </div>
         </div>
 
-        {!withTL && tlAddInfoElem}
+        {tlAddInfoElem}
 
         <div className={cn("mt-2 flex flex-row gap-2")}>
           <button
@@ -459,40 +521,41 @@ export const SFXEdit = ({
                 ? (labels?.btns?.save?.saving ?? "Saving")
                 : (labels?.btns?.save?.saved ?? "Saved")}
           </button>
-          {withTL === true && (
-            <>
-              <dialog
-                id="edittlDialog"
-                className={cn(
-                  "m-auto min-w-[50%] rounded-xl border border-blue-200 bg-white/95 p-6",
-                  "shadow-lg backdrop-blur-sm dark:border-blue-700",
-                  "dark:bg-slate-800/95 dark:text-white",
-                )}
-                ref={tlEditDialogRef}
-                popover={"auto"}
-              >
-                <TLEditorDirect
-                  tls={sfx.tls}
-                  removeOnCancel={false}
-                  sfx={sfx}
-                  onChange={(tls) => {
-                    onChange?.((prev) => ({ ...prev, tls }));
-                  }}
-                />
-              </dialog>
-              <button
-                popoverTarget="edittlDialog"
-                popoverTargetAction="show"
-                className={cn(
-                  "rounded bg-gray-200 px-2 py-1 text-xs",
-                  "hover:bg-gray-300 dark:bg-slate-600 dark:text-white",
-                  "dark:hover:bg-slate-500",
-                )}
-              >
-                {labels?.btns?.edittl ?? "Edit TLs"}
-              </button>
-            </>
-          )}
+
+          <>
+            <dialog
+              id={`tleditdialog_${sfx.id}`}
+              className={cn(
+                "m-auto min-w-[50%] rounded-xl border border-blue-200 bg-white/95 p-6",
+                "shadow-lg backdrop-blur-sm dark:border-blue-700",
+                "dark:bg-slate-800/95 dark:text-white",
+              )}
+              ref={tlEditDialogRef}
+              popover="auto"
+            >
+              <TLEditorDirect
+                tls={sfx.tls}
+                removeOnCancel={false}
+                sfx={sfx}
+                onChange={(tls) => {
+                  onChange?.((prev) => ({ ...prev, tls }));
+                }}
+              />
+            </dialog>
+            <button
+              className={cn(
+                "rounded bg-gray-200 px-2 py-1 text-xs",
+                "hover:bg-gray-300 dark:bg-slate-600 dark:text-white",
+                "dark:hover:bg-slate-500",
+              )}
+              onClick={() => {
+                tlEditDialogRef.current?.showPopover();
+              }}
+            >
+              {labels?.btns?.edittl ?? "Edit TLs"}
+            </button>
+          </>
+
           <button
             className={cn(
               "rounded bg-gray-200 px-2 py-1 text-xs",
@@ -534,7 +597,7 @@ export const SFX = ({
 
   onSave,
   onRemove,
-  withTL,
+  tlExtra,
 }: SFXTLDiscriminator & {
   classNames?: SFXClasses;
 
@@ -543,14 +606,13 @@ export const SFX = ({
   ) => Promisable<CollapsedOnomatopoeia | void>;
   onRemove?: () => Promisable<void>;
   editable?: boolean | undefined;
+  tlExtra?: string;
 }) => {
-  const [sfxCopy, setSFXCopy] = useState<CollapsedOnomatopoeia>(
-    withTL ? sfx : { ...sfx, tls: [] },
-  );
+  const [sfxCopy, setSFXCopy] = useState<CollapsedOnomatopoeia>({ ...sfx });
 
   useEffect(() => {
-    setSFXCopy(withTL ? sfx : { ...sfx, tls: [] });
-  }, [sfx, withTL]);
+    setSFXCopy(sfx);
+  }, [sfx]);
 
   const [mode, setMode] = useState<"edit" | "view">("view");
 
@@ -567,7 +629,6 @@ export const SFX = ({
         >
           <SFX
             sfx={sfxCopy}
-            withTL={withTL}
             classNames={
               classNames?.editable?.sfx ?? { default: classNames?.default }
             }
@@ -629,10 +690,9 @@ export const SFX = ({
     return (
       <SFXEdit
         sfx={sfxCopy}
-        withTL={withTL}
         classNames={classNames?.edit}
         onCancel={() => {
-          setSFXCopy(withTL ? sfx : { ...sfx, tls: [] });
+          setSFXCopy(sfx);
           setMode("view");
         }}
         onSaveClicked={async () => {
@@ -645,11 +705,12 @@ export const SFX = ({
         onChange={(action) => {
           setSFXCopy(action(sfxCopy));
         }}
+        tlAddInfoElem={<>{tlExtra ?? ""}</>}
       />
     );
   }
 
   return (
-    <SFXCard sfx={sfxCopy} withTL={withTL} classNames={classNames?.default} />
+    <SFXCard sfx={sfxCopy} classNames={classNames?.default} tlExtra={tlExtra} />
   );
 };
