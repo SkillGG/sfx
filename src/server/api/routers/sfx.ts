@@ -5,6 +5,7 @@ import { createTRPCRouter, publicProcedure } from "@/server/api/trpc";
 import { CollapsedOnomatopoeia, CollapsedTL, type SFXData } from "@/utils";
 import { checkSession } from "./user";
 import type { PrismaClient } from "@prisma/client";
+import { inspect } from "util";
 
 const authShape = object({ token: string(), deviceName: string() });
 
@@ -36,7 +37,7 @@ const sfxGetTLs = async (
     def: string;
     extra: string | null;
     language: string;
-    showReverse?: boolean;
+    show?: "both" | "reverse";
     hideTLSFXs?: number[];
   }[],
   reverse?: boolean,
@@ -47,26 +48,28 @@ const sfxGetTLs = async (
     sfxs.map(async (sfx) => {
       return {
         sfx,
-        tls: await db.translation.findMany({
-          where: {
-            OR: [
-              {
-                ogSFX: {
-                  id: sfx.showReverse ? -1 : sfx.id,
+        tls: [
+          ...(await db.translation.findMany({
+            where: {
+              OR: [
+                {
+                  ogSFX: {
+                    id: sfx.show === "reverse" ? -1 : sfx.id,
+                  },
                 },
-              },
-              {
-                tlSFX: {
-                  id: !sfx.showReverse ? -1 : sfx.id,
+                {
+                  tlSFX: {
+                    id: !sfx.show ? -1 : sfx.id,
+                  },
                 },
-              },
-            ],
-          },
-          include: {
-            tlSFX: true,
-            ogSFX: !!sfx.showReverse,
-          },
-        }),
+              ],
+            },
+            include: {
+              tlSFX: true,
+              ogSFX: true,
+            },
+          })),
+        ],
       };
     }),
   );
@@ -74,14 +77,30 @@ const sfxGetTLs = async (
   for (const sfxWithTL of sfxsWithTL) {
     const collapsedTLs: CollapsedTL[] = [];
 
+    console.log("got SFX with TLs:", sfxWithTL.sfx.text, sfxWithTL.tls);
+
     for (const tl of sfxWithTL.tls) {
-      if (sfxWithTL.sfx.hideTLSFXs?.includes(tl.tlSFX.id)) continue;
+      const oppositeSFX =
+        tl.ogSFX.id === sfxWithTL.sfx.id
+          ? tl.tlSFX
+          : sfxWithTL.sfx.show === "both"
+            ? tl.ogSFX
+            : null;
+
+      if (!oppositeSFX) continue;
+
+      if (sfxWithTL.sfx.hideTLSFXs?.includes(oppositeSFX.id)) continue;
+      if (oppositeSFX.id === sfxWithTL.sfx.id) continue;
+
       collapsedTLs.push({
         additionalInfo: tl.additionalInfo,
         id: tl.id,
         sfx1Id: tl.sfx1Id,
         sfx2Id: tl.sfx2Id,
-        sfx: { ...(tl.ogSFX ?? tl.tlSFX), tls: [] },
+        sfx: {
+          ...oppositeSFX,
+          tls: [],
+        },
       });
     }
 
@@ -200,7 +219,7 @@ const searchDBForSFX = async (
       language: string;
       ogtls: (typeof sfxs)[number]["ogTranslations"];
       optls: (typeof sfxs)[number]["tlTranslations"];
-      showReverse?: boolean;
+      show?: "both" | "reverse";
       hideTLSFXs?: number[];
     }[]
   >((arr, sfx) => {
@@ -215,6 +234,7 @@ const searchDBForSFX = async (
       updatedAt: sfx.updatedAt,
       ogtls: sfx.ogTranslations,
       optls: sfx.tlTranslations,
+      show: "both" as "both" | "reverse",
     };
 
     // get all sfx that have this as opposite sfx
@@ -224,31 +244,38 @@ const searchDBForSFX = async (
         v.optls.some((tl) => tl.ogSFX.id === sfx.id),
     );
 
-    if (prevSFX.length) {
-      const tlOgs = prevSFX.find((sx) => {
-        return (
-          !sfxContains(sx, search.query) &&
-          sx.ogtls.some((q) => q.tlSFX.id === sfx.id)
-        );
-      });
+    console.log(
+      "SFX already in list:",
+      inspect(prevSFX, {
+        colors: true,
+        depth: null,
+        compact: true,
+        showHidden: false,
+      }),
+      sfx,
+    );
 
-      if (tlOgs && sfxContains(sfx, search.query)) {
-        return [
-          ...arr
-            .filter((q) => q.id !== tlOgs.id)
-            .map((q) => ({
-              ...q,
-              hideTLSFXs: [...(q.hideTLSFXs ?? []), sfxObj.id],
-            })),
-          { ...sfxObj, showReverse: true },
-        ];
+    if (prevSFX.length) {
+      if (sfxContains(sfx, search.query)) {
+        const prevSFXToHide = prevSFX.filter((psfx) => {
+          return !sfxContains(psfx, search.query);
+        });
+        if (prevSFXToHide.length > 0) {
+          console.log("hiding", prevSFXToHide);
+          return [
+            ...arr.filter((q) => !prevSFXToHide.find((x) => x.id === q.id)),
+            {
+              ...sfxObj,
+            },
+          ];
+        }
       }
 
       // add reversed version
       if (
-        prevSFX.some((q) => q.showReverse) // if there is a reversed sfx
+        prevSFX.some((q) => q.show) // if there is a reversed sfx
       ) {
-        return [...arr, { ...sfxObj, showReverse: true }];
+        return [...arr, { ...sfxObj, show: "reverse" as const }];
       }
 
       // skip it
@@ -257,6 +284,17 @@ const searchDBForSFX = async (
 
     return [...arr, sfxObj];
   }, []);
+
+  console.log(
+    "dedupedSFX:",
+    "\n",
+    inspect(deduped, {
+      colors: true,
+      showHidden: false,
+      depth: null,
+      compact: true,
+    }).replaceAll("\t", " "),
+  );
 
   return (await sfxGetTLs(db, deduped)).slice(
     search.skip,
@@ -320,7 +358,7 @@ export const sfxRouter = createTRPCRouter({
               ...CollapsedTL.shape,
               sfx: object({
                 ...CollapsedOnomatopoeia.shape,
-              }).omit({ tls: true }),
+              }),
             }),
           ),
         }),
@@ -335,13 +373,26 @@ export const sfxRouter = createTRPCRouter({
           sfx: { text, def, extra, read, language, tls },
         },
       }) => {
+        const flattenTLs: (t: CollapsedTL[]) => CollapsedTL[] = (tls) => {
+          return tls
+            .map<CollapsedTL[]>((tl) => {
+              if (!tl.sfx.tls || tl.sfx.tls.length === 0) return [tl];
+              return [tl, ...flattenTLs(tl.sfx.tls)];
+            })
+            .flat(100);
+        };
+
+        const allTLs = flattenTLs(tls);
+
         const loggedIn = await checkSession(ctx.db, { token, deviceName });
 
         if (loggedIn.ok) {
           const sfxUpdates = [
             { text, def, extra, read, language, id },
-            ...tls.filter((s) => isFinite(s.sfx.id)).map((q) => q.sfx),
+            ...allTLs.filter((s) => isFinite(s.sfx.id)).map((q) => q.sfx),
           ];
+
+          console.log("updating SFX", sfxUpdates);
 
           // update every SFX
           await Promise.all(
@@ -361,14 +412,16 @@ export const sfxRouter = createTRPCRouter({
             }),
           );
 
-          for (const tl of tls) {
+          for (const tl of allTLs) {
             // update the tls
             if (tl.forDeletion) {
+              console.log("removing TL", tl);
               await ctx.db.translation.delete({ where: { id: tl.id } });
               continue;
             }
 
             if (!isFinite(tl.id) || !isFinite(tl.sfx2Id)) {
+              console.log("upserting onomatopoeia", tl);
               await ctx.db.onomatopoeia.upsert({
                 where: { id: isFinite(tl.sfx.id) ? tl.sfx.id : -1 },
                 create: {
@@ -401,7 +454,7 @@ export const sfxRouter = createTRPCRouter({
               });
               continue;
             }
-
+            console.log("updating tl additional info");
             await ctx.db.translation.update({
               where: { id: tl.id },
               data: {

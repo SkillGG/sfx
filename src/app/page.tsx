@@ -27,6 +27,24 @@ const List = () => {
 
   if (isLoading) return <PageLoad key={"load"} />;
 
+  if (search.value === "#creator") {
+    return (
+      <div
+        className={cn(
+          "py-12 text-center text-lg",
+          "text-blue-500 dark:text-blue-300",
+        )}
+      >
+        <Link
+          href="/creator"
+          className={cn("text-blue-700 dark:text-blue-500")}
+        >
+          Open the creator
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <>
       {!sfxs || sfxs.length === 0 ? (
@@ -38,14 +56,16 @@ const List = () => {
         >
           No SFX found.
           <br />
-You can request it via email:<br />
+          You can request it via email:
+          <br />
           <Link
             href="mailto:request@sfxvault.org"
             className={cn("text-blue-700", "dark:text-blue-500")}
           >
             request@sfxvault.org
           </Link>
-<br/>And I&apos;ll add it asap
+          <br />
+          And I&apos;ll add it asap
         </div>
       ) : (
         <SFXListPanel

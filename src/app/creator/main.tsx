@@ -383,7 +383,10 @@ const CreatorPage = () => {
         </div>
         <TLEditorDirect
           tls={tls}
-          onChange={(tls) => setTLs(tls)}
+          onChange={(tls) => {
+            console.log("tls_creator_change", tls);
+            setTLs(tls);
+          }}
           removeOnCancel
           sfx={{
             def,
@@ -449,6 +452,7 @@ const CreatorPage = () => {
             }}
             onSave={async (old, sfx) => {
               if (auth) {
+                console.log("Updating SFX", sfx);
                 await updateSFX.mutateAsync({ id: old.id, sfx, auth });
                 await utils.sfx.listSFX.invalidate();
               }

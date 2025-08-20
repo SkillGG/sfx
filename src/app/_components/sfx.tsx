@@ -544,6 +544,8 @@ export const SFXEdit = ({
                 removeOnCancel={false}
                 sfx={sfx}
                 onChange={(tls) => {
+                  console.log("tls_sfx_change", sfx.text, tls);
+
                   onChange?.((prev) => ({ ...prev, tls }));
                 }}
               />
