@@ -43,7 +43,7 @@ const SearchBar = ({
   }, [search]);
 
   useEffect(() => {
-    console.log("searchihng for", debouncedSearch);
+    console.log("searching for", debouncedSearch);
     onChange(debouncedSearch);
     history.pushState(
       null,

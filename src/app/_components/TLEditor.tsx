@@ -285,8 +285,6 @@ export const TLEditorDirect = ({
   removeOnCancel?: boolean;
   onChange: (tls: CollapsedTL[]) => Promisable<void>;
 }) => {
-  console.log(tls);
-
   const [newTL, setNewTL] = useState<CollapsedTL>({
     additionalInfo: "",
     sfx1Id: sfx?.id ?? Infinity,
@@ -304,8 +302,6 @@ export const TLEditorDirect = ({
   });
 
   const connSFXDialog = useRef<HTMLDialogElement>(null);
-
-  console.log("tls", tls);
 
   const [freshTLs, setFreshTLs] = useState<number[]>([]);
 

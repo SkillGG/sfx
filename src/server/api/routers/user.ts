@@ -24,20 +24,12 @@ export const checkSession = async (
 ): Promise<{ ok: true } | { ok: false; err: string; errcode: string }> => {
   const { token, deviceName } = auth;
 
-  console.log(
-    "Checking if ",
-    deviceName,
-    " is logged in with token: ",
-    token,
-    "is logged in",
-  );
+  console.log("Checking if ", deviceName, " is logged in with token: ", token);
   if (!token) return { ok: false, err: "No token?", errcode: "INVALID_TOKEN" };
 
   const userToken = await db.userSession.findFirst({
     where: { token, username: deviceName },
   });
-
-  console.log(userToken);
 
   if (!userToken)
     return {
@@ -59,12 +51,12 @@ export const checkSession = async (
 
   console.log(
     "Loggin in as ",
-    userToken,
-    tokenExpiry,
-    tokenExpiry > Date.now() ? ">" : "<",
-    Date.now(),
-    new Date(),
+    userToken.username,
+    "exipres:",
     new Date(tokenExpiry),
+    tokenExpiry > Date.now() ? ">" : "<",
+    "now",
+    new Date(),
   );
   console.log(
     "refreshing ",

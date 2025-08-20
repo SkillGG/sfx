@@ -1,10 +1,5 @@
 import { api } from "@/trpc/react";
-import {
-  cn,
-  CollapsedTL,
-  type CollapsedOnomatopoeia,
-  type Promisable,
-} from "@/utils";
+import { cn, type CollapsedOnomatopoeia, type Promisable } from "@/utils";
 import { SFX, type SFXClasses } from "./sfx";
 import type { ClassValue } from "clsx";
 
@@ -47,8 +42,6 @@ export const SFXListPanel = ({
   if (dbSFX.isLoading || !sfxs) {
     return <div className={cn(classNames?.loading)}>Loading SFX List</div>;
   }
-
-  console.log("sfxs", sfxs);
 
   return (
     <div className={cn(classNames?.container)}>

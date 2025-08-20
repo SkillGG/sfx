@@ -3,32 +3,8 @@ import { object, string, number, array, literal } from "zod/v4";
 
 import { createTRPCRouter, publicProcedure } from "@/server/api/trpc";
 import { CollapsedOnomatopoeia, CollapsedTL, type SFXData } from "@/utils";
-import type { Onomatopoeia } from "@prisma/client";
 import { checkSession } from "./user";
 import type { PrismaClient } from "@prisma/client";
-import { api } from "@/trpc/server";
-import { inspect } from "util";
-
-type SimpleCollapsedTL = Omit<CollapsedTL, "sfx"> & {
-  sfx: SFXData & { tls?: SimpleCollapsedTL[] };
-};
-
-const collapseSFX = (
-  ogSFX: Onomatopoeia | SFXData,
-  tls?: SimpleCollapsedTL[],
-): CollapsedOnomatopoeia => {
-  const sfx = {
-    ...ogSFX,
-    tls:
-      tls?.map((tl): CollapsedTL => {
-        return {
-          ...tl,
-          sfx: collapseSFX(tl.sfx, tl.sfx.tls),
-        };
-      }) ?? [],
-  };
-  return sfx;
-};
 
 const authShape = object({ token: string(), deviceName: string() });
 
@@ -98,12 +74,6 @@ const sfxGetTLs = async (
   for (const sfxWithTL of sfxsWithTL) {
     const collapsedTLs: CollapsedTL[] = [];
 
-    if (sfxWithTL.sfx.showReverse) {
-      console.log(
-        "SWT",
-        inspect(sfxWithTL, { colors: true, depth: null, showHidden: false }),
-      );
-    }
     for (const tl of sfxWithTL.tls) {
       if (sfxWithTL.sfx.hideTLSFXs?.includes(tl.tlSFX.id)) continue;
       collapsedTLs.push({
@@ -368,11 +338,6 @@ export const sfxRouter = createTRPCRouter({
         const loggedIn = await checkSession(ctx.db, { token, deviceName });
 
         if (loggedIn.ok) {
-          console.log(
-            "forDeletion",
-            tls.filter((q) => q.forDeletion),
-          );
-
           const sfxUpdates = [
             { text, def, extra, read, language, id },
             ...tls.filter((s) => isFinite(s.sfx.id)).map((q) => q.sfx),
@@ -397,8 +362,6 @@ export const sfxRouter = createTRPCRouter({
           );
 
           for (const tl of tls) {
-            console.log("updating", tl);
-
             // update the tls
             if (tl.forDeletion) {
               await ctx.db.translation.delete({ where: { id: tl.id } });
@@ -465,11 +428,6 @@ export const sfxRouter = createTRPCRouter({
         const loggedIn = await checkSession(ctx.db, auth);
         if (!loggedIn.ok) return loggedIn;
         // create og SFX
-
-        console.log(
-          "creating TLs",
-          inspect(tls, { depth: null, colors: true, showHidden: false }),
-        );
 
         type CreateCreateObject = {
           def: string;

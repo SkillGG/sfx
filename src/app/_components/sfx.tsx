@@ -87,7 +87,7 @@ const parseSFXText = (str?: string | null): ReactNode => {
         })}
       {fields
         .filter((q) => q.type !== "string")
-        .map((q, i) => {
+        .map((q, _i) => {
           switch (q.type) {
             default:
               return (

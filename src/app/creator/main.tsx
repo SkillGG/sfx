@@ -47,7 +47,6 @@ const CreatorPage = () => {
   useEffect(() => {
     const memoryStr = localStorage.getItem("creatememory");
     if (memoryStr) {
-      console.log(memoryStr);
       const memory: unknown = JSON.parse(memoryStr);
       console.log(memory);
       if (typeof memory !== "object" || !memory) return;
@@ -78,8 +77,6 @@ const CreatorPage = () => {
           return denullifyIds(tl);
         });
 
-        console.log("denullified: ", denullified);
-
         setTLs(denullified);
       }
     }
@@ -88,7 +85,6 @@ const CreatorPage = () => {
   useEffect(() => {
     if (!firstRun) return;
     const memory = { sfx, def, extra, lang, read, tls };
-    console.log("saving to memory", memory);
     localStorage.setItem("creatememory", JSON.stringify(memory));
   }, [sfx, def, extra, lang, read, tls, firstRun]);
 
@@ -117,8 +113,6 @@ const CreatorPage = () => {
         tls: tls ?? [],
         auth,
       } satisfies Omit<CollapsedOnomatopoeia, "id"> & { auth: UserSessionData };
-
-      console.log("Creating sfx", validSFX);
 
       await createSFX.mutateAsync(validSFX);
 
