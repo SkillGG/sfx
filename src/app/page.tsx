@@ -38,13 +38,14 @@ const List = () => {
         >
           No SFX found.
           <br />
-Send me an
+You can request it via email:<br />
           <Link
             href="mailto:request@sfxvault.org"
             className={cn("text-blue-700", "dark:text-blue-500")}
           >
-            e-mail
-          </Link>!
+            request@sfxvault.org
+          </Link>
+<br/>And I'll add it asap
         </div>
       ) : (
         <SFXListPanel
