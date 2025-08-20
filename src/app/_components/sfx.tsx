@@ -237,6 +237,9 @@ export const SFXEdit = ({
 
   tlAddInfoElem,
 
+  noTLs,
+  allowDeeperTLs,
+
   saveBtnState = "default",
   onSaveClicked,
 
@@ -246,6 +249,8 @@ export const SFXEdit = ({
 }: SFXTLDiscriminator & {
   noLang?: boolean;
   removeLangs?: string[];
+  noTLs?: boolean;
+  allowDeeperTLs?: boolean;
   labels?: {
     main?: React.ReactNode;
     empty?: React.ReactNode;
@@ -528,41 +533,45 @@ export const SFXEdit = ({
                 : (labels?.btns?.save?.saved ?? "Saved")}
           </button>
 
-          <>
-            <dialog
-              id={`tleditdialog_${sfx.id}`}
-              className={cn(
-                "m-auto min-w-[50%] rounded-xl border border-blue-200 bg-white/95 p-6",
-                "shadow-lg backdrop-blur-sm dark:border-blue-700",
-                "dark:bg-slate-800/95 dark:text-white",
-              )}
-              ref={tlEditDialogRef}
-              popover="auto"
-            >
-              <TLEditorDirect
-                tls={sfx.tls}
-                removeOnCancel={false}
-                sfx={sfx}
-                onChange={(tls) => {
-                  console.log("tls_sfx_change", sfx.text, tls);
+          {!noTLs && (
+            <>
+              <dialog
+                id={`tleditdialog_${sfx.id}`}
+                className={cn(
+                  "m-auto min-w-[50%] rounded-xl border border-blue-200 bg-white/95 p-6",
+                  "shadow-lg backdrop-blur-sm dark:border-blue-700",
+                  "dark:bg-slate-800/95 dark:text-white",
+                )}
+                ref={tlEditDialogRef}
+                popover="auto"
+              >
+                <TLEditorDirect
+                  tls={sfx.tls}
+                  removeOnCancel={false}
+                  noTLs={allowDeeperTLs ? false : true}
+                  allowDeeperTLs={allowDeeperTLs}
+                  sfx={sfx}
+                  onChange={(tls) => {
+                    console.log("tls_sfx_change", sfx.text, tls);
 
-                  onChange?.((prev) => ({ ...prev, tls }));
+                    onChange?.((prev) => ({ ...prev, tls }));
+                  }}
+                />
+              </dialog>
+              <button
+                className={cn(
+                  "rounded bg-gray-200 px-2 py-1 text-xs",
+                  "hover:bg-gray-300 dark:bg-slate-600 dark:text-white",
+                  "dark:hover:bg-slate-500",
+                )}
+                onClick={() => {
+                  tlEditDialogRef.current?.showPopover();
                 }}
-              />
-            </dialog>
-            <button
-              className={cn(
-                "rounded bg-gray-200 px-2 py-1 text-xs",
-                "hover:bg-gray-300 dark:bg-slate-600 dark:text-white",
-                "dark:hover:bg-slate-500",
-              )}
-              onClick={() => {
-                tlEditDialogRef.current?.showPopover();
-              }}
-            >
-              {labels?.btns?.edittl ?? "Edit TLs"}
-            </button>
-          </>
+              >
+                {labels?.btns?.edittl ?? "Edit TLs"}
+              </button>
+            </>
+          )}
 
           <button
             className={cn(

@@ -18,6 +18,9 @@ export const TL = ({
 
   removeOnCancel,
 
+  noTLs,
+  allowDeeperTLs,
+
   onChange,
   onSave,
 }: {
@@ -25,6 +28,9 @@ export const TL = ({
 
   removeLangs?: string[];
   removeOnCancel?: boolean;
+
+  noTLs?: boolean;
+  allowDeeperTLs?: boolean;
 
   onSave?: (tl: CollapsedTL | null) => Promisable<void>;
   onChange?: (tl: CollapsedTL) => Promisable<void>;
@@ -45,6 +51,8 @@ export const TL = ({
     return (
       <>
         <SFXEdit
+          noTLs={noTLs}
+          allowDeeperTLs={allowDeeperTLs}
           removeLangs={removeLangs}
           classNames={{
             btns: {
@@ -278,11 +286,16 @@ export const TLEditorDirect = ({
   sfx,
   removeOnCancel,
 
+  noTLs,
+  allowDeeperTLs,
+
   onChange,
 }: {
   tls: CollapsedTL[];
   sfx?: CollapsedOnomatopoeia;
   removeOnCancel?: boolean;
+  noTLs?: boolean;
+  allowDeeperTLs?: boolean;
   onChange: (tls: CollapsedTL[]) => Promisable<void>;
 }) => {
   const [newTL, setNewTL] = useState<CollapsedTL>({
@@ -334,6 +347,8 @@ export const TLEditorDirect = ({
             tl={tl}
             removeLangs={[sfx?.language ?? ""]}
             key={tl.id}
+            noTLs={noTLs}
+            allowDeeperTLs={allowDeeperTLs}
             removeOnCancel={freshTLs.includes(tl.id) ? true : removeOnCancel}
             onChange={async (tl) => {
               const newTLs = tls.map((t) => (t.id === tl.id ? tl : t));

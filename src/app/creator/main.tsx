@@ -383,6 +383,7 @@ const CreatorPage = () => {
         </div>
         <TLEditorDirect
           tls={tls}
+          allowDeeperTLs
           onChange={(tls) => {
             console.log("tls_creator_change", tls);
             setTLs(tls);
@@ -412,6 +413,7 @@ const CreatorPage = () => {
           {createSFX.isPending ? "Creating..." : "Create"}
         </button>
       </div>
+
       {/* Side panel with SFX list */}
       <div className={cn("flex flex-1 flex-col gap-4")}>
         <h2
