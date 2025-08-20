@@ -1,8 +1,8 @@
 import { cn } from "@/utils";
 import { useEffect, useState } from "react";
-import type { SearchQuery } from "../page";
+import { useSearch, type SearchQuery } from "../hooks/search";
 
-const parseSearchQuery = (query: string) => {
+const parseSearchQuery = (query: string, stop: boolean) => {
   const langRegex = /lang:(?<langs>(?:[a-z]){2,4},?)+/i;
   const langMatch = langRegex.exec(query);
 
@@ -10,42 +10,43 @@ const parseSearchQuery = (query: string) => {
 
   const value = query.replace(langRegex, "").trim();
 
-  return { value, langs };
+  return { value, langs, stop };
 };
 
-const SearchBar = ({
-  value,
-  onChange,
-}: {
-  value: SearchQuery;
-  onChange: (value: SearchQuery) => void;
-}) => {
-  const [search, setSearch] = useState<string>("");
+const SearchBar = () => {
+  const globalSearch = useSearch();
 
-  const [debouncedSearch, setDebouncedSearch] = useState<{
-    value: string;
-    langs: string[];
-  }>(parseSearchQuery(""));
+  const [search, setSearch] = useState<string>(
+    globalSearch.search.value +
+      (globalSearch.search.langs.length ? " " : "") +
+      globalSearch.search.langs.map((q) => `lang:${q}`).join(" "),
+  );
+
+  const [debouncedSearch, setDebouncedSearch] = useState<SearchQuery>(
+    parseSearchQuery("", globalSearch.search.stop),
+  );
 
   useEffect(() => {
+    if (globalSearch.search.stop) return;
     setSearch(
-      value.value +
-        (value.langs.length > 0 ? ` lang:${value.langs.join(",")}` : ""),
+      globalSearch.search.value +
+        (globalSearch.search.langs.length > 0
+          ? ` lang:${globalSearch.search.langs.join(",")}`
+          : ""),
     );
-  }, [value]);
+  }, [globalSearch.search]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedSearch(parseSearchQuery(search));
+      setDebouncedSearch(parseSearchQuery(search, false));
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [search]);
+  }, [globalSearch.search.stop, search]);
 
   useEffect(() => {
-    console.log("searching for", debouncedSearch);
-    onChange(debouncedSearch);
-  }, [onChange, debouncedSearch]);
+    globalSearch.setSearch(debouncedSearch);
+  }, [debouncedSearch, globalSearch]);
 
   return (
     <div className={cn("flex w-fit flex-row gap-2")}>

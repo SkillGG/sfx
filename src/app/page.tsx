@@ -6,72 +6,24 @@ import { useDarkMode } from "./hooks/darkmode";
 import { cn } from "@/utils";
 import Link from "next/link";
 import SearchBar from "./_components/searchBar";
-import { Suspense, useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import { SFXListPanel } from "./_components/sfxList.";
-
-export type SearchQuery = {
-  value: string;
-  langs: string[];
-};
+import { isValidSearch, SearchProvider, useSearch } from "./hooks/search";
 
 const PageLoad = () => {
   const { mode } = useDarkMode();
   return <div className={cn(mode)}>Loading...</div>;
 };
 
-const validSearch = (search: SearchQuery) => {
-  return search.value.length >= 3 || search.value.length === 0;
-};
-
-const Search = ({
-  search: fxsearch,
-  setSearch: setSearchbarText,
-}: {
-  search?: SearchQuery | null;
-  setSearch: (q: SearchQuery) => void;
-}) => {
-  const queryParams = useSearchParams();
-
-  const [search, setSearch] = useState<SearchQuery>({
-    value: fxsearch?.value ?? queryParams.get("search") ?? "",
-    langs: fxsearch?.langs ?? queryParams.get("langs")?.split(",") ?? [],
-  });
-
-  const [lastValidSearch, setLastValidSearch] = useState<SearchQuery>(search);
+const List = () => {
+  const { search } = useSearch();
 
   const { data: sfxs, isLoading } = api.sfx.listSFX.useQuery(
-    { query: lastValidSearch.value, langs: lastValidSearch.langs },
+    { query: search.value, langs: search.langs },
     {
-      enabled: validSearch(search),
+      enabled: isValidSearch(search),
     },
   );
-
-  useEffect(() => {
-    if (fxsearch) {
-      setSearch(fxsearch);
-    }
-  }, [fxsearch]);
-
-  useEffect(() => {
-    if (validSearch(search)) {
-      setLastValidSearch(search);
-      setSearchbarText(search);
-      history.pushState(
-        null,
-        "",
-        `?search=${search.value}${
-          search.langs.length > 0 ? `&langs=${search.langs.join(",")}` : ""
-        }`,
-      );
-    }
-  }, [search]);
-
-  useEffect(() => {
-    if (validSearch(search)) {
-      setLastValidSearch(search);
-    }
-  }, [search]);
 
   if (isLoading) return <PageLoad key={"load"} />;
 
@@ -118,9 +70,6 @@ const Search = ({
 
 const SearchPage = () => {
   const { mode } = useDarkMode();
-
-  const [search, setSearch] = useState<SearchQuery | null>(null);
-
   return (
     <div
       className={cn(
@@ -136,24 +85,23 @@ const SearchPage = () => {
           "dark:border-blue-700 dark:bg-slate-800/80 dark:text-blue-100",
         )}
       >
-        <div className={cn("mb-2 flex items-center justify-between")}>
-          <h1
-            className={cn(
-              "m-0 text-4xl font-extrabold tracking-tight",
-              "text-blue-900 dark:text-blue-100",
-            )}
-          >
-            SFX Vault
-          </h1>
-          <SearchBar
-            value={search ?? { langs: [], value: "" }}
-            onChange={setSearch}
-          />
-          <DarkModeSwitch />
-        </div>
-        <hr className={cn("mb-4 border-blue-200 dark:border-blue-700")} />
         <Suspense fallback={<PageLoad key={"load"} />}>
-          <Search setSearch={setSearch} search={search} />
+          <SearchProvider>
+            <div className={cn("mb-2 flex items-center justify-between")}>
+              <h1
+                className={cn(
+                  "m-0 text-4xl font-extrabold tracking-tight",
+                  "text-blue-900 dark:text-blue-100",
+                )}
+              >
+                SFX Vault
+              </h1>
+              <SearchBar />
+              <DarkModeSwitch />
+            </div>
+            <hr className={cn("mb-4 border-blue-200 dark:border-blue-700")} />
+            <List />
+          </SearchProvider>
         </Suspense>
       </div>
     </div>
