@@ -5,7 +5,6 @@ import { createTRPCRouter, publicProcedure } from "@/server/api/trpc";
 import { CollapsedOnomatopoeia, CollapsedTL, type SFXData } from "@/utils";
 import { checkSession } from "./user";
 import type { PrismaClient } from "@prisma/client";
-import { inspect } from "util";
 
 const authShape = object({ token: string(), deviceName: string() });
 
@@ -77,15 +76,13 @@ const sfxGetTLs = async (
   for (const sfxWithTL of sfxsWithTL) {
     const collapsedTLs: CollapsedTL[] = [];
 
-    console.log("got SFX with TLs:", sfxWithTL.sfx.text, sfxWithTL.tls);
-
     for (const tl of sfxWithTL.tls) {
-      const oppositeSFX =
-        tl.ogSFX.id === sfxWithTL.sfx.id
-          ? tl.tlSFX
-          : sfxWithTL.sfx.show === "both"
-            ? tl.ogSFX
-            : null;
+      const useOG = tl.ogSFX.id !== sfxWithTL.sfx.id;
+      const oppositeSFX = !useOG
+        ? tl.tlSFX
+        : sfxWithTL.sfx.show === "both"
+          ? tl.ogSFX
+          : null;
 
       if (!oppositeSFX) continue;
 
@@ -93,7 +90,7 @@ const sfxGetTLs = async (
       if (oppositeSFX.id === sfxWithTL.sfx.id) continue;
 
       collapsedTLs.push({
-        additionalInfo: tl.additionalInfo,
+        additionalInfo: (useOG ? "⏉" : "") + (tl.additionalInfo ?? ""),
         id: tl.id,
         sfx1Id: tl.sfx1Id,
         sfx2Id: tl.sfx2Id,
@@ -113,7 +110,7 @@ const sfxGetTLs = async (
     Collapsed.push({ ...sfxWithTL.sfx, tls: collapsedTLs });
   }
 
-  return typeof reverse ? Collapsed.reverse() : Collapsed;
+  return reverse ? Collapsed.reverse() : Collapsed;
 };
 
 const sfxContains = (sfx: SFXData, search: string) => {
@@ -244,24 +241,12 @@ const searchDBForSFX = async (
         v.optls.some((tl) => tl.ogSFX.id === sfx.id),
     );
 
-    console.log(
-      "SFX already in list:",
-      inspect(prevSFX, {
-        colors: true,
-        depth: null,
-        compact: true,
-        showHidden: false,
-      }),
-      sfx,
-    );
-
     if (prevSFX.length) {
       if (sfxContains(sfx, search.query)) {
         const prevSFXToHide = prevSFX.filter((psfx) => {
           return !sfxContains(psfx, search.query);
         });
         if (prevSFXToHide.length > 0) {
-          console.log("hiding", prevSFXToHide);
           return [
             ...arr.filter((q) => !prevSFXToHide.find((x) => x.id === q.id)),
             {
@@ -285,17 +270,6 @@ const searchDBForSFX = async (
     return [...arr, sfxObj];
   }, []);
 
-  console.log(
-    "dedupedSFX:",
-    "\n",
-    inspect(deduped, {
-      colors: true,
-      showHidden: false,
-      depth: null,
-      compact: true,
-    }).replaceAll("\t", " "),
-  );
-
   return (await sfxGetTLs(db, deduped)).slice(
     search.skip,
     search.limit + search.skip,
@@ -309,7 +283,7 @@ export const sfxRouter = createTRPCRouter({
       const search = !input
         ? undefined
         : typeof input === "object" && "order" in input
-          ? input.order
+          ? input
           : typeof input === "string"
             ? input
             : ({
@@ -321,6 +295,7 @@ export const sfxRouter = createTRPCRouter({
 
       if (
         typeof search === "object" &&
+        !("order" in search) &&
         (search.query || search.langs.length > 0)
       )
         return await searchDBForSFX(ctx.db, search);
@@ -337,13 +312,18 @@ export const sfxRouter = createTRPCRouter({
         },
       });
 
-      if (input === "list") return sfxs.map((q) => ({ ...q, tls: [] }));
+      if (search === "list") return sfxs.map((q) => ({ ...q, tls: [] }));
 
-      const ret = await sfxGetTLs(ctx.db, sfxs, search === "desc");
+      const reverse = search && "order" in search && search.order === "desc";
 
-      return typeof search === "object"
-        ? ret.slice(search.skip, search.limit + search.skip)
-        : ret;
+      const ret = await sfxGetTLs(ctx.db, sfxs, reverse);
+
+      console.log(search);
+
+      const limit = search?.limit ?? 100;
+      const skip = search?.skip ?? 0;
+
+      return typeof search === "object" ? ret.slice(skip, limit + skip) : ret;
     }),
 
   updateSFX: publicProcedure
@@ -392,8 +372,6 @@ export const sfxRouter = createTRPCRouter({
             ...allTLs.filter((s) => isFinite(s.sfx.id)).map((q) => q.sfx),
           ];
 
-          console.log("updating SFX", sfxUpdates);
-
           // update every SFX
           await Promise.all(
             sfxUpdates.map(async (sfx) => {
@@ -415,13 +393,11 @@ export const sfxRouter = createTRPCRouter({
           for (const tl of allTLs) {
             // update the tls
             if (tl.forDeletion) {
-              console.log("removing TL", tl);
               await ctx.db.translation.delete({ where: { id: tl.id } });
               continue;
             }
 
             if (!isFinite(tl.id) || !isFinite(tl.sfx2Id)) {
-              console.log("upserting onomatopoeia", tl);
               await ctx.db.onomatopoeia.upsert({
                 where: { id: isFinite(tl.sfx.id) ? tl.sfx.id : -1 },
                 create: {
@@ -454,7 +430,6 @@ export const sfxRouter = createTRPCRouter({
               });
               continue;
             }
-            console.log("updating tl additional info");
             await ctx.db.translation.update({
               where: { id: tl.id },
               data: {

@@ -47,7 +47,9 @@ export const TL = ({
     null,
   );
 
-  if (mode === "edit") {
+  const isReversed = tl.additionalInfo?.startsWith("⏉");
+
+  if (mode === "edit" && !isReversed) {
     return (
       <>
         <SFXEdit
@@ -128,7 +130,9 @@ export const TL = ({
         tlExtra={tl.additionalInfo ?? ""}
         classNames={{
           default: {
-            container: tl.forDeletion && "border-red-400 dark:border-red-400",
+            container: cn(
+              tl.forDeletion && "border-red-400 dark:border-red-400",
+            ),
             topinfo: {
               text: tl.forDeletion && "text-red-400 dark:text-red-400",
             },

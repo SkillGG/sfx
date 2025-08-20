@@ -205,12 +205,23 @@ const SFXCard = ({
             )}
           >
             {usedSFX.tls.map((tl) => {
+              const isReversed = tl.additionalInfo?.startsWith("⏉");
               return (
                 <SFX
                   key={tl.sfx1Id + "." + tl.sfx2Id}
                   sfx={tl.sfx}
-                  classNames={classNames?.tls?.sfx}
-                  tlExtra={tl.additionalInfo ?? undefined}
+                  classNames={{
+                    ...classNames?.tls?.sfx,
+                    default: {
+                      ...classNames?.tls?.sfx?.default,
+                      container: cn(
+                        "border-2 dark:border-1",
+                        classNames?.tls?.sfx?.default?.container,
+                        isReversed && "border-red-900 dark:border-yellow-400",
+                      ),
+                    },
+                  }}
+                  tlExtra={tl.additionalInfo?.replace("⏉", "") ?? undefined}
                 />
               );
             })}
