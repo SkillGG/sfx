@@ -4,7 +4,13 @@ import {
   type Promisable,
   type ValidationResult,
 } from "@/utils";
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import React, {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { useSFXLangs } from "../hooks/langs";
 import { SFXLangSelect } from "./sfxLangSelect";
 import { env } from "@/env";
@@ -76,13 +82,13 @@ const parseSFXText = (str?: string | null): ReactNode => {
         .filter((q) => q.type === "string")
         .map((q, i, arr) => {
           return (
-            <>
+            <React.Fragment key={q.data}>
               {arr[0]?.data.startsWith("- ") && `${i + 1}. `}
               {i === 0 && q.data.startsWith("- ")
                 ? q.data.substring(1)
                 : q.data}
               {"\n"}
-            </>
+            </React.Fragment>
           );
         })}
       {fields
@@ -91,9 +97,9 @@ const parseSFXText = (str?: string | null): ReactNode => {
           switch (q.type) {
             default:
               return (
-                <>
+                <React.Fragment key={str ?? q.data}>
                   {q.type}:{q.data}
-                </>
+                </React.Fragment>
               );
           }
         })}

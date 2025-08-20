@@ -6,7 +6,7 @@ import { useDarkMode } from "./hooks/darkmode";
 import { cn } from "@/utils";
 import Link from "next/link";
 import SearchBar from "./_components/searchBar";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { SFXListPanel } from "./_components/sfxList.";
 
@@ -15,16 +15,27 @@ export type SearchQuery = {
   langs: string[];
 };
 
+const PageLoad = () => {
+  const { mode } = useDarkMode();
+  return <div className={cn(mode)}>Loading...</div>;
+};
+
 const validSearch = (search: SearchQuery) => {
   return search.value.length >= 3 || search.value.length === 0;
 };
 
-export default function Home() {
+const Search = ({
+  search: fxsearch,
+  setSearch: setSearchbarText,
+}: {
+  search?: SearchQuery | null;
+  setSearch: (q: SearchQuery) => void;
+}) => {
   const queryParams = useSearchParams();
 
   const [search, setSearch] = useState<SearchQuery>({
-    value: "",
-    langs: [],
+    value: fxsearch?.value ?? queryParams.get("search") ?? "",
+    langs: fxsearch?.langs ?? queryParams.get("langs")?.split(",") ?? [],
   });
 
   const [lastValidSearch, setLastValidSearch] = useState<SearchQuery>(search);
@@ -37,13 +48,24 @@ export default function Home() {
   );
 
   useEffect(() => {
-    const value = queryParams.get("search");
-    const langs = queryParams.get("langs");
-    setSearch({
-      value: value ?? "",
-      langs: langs?.split(",") ?? [],
-    });
-  }, [queryParams]);
+    if (fxsearch) {
+      setSearch(fxsearch);
+    }
+  }, [fxsearch]);
+
+  useEffect(() => {
+    if (validSearch(search)) {
+      setLastValidSearch(search);
+      setSearchbarText(search);
+      history.pushState(
+        null,
+        "",
+        `?search=${search.value}${
+          search.langs.length > 0 ? `&langs=${search.langs.join(",")}` : ""
+        }`,
+      );
+    }
+  }, [search]);
 
   useEffect(() => {
     if (validSearch(search)) {
@@ -51,29 +73,53 @@ export default function Home() {
     }
   }, [search]);
 
-  const { mode } = useDarkMode();
+  if (isLoading) return <PageLoad key={"load"} />;
 
-  if (isLoading && !validSearch(search))
-    return (
-      <div
-        className={cn(
-          "flex h-screen w-full items-center justify-center",
-          mode,
-          "dark:bg-slate-900",
-        )}
-      >
+  return (
+    <>
+      {!sfxs || sfxs.length === 0 ? (
         <div
           className={cn(
-            "mx-auto mt-16 w-fit rounded border border-blue-200 bg-white p-8",
-            "text-lg text-blue-700 shadow dark:border-blue-700",
-            "dark:bg-slate-800/80 dark:text-blue-200",
-            mode,
+            "py-12 text-center text-lg",
+            "text-blue-500 dark:text-blue-300",
           )}
         >
-          Loading...
+          No SFX found.
+          <br />
+          <Link
+            href="/creator"
+            className={cn("text-blue-700", "dark:text-blue-500")}
+          >
+            Create one!
+          </Link>
         </div>
-      </div>
-    );
+      ) : (
+        <SFXListPanel
+          sfxList={sfxs}
+          classNames={{
+            container: "max-h-[70dvh] overflow-auto px-2 flex flex-col gap-2",
+            sfxs: {
+              default: {
+                tls: {
+                  sfx: {
+                    default: {
+                      container: "basis-[45%] grow",
+                    },
+                  },
+                },
+              },
+            },
+          }}
+        />
+      )}
+    </>
+  );
+};
+
+const SearchPage = () => {
+  const { mode } = useDarkMode();
+
+  const [search, setSearch] = useState<SearchQuery | null>(null);
 
   return (
     <div
@@ -99,48 +145,21 @@ export default function Home() {
           >
             SFX Vault
           </h1>
-          <SearchBar value={search} onChange={setSearch} />
+          <SearchBar
+            value={search ?? { langs: [], value: "" }}
+            onChange={setSearch}
+          />
           <DarkModeSwitch />
         </div>
         <hr className={cn("mb-4 border-blue-200 dark:border-blue-700")} />
-        {isLoading && validSearch(search) ? (
-          <div>Loading...</div>
-        ) : !sfxs || sfxs.length === 0 ? (
-          <div
-            className={cn(
-              "py-12 text-center text-lg",
-              "text-blue-500 dark:text-blue-300",
-            )}
-          >
-            No SFX found.
-            <br />
-            <Link
-              href="/creator"
-              className={cn("text-blue-700", "dark:text-blue-500")}
-            >
-              Create one!
-            </Link>
-          </div>
-        ) : (
-          <SFXListPanel
-            sfxList={sfxs}
-            classNames={{
-              container: "max-h-[70dvh] overflow-auto px-2 flex flex-col gap-2",
-              sfxs: {
-                default: {
-                  tls: {
-                    sfx: {
-                      default: {
-                        container: "basis-[45%] grow",
-                      },
-                    },
-                  },
-                },
-              },
-            }}
-          />
-        )}
+        <Suspense fallback={<PageLoad key={"load"} />}>
+          <Search setSearch={setSearch} search={search} />
+        </Suspense>
       </div>
     </div>
   );
+};
+
+export default function Home() {
+  return <SearchPage />;
 }

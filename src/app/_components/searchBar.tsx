@@ -45,15 +45,6 @@ const SearchBar = ({
   useEffect(() => {
     console.log("searching for", debouncedSearch);
     onChange(debouncedSearch);
-    history.pushState(
-      null,
-      "",
-      `?search=${debouncedSearch.value}${
-        debouncedSearch.langs.length > 0
-          ? `&langs=${debouncedSearch.langs.join(",")}`
-          : ""
-      }`,
-    );
   }, [onChange, debouncedSearch]);
 
   return (
