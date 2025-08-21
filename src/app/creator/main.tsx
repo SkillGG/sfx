@@ -49,7 +49,6 @@ const CreatorPage = () => {
     const memoryStr = localStorage.getItem("creatememory");
     if (memoryStr) {
       const memory: unknown = JSON.parse(memoryStr);
-      console.log(memory);
       if (typeof memory !== "object" || !memory) return;
       if ("sfx" in memory && typeof memory.sfx === "string") setSFX(memory.sfx);
       if ("def" in memory && typeof memory.def === "string") setDef(memory.def);

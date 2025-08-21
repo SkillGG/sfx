@@ -3,10 +3,10 @@ import { z } from "zod";
 
 const { NODE_ENV } = process.env;
 
-console.log(
-  "Using DB @ ",
-  new URL(process.env.DATABASE_URL ?? "https://undefined").hostname,
-);
+// console.log(
+//   "Using DB @ ",
+//   new URL(process.env.DATABASE_URL ?? "https://undefined").hostname,
+// );
 
 export const env = createEnv({
   /**
