@@ -6,21 +6,8 @@ import { api } from "@/trpc/react";
 import { cn } from "@/utils";
 import LoginPage from "./login";
 import { UserSessionProvider } from "../hooks/userlogin";
-import type { ClassValue } from "clsx";
 import { useTheme } from "../hooks/theme";
-
-export const Spinner = ({ className }: { className?: ClassValue }) => {
-  return (
-    <div
-      className={cn(
-        "h-8 w-8 animate-spin rounded-full border-4 border-(color:--accent-400) border-t-transparent",
-        "dark:border-(color:--accent-300) dark:border-t-transparent",
-        className,
-      )}
-      aria-label="Loading spinner"
-    />
-  );
-};
+import { Spinner } from "../_components/spinner";
 
 const LoadPageSpinner = () => {
   const { mode } = useTheme();

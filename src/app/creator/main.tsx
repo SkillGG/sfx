@@ -13,7 +13,7 @@ import { TLEditorDirect } from "../_components/TLEditor";
 import type { SFXLang } from "../hooks/langs";
 import { useUser, type UserSessionData } from "../hooks/userlogin";
 import { SFXListPanel } from "../_components/sfxList.";
-import { Spinner } from "./page";
+import { Spinner } from "../_components/spinner";
 
 // SFX creator page
 const CreatorPage = () => {

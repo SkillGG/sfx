@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <title>BOOM</title>
+  <rect width="64" height="64" rx="12" ry="12" fill="#111827"/>
+  <g transform="translate(32,32)">
+    <polygon points="0,-26 6,-12 22,-12 9,-3 14,12 0,4 -14,12 -9,-3 -22,-12 -6,-12"
+             fill="#f59e0b" stroke="#b45309" stroke-width="2"/>
+    <polygon points="0,-18 5,-9 14,-9 6,-3 9,7 0,2 -9,7 -6,-3 -14,-9 -5,-9"
+             fill="#ef4444" opacity="0.9"/>
+  </g>
+  <text x="32" y="39" font-family="Impact, Arial Black, sans-serif" font-size="18"
+        text-anchor="middle" fill="#ffffff" stroke="#000000" stroke-width="1.5">BOOM</text>
+</svg>

@@ -9,7 +9,7 @@ import SearchBar from "./_components/searchBar";
 import { Suspense } from "react";
 import { SFXListPanel } from "./_components/sfxList.";
 import { isValidSearch, SearchProvider, useSearch } from "./hooks/search";
-import { Spinner } from "./creator/page";
+import { Spinner } from "./_components/spinner";
 
 const PageLoad = () => {
   const { mode } = useTheme();

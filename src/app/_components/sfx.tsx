@@ -21,7 +21,7 @@ import { TLEditorDirect } from "./TLEditor";
 import type { ClassValue } from "clsx";
 import Image from "next/image";
 import { api } from "@/trpc/react";
-import { Spinner } from "../creator/page";
+import { Spinner } from "./spinner";
 
 export type SaveState = "default" | "done" | "waiting";
 
@@ -79,7 +79,7 @@ const sfxFieldFromString = (str: string): Arrayable<SFXField | null> => {
 };
 
 const GetLocalImg = ({ filename, alt }: { filename: string; alt: string }) => {
-  const [img, rest] = api.picture.getPicture.useSuspenseQuery(filename);
+  const [img] = api.picture.getPicture.useSuspenseQuery(filename);
 
   const popupRef = useRef<HTMLDialogElement>(null);
 

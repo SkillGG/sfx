@@ -2,7 +2,7 @@ import { api } from "@/trpc/react";
 import { cn, type CollapsedOnomatopoeia, type Promisable } from "@/utils";
 import { SFX, type SFXClasses } from "./sfx";
 import type { ClassValue } from "clsx";
-import { Spinner } from "../creator/page";
+import { Spinner } from "./spinner";
 
 export const SFXListPanel = ({
   editable,
