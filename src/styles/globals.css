@@ -209,6 +209,128 @@
   --accent-pink-700: #be185d;
   --accent-pink-800: #9d174d;
   --accent-pink-900: #831843;
+
+  /* New accent colors */
+  --accent-yellow-50: #fefce8;
+  --accent-yellow-100: #fef9c3;
+  --accent-yellow-200: #fef08a;
+  --accent-yellow-300: #fde047;
+  --accent-yellow-400: #facc15;
+  --accent-yellow-500: #eab308;
+  --accent-yellow-600: #ca8a04;
+  --accent-yellow-700: #a16207;
+  --accent-yellow-800: #854d0e;
+  --accent-yellow-900: #713f12;
+
+  --accent-teal-50: #f0fdfa;
+  --accent-teal-100: #ccfbf1;
+  --accent-teal-200: #99f6e4;
+  --accent-teal-300: #5eead4;
+  --accent-teal-400: #2dd4bf;
+  --accent-teal-500: #14b8a6;
+  --accent-teal-600: #0d9488;
+  --accent-teal-700: #0f766e;
+  --accent-teal-800: #115e59;
+  --accent-teal-900: #134e4a;
+
+  --accent-indigo-50: #eef2ff;
+  --accent-indigo-100: #e0e7ff;
+  --accent-indigo-200: #c7d2fe;
+  --accent-indigo-300: #a5b4fc;
+  --accent-indigo-400: #818cf8;
+  --accent-indigo-500: #6366f1;
+  --accent-indigo-600: #4f46e5;
+  --accent-indigo-700: #4338ca;
+  --accent-indigo-800: #3730a3;
+  --accent-indigo-900: #312e81;
+
+  --accent-emerald-50: #ecfdf5;
+  --accent-emerald-100: #d1fae5;
+  --accent-emerald-200: #a7f3d0;
+  --accent-emerald-300: #6ee7b7;
+  --accent-emerald-400: #34d399;
+  --accent-emerald-500: #10b981;
+  --accent-emerald-600: #059669;
+  --accent-emerald-700: #047857;
+  --accent-emerald-800: #065f46;
+  --accent-emerald-900: #064e3b;
+
+  --accent-cyan-50: #ecfeff;
+  --accent-cyan-100: #cffafe;
+  --accent-cyan-200: #a5f3fc;
+  --accent-cyan-300: #67e8f9;
+  --accent-cyan-400: #22d3ee;
+  --accent-cyan-500: #06b6d4;
+  --accent-cyan-600: #0891b2;
+  --accent-cyan-700: #0e7490;
+  --accent-cyan-800: #155e75;
+  --accent-cyan-900: #164e63;
+
+  --accent-violet-50: #f5f3ff;
+  --accent-violet-100: #ede9fe;
+  --accent-violet-200: #ddd6fe;
+  --accent-violet-300: #c4b5fd;
+  --accent-violet-400: #a78bfa;
+  --accent-violet-500: #8b5cf6;
+  --accent-violet-600: #7c3aed;
+  --accent-violet-700: #6d28d9;
+  --accent-violet-800: #5b21b6;
+  --accent-violet-900: #4c1d95;
+
+  --accent-fuchsia-50: #fdf4ff;
+  --accent-fuchsia-100: #fae8ff;
+  --accent-fuchsia-200: #f5d0fe;
+  --accent-fuchsia-300: #f0abfc;
+  --accent-fuchsia-400: #e879f9;
+  --accent-fuchsia-500: #d946ef;
+  --accent-fuchsia-600: #c026d3;
+  --accent-fuchsia-700: #a21caf;
+  --accent-fuchsia-800: #86198f;
+  --accent-fuchsia-900: #701a75;
+
+  --accent-lime-50: #f7fee7;
+  --accent-lime-100: #ecfccb;
+  --accent-lime-200: #d9f99d;
+  --accent-lime-300: #bef264;
+  --accent-lime-400: #a3e635;
+  --accent-lime-500: #84cc16;
+  --accent-lime-600: #65a30d;
+  --accent-lime-700: #4d7c0f;
+  --accent-lime-800: #3f6212;
+  --accent-lime-900: #365314;
+
+  --accent-orange-50: #fff7ed;
+  --accent-orange-100: #ffedd5;
+  --accent-orange-200: #fed7aa;
+  --accent-orange-300: #fdba74;
+  --accent-orange-400: #fb923c;
+  --accent-orange-500: #f97316;
+  --accent-orange-600: #ea580c;
+  --accent-orange-700: #c2410c;
+  --accent-orange-800: #9a3412;
+  --accent-orange-900: #7c2d12;
+
+  --accent-red-50: #fef2f2;
+  --accent-red-100: #fee2e2;
+  --accent-red-200: #fecaca;
+  --accent-red-300: #fca5a5;
+  --accent-red-400: #f87171;
+  --accent-red-500: #ef4444;
+  --accent-red-600: #dc2626;
+  --accent-red-700: #b91c1c;
+  --accent-red-800: #991b1b;
+  --accent-red-900: #7f1d1d;
+
+  --accent-slate-50: #f8fafc;
+  --accent-slate-100: #f1f5f9;
+  --accent-slate-200: #e2e8f0;
+  --accent-slate-300: #cbd5e1;
+  --accent-slate-400: #94a3b8;
+  --accent-slate-500: #64748b;
+  --accent-slate-600: #475569;
+  --accent-slate-700: #334155;
+  --accent-slate-800: #1e293b;
+  --accent-slate-900: #0f172a;
 }
 
 /* data-accent switcher: remap --accent-* to chosen palette */
@@ -294,4 +416,159 @@
   --accent-700: var(--accent-blue-700);
   --accent-800: var(--accent-blue-800);
   --accent-900: var(--accent-blue-900);
+}
+
+/* New accent color rules */
+:root[data-accent="yellow"],
+[data-accent="yellow"] {
+  --accent-50: var(--accent-yellow-50);
+  --accent-100: var(--accent-yellow-100);
+  --accent-200: var(--accent-yellow-200);
+  --accent-300: var(--accent-yellow-300);
+  --accent-400: var(--accent-yellow-400);
+  --accent-500: var(--accent-yellow-500);
+  --accent-600: var(--accent-yellow-600);
+  --accent-700: var(--accent-yellow-700);
+  --accent-800: var(--accent-yellow-800);
+  --accent-900: var(--accent-yellow-900);
+}
+
+:root[data-accent="teal"],
+[data-accent="teal"] {
+  --accent-50: var(--accent-teal-50);
+  --accent-100: var(--accent-teal-100);
+  --accent-200: var(--accent-teal-200);
+  --accent-300: var(--accent-teal-300);
+  --accent-400: var(--accent-teal-400);
+  --accent-500: var(--accent-teal-500);
+  --accent-600: var(--accent-teal-600);
+  --accent-700: var(--accent-teal-700);
+  --accent-800: var(--accent-teal-800);
+  --accent-900: var(--accent-teal-900);
+}
+
+:root[data-accent="indigo"],
+[data-accent="indigo"] {
+  --accent-50: var(--accent-indigo-50);
+  --accent-100: var(--accent-indigo-100);
+  --accent-200: var(--accent-indigo-200);
+  --accent-300: var(--accent-indigo-300);
+  --accent-400: var(--accent-indigo-400);
+  --accent-500: var(--accent-indigo-500);
+  --accent-600: var(--accent-indigo-600);
+  --accent-700: var(--accent-indigo-700);
+  --accent-800: var(--accent-indigo-800);
+  --accent-900: var(--accent-indigo-900);
+}
+
+:root[data-accent="emerald"],
+[data-accent="emerald"] {
+  --accent-50: var(--accent-emerald-50);
+  --accent-100: var(--accent-emerald-100);
+  --accent-200: var(--accent-emerald-200);
+  --accent-300: var(--accent-emerald-300);
+  --accent-400: var(--accent-emerald-400);
+  --accent-500: var(--accent-emerald-500);
+  --accent-600: var(--accent-emerald-600);
+  --accent-700: var(--accent-emerald-700);
+  --accent-800: var(--accent-emerald-800);
+  --accent-900: var(--accent-emerald-900);
+}
+
+:root[data-accent="cyan"],
+[data-accent="cyan"] {
+  --accent-50: var(--accent-cyan-50);
+  --accent-100: var(--accent-cyan-100);
+  --accent-200: var(--accent-cyan-200);
+  --accent-300: var(--accent-cyan-300);
+  --accent-400: var(--accent-cyan-400);
+  --accent-500: var(--accent-cyan-500);
+  --accent-600: var(--accent-cyan-600);
+  --accent-700: var(--accent-cyan-700);
+  --accent-800: var(--accent-cyan-800);
+  --accent-900: var(--accent-cyan-900);
+}
+
+:root[data-accent="violet"],
+[data-accent="violet"] {
+  --accent-50: var(--accent-violet-50);
+  --accent-100: var(--accent-violet-100);
+  --accent-200: var(--accent-violet-200);
+  --accent-300: var(--accent-violet-300);
+  --accent-400: var(--accent-violet-400);
+  --accent-500: var(--accent-violet-500);
+  --accent-600: var(--accent-violet-600);
+  --accent-700: var(--accent-violet-700);
+  --accent-800: var(--accent-violet-800);
+  --accent-900: var(--accent-violet-900);
+}
+
+:root[data-accent="fuchsia"],
+[data-accent="fuchsia"] {
+  --accent-50: var(--accent-fuchsia-50);
+  --accent-100: var(--accent-fuchsia-100);
+  --accent-200: var(--accent-fuchsia-200);
+  --accent-300: var(--accent-fuchsia-300);
+  --accent-400: var(--accent-fuchsia-400);
+  --accent-500: var(--accent-fuchsia-500);
+  --accent-600: var(--accent-fuchsia-600);
+  --accent-700: var(--accent-fuchsia-700);
+  --accent-800: var(--accent-fuchsia-800);
+  --accent-900: var(--accent-fuchsia-900);
+}
+
+:root[data-accent="lime"],
+[data-accent="lime"] {
+  --accent-50: var(--accent-lime-50);
+  --accent-100: var(--accent-lime-100);
+  --accent-200: var(--accent-lime-200);
+  --accent-300: var(--accent-lime-300);
+  --accent-400: var(--accent-lime-400);
+  --accent-500: var(--accent-lime-500);
+  --accent-600: var(--accent-lime-600);
+  --accent-700: var(--accent-lime-700);
+  --accent-800: var(--accent-lime-800);
+  --accent-900: var(--accent-lime-900);
+}
+
+:root[data-accent="orange"],
+[data-accent="orange"] {
+  --accent-50: var(--accent-orange-50);
+  --accent-100: var(--accent-orange-100);
+  --accent-200: var(--accent-orange-200);
+  --accent-300: var(--accent-orange-300);
+  --accent-400: var(--accent-orange-400);
+  --accent-500: var(--accent-orange-500);
+  --accent-600: var(--accent-orange-600);
+  --accent-700: var(--accent-orange-700);
+  --accent-800: var(--accent-orange-800);
+  --accent-900: var(--accent-orange-900);
+}
+
+:root[data-accent="red"],
+[data-accent="red"] {
+  --accent-50: var(--accent-red-50);
+  --accent-100: var(--accent-red-100);
+  --accent-200: var(--accent-red-200);
+  --accent-300: var(--accent-red-300);
+  --accent-400: var(--accent-red-400);
+  --accent-500: var(--accent-red-500);
+  --accent-600: var(--accent-red-600);
+  --accent-700: var(--accent-red-700);
+  --accent-800: var(--accent-red-800);
+  --accent-900: var(--accent-red-900);
+}
+
+:root[data-accent="slate"],
+[data-accent="slate"] {
+  --accent-50: var(--accent-slate-50);
+  --accent-100: var(--accent-slate-100);
+  --accent-200: var(--accent-slate-200);
+  --accent-300: var(--accent-slate-300);
+  --accent-400: var(--accent-slate-400);
+  --accent-500: var(--accent-slate-500);
+  --accent-600: var(--accent-slate-600);
+  --accent-700: var(--accent-slate-700);
+  --accent-800: var(--accent-slate-800);
+  --accent-900: var(--accent-slate-900);
 }

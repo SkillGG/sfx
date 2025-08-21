@@ -14,6 +14,10 @@ const LoginPage = () => {
 
   const [err, setError] = useState("");
 
+  const [capslock, setCapslock] = useState(false);
+
+  const [show, setShow] = useState(false);
+
   return (
     <div
       className={cn(
@@ -52,22 +56,44 @@ const LoginPage = () => {
             <AccentSwitch className={cn("ml-auto h-4 w-4")} />
             <DarkModeSwitch />
           </div>
-          <input
-            type="password"
-            className={cn(
-              "rounded-md border border-slate-300 bg-slate-50 px-3 py-2 text-slate-900",
-              "focus:ring-2 focus:ring-blue-500 focus:outline-none",
-              "dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100",
-              err && "border-red-900",
-              err && "dark:border-red-900",
-            )}
-            onChange={(e) => {
-              setError("");
-              setPass(e.currentTarget.value);
-            }}
-            value={pass}
-            autoFocus
-          />
+          <div>
+            <div className={cn("text-(color:--notice-500)")}>
+              {capslock && "CAPS!"}
+            </div>
+            <input
+              type={show ? "text" : "password"}
+              className={cn(
+                "rounded-md border border-slate-300 bg-slate-50 px-3 py-2",
+                "focus:ring-2 focus:ring-blue-500 focus:outline-none",
+                "dark:border-slate-600 dark:bg-slate-700",
+                err && "border-(color:--error-800)",
+                err && "dark:border-(color:--error-400)",
+                capslock && "border-(color:--notice-700)",
+                capslock && "dark:border-(color:--notice-400)",
+                !show && "text-(color:--accent-600)",
+                !show && "dark:text-(color:--accent-200)",
+              )}
+              onChange={(e) => {
+                setError("");
+                setPass(e.currentTarget.value);
+              }}
+              onKeyDown={(k) => {
+                setCapslock(k.getModifierState("CapsLock"));
+              }}
+              value={pass}
+              autoFocus
+            />
+            <button
+              type="button"
+              onClick={() => setShow((p) => !p)}
+              className={cn(
+                "ml-4 min-w-[3rem]",
+                "dark:text-(color:--accent-400)",
+              )}
+            >
+              {show ? "Hide" : "Show"}
+            </button>
+          </div>
         </label>
         {err && (
           <div

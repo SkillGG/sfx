@@ -73,10 +73,7 @@ const sfxFieldFromString = (str: string): Arrayable<SFXField | null> => {
     }
   }
 
-  if (!str.includes(":")) {
-    return { type: "string", data: str };
-  }
-  return null;
+  return { type: "string", data: str };
 };
 
 const GetLocalImg = ({
@@ -110,7 +107,7 @@ const GetLocalImg = ({
     <>
       <div
         className={cn(
-          "relative z-10 h-fit w-fit",
+          "relative z-0 h-fit w-fit",
           "before:absolute before:hidden before:h-full before:w-full before:justify-center hover:before:flex",
           "font-bold before:items-center before:bg-(--accent-600) before:text-black before:opacity-0",
           "before:content-['show'] hover:cursor-pointer hover:before:opacity-75",
@@ -127,7 +124,7 @@ const GetLocalImg = ({
             width={100}
             height={100}
             className={cn(
-              "h-auto max-h-[100px] w-auto",
+              "-z-10 h-auto max-h-[100px] w-auto",
               "hover:cursor-pointer",
             )}
           />
@@ -149,9 +146,9 @@ const GetLocalImg = ({
         popover="auto"
         className={cn(
           "absolute top-0 right-0 left-0 cursor-pointer",
-          "h-full w-full items-center justify-center",
-          "bg-(--accent-200)/50",
-          "dark:bg-(--accent-900)/15",
+          "z-20 h-full w-full items-center justify-center",
+          "bg-(--accent-200)/70",
+          "dark:bg-(--accent-900)/40",
         )}
         onClick={() => {
           popupRef.current?.hidePopover();
@@ -163,8 +160,8 @@ const GetLocalImg = ({
               fallback={nonDB}
               width={0}
               height={0}
-              containerClassName={cn("")}
-              className={cn("h-auto w-auto")}
+              containerClassName={cn("z-30")}
+              className={cn("z-40 h-auto w-auto")}
               src={src}
               alt={alt}
               loader={({ src }) => src}
@@ -290,7 +287,7 @@ const SFXCard = ({
             classNames?.topinfo?.language,
           )}
         >
-          ({langs.find((l) => l.code === usedSFX.language)?.name})
+          {langs.find((l) => l.code === usedSFX.language)?.name}{" "}
           {env.NEXT_PUBLIC_DEVENV === "development" &&
             `[${isFinite(sfx.id) ? sfx.id : "NEW"}]`}
         </div>

@@ -3,13 +3,28 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
 export type LightMode = "light" | "dark";
-export type AccentName =
-  | "blue"
-  | "green"
-  | "purple"
-  | "rose"
-  | "amber"
-  | "pink";
+
+export const ACCENTS = [
+  "blue",
+  "indigo",
+  "violet",
+  "purple",
+  "fuchsia",
+  "pink",
+  "rose",
+  "red",
+  "orange",
+  "amber",
+  "yellow",
+  "lime",
+  "green",
+  "emerald",
+  "teal",
+  "cyan",
+  "slate",
+] as const;
+
+export type AccentName = (typeof ACCENTS)[number];
 
 type ThemeContextValue = {
   mode: LightMode;

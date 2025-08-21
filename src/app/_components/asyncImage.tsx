@@ -3,7 +3,6 @@ import Image, { type ImageProps } from "next/image";
 import { cn } from "@/utils";
 
 interface AsyncImageProps extends ImageProps {
-  spinnerClassName?: string;
   containerClassName?: string;
   fallback?: ReactNode;
 }

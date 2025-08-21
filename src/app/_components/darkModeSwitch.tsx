@@ -1,4 +1,4 @@
-import { useTheme } from "../hooks/theme";
+import { ACCENTS, useTheme } from "../hooks/theme";
 import { cn } from "@/utils";
 
 export const DarkModeSwitch = ({ className }: { className?: string }) => {
@@ -14,8 +14,6 @@ export const DarkModeSwitch = ({ className }: { className?: string }) => {
   );
 };
 
-const ACCENTS = ["blue", "green", "purple", "rose", "amber", "pink"] as const;
-
 const AccentSwitch = ({ className }: { className?: string }) => {
   const { accent, setAccent } = useTheme();
   return (
@@ -28,13 +26,18 @@ const AccentSwitch = ({ className }: { className?: string }) => {
         "bg-(color:--accent-500)",
         "hover:bg-(color:--accent-600)",
         "focus:ring-2 focus:ring-(color:--accent-400) focus:outline-none",
-        "dark:border-(color:--dark-neutral-600)",
+        "dark:border-(color:--neutral-600)",
         className,
       )}
       aria-label="Switch accent color"
       onClick={() => {
         const idx = ACCENTS.indexOf(accent);
         setAccent(ACCENTS[(idx + 1) % ACCENTS.length] ?? "blue");
+      }}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        const idx = ACCENTS.indexOf(accent) - 1;
+        setAccent(ACCENTS[idx < 0 ? ACCENTS.length - 1 : idx] ?? "blue");
       }}
     />
   );
