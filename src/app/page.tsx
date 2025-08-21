@@ -10,6 +10,7 @@ import { Suspense } from "react";
 import { SFXListPanel } from "./_components/sfxList.";
 import { isValidSearch, SearchProvider, useSearch } from "./hooks/search";
 import { Spinner } from "./_components/spinner";
+import type { Metadata } from "next";
 
 const PageLoad = () => {
   const { mode } = useTheme();

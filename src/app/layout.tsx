@@ -10,7 +10,15 @@ import { cn } from "@/utils";
 
 export const metadata: Metadata = {
   title: "SFX Vault",
-  description: "Vault fr SFX",
+  description: "A list of Manga SFX and their translations",
+  openGraph: {
+    type: "website",
+    description: "A list of Manga SFX and their translations",
+    determiner: "the",
+    emails: ["contact@sfxvault.org"],
+    siteName: "SFX Vault",
+    url: "https://sfxvault.org",
+  },
   icons: [{ rel: "icon", url: "/favicon.ico" }],
 };
 
