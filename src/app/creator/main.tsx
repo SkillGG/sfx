@@ -206,16 +206,16 @@ const CreatorPage = () => {
         </h1>
         <div
           className={cn(
-            "flex flex-col gap-2 rounded-xl border-2 border-(color:--accent-300)",
+            "flex flex-col gap-2 rounded-xl border-2 border-(color:--regular-border)",
             "bg-(color:--accent-50) p-2 shadow-sm",
-            "dark:border-(color:--accent-600) dark:bg-slate-800",
+            "dark:bg-slate-800",
           )}
         >
           <h2
             className={cn(
-              "flex items-center justify-center border-b border-(color:--accent-200)",
+              "flex items-center justify-center border-b border-(color:--regular-border)",
               "pb-2 text-center text-2xl font-semibold text-(color:--accent-800)",
-              "dark:border-(color:--accent-700) dark:text-(color:--accent-200)",
+              "dark:text-(color:--accent-200)",
             )}
           >
             New SFX
@@ -236,8 +236,9 @@ const CreatorPage = () => {
                 "mt-1 flex-1 font-medium whitespace-nowrap",
                 "text-(color:--accent-700) dark:text-(color:--accent-300)",
                 validation.hasFieldError("text") &&
-                  "text-red-600 dark:text-red-400",
+                  "text-(color:--error-600) dark:text-(color:--error-600)",
               )}
+              data-err={validation.hasFieldError("text")}
             >
               SFX
             </label>
@@ -247,9 +248,13 @@ const CreatorPage = () => {
                   "rounded border bg-white px-2 py-1",
                   "focus:ring-1 focus:outline-none dark:bg-slate-700 dark:text-white",
                   "dark:placeholder-gray-400",
-                  validation.hasFieldError("text")
-                    ? "border-red-500 focus:border-red-500 focus:ring-red-500 dark:border-red-400 dark:focus:border-red-400 dark:focus:ring-red-400"
-                    : "border-(color:--accent-300) focus:border-(color:--accent-500) focus:ring-(color:--accent-500) dark:border-(color:--accent-600) dark:focus:border-(color:--accent-400) dark:focus:ring-(color:--accent-400)",
+                  "ocus:border-(color:--accent-500) border-(color:--input-border)",
+                  "focus:ring-(color:--accent-500)",
+                  "dark:focus:border-(color:--accent-400) dark:focus:ring-(color:--accent-400)",
+                  validation.hasFieldError("text") &&
+                    "border-(color:--error--500) focus:border-(color:--error--500)" +
+                      "focus:ring-(color:--error--500) dark:border-(color:--error--400)" +
+                      "dark:focus:border-(color:--error--400) dark:focus:ring-(color:--error--400)",
                 )}
                 placeholder="SFX"
                 type="text"
@@ -272,7 +277,7 @@ const CreatorPage = () => {
                 "mt-1 flex-1 font-medium whitespace-nowrap",
                 "text-(color:--accent-700) dark:text-(color:--accent-300)",
                 validation.hasFieldError("def") &&
-                  "text-red-600 dark:text-red-400",
+                  "text-(color:--error-600) dark:text-(color:--error-600)",
               )}
             >
               Definition
@@ -283,9 +288,13 @@ const CreatorPage = () => {
                   "flex-3 rounded border bg-white px-2 py-1",
                   "focus:ring-1 focus:outline-none dark:bg-slate-700 dark:text-white",
                   "dark:placeholder-gray-400",
-                  validation.hasFieldError("def")
-                    ? "border-red-500 focus:border-red-500 focus:ring-red-500 dark:border-red-400 dark:focus:border-red-400 dark:focus:ring-red-400"
-                    : "border-(color:--accent-300) focus:border-(color:--accent-500) focus:ring-(color:--accent-500) dark:border-(color:--accent-600) dark:focus:border-(color:--accent-400) dark:focus:ring-(color:--accent-400)",
+                  "ocus:border-(color:--accent-500) border-(color:--input-border)",
+                  "focus:ring-(color:--accent-500)",
+                  "dark:focus:border-(color:--accent-400) dark:focus:ring-(color:--accent-400)",
+                  validation.hasFieldError("def") &&
+                    "border-(color:--error-500) focus:border-(color:--error-500)" +
+                      "focus:ring-(color:--error-500) dark:border-(color:--error-400)" +
+                      "dark:focus:border-(color:--error-400) dark:focus:ring-(color:--error-400)",
                 )}
                 placeholder="Definition"
                 type="text"
@@ -308,7 +317,7 @@ const CreatorPage = () => {
                 "flex-1 font-medium whitespace-nowrap",
                 "text-(color:--accent-700) dark:text-(color:--accent-300)",
                 validation.hasFieldError("extra") &&
-                  "text-red-600 dark:text-red-400",
+                  "text-(color:--error-600) dark:text-(color:--error-400)",
               )}
             >
               Extra
@@ -319,9 +328,14 @@ const CreatorPage = () => {
                   "ml-auto w-full rounded border bg-white px-2 py-1",
                   "focus:ring-1 focus:outline-none dark:bg-slate-700 dark:text-white",
                   "dark:placeholder-gray-400",
-                  validation.hasFieldError("extra")
-                    ? "border-red-500 focus:border-red-500 focus:ring-red-500 dark:border-red-400 dark:focus:border-red-400 dark:focus:ring-red-400"
-                    : "border-(color:--accent-300) focus:border-(color:--accent-500) focus:ring-(color:--accent-500) dark:border-(color:--accent-600) dark:focus:border-(color:--accent-400) dark:focus:ring-(color:--accent-400)",
+                  "ocus:border-(color:--accent-500) border-(color:--input-border)",
+                  "focus:ring-(color:--accent-500)",
+                  "dark:focus:border-(color:--accent-400) dark:focus:ring-(color:--accent-400)",
+
+                  validation.hasFieldError("extra") &&
+                    "border-(color:--error-500) focus:border-(color:--error-500)" +
+                      "focus:ring-(color:--error-500) dark:border-(color:--error-400)" +
+                      "dark:focus:border-(color:--error-400) dark:focus:ring-(color:--error-400)",
                 )}
                 placeholder="Extra"
                 type="text"
@@ -344,7 +358,7 @@ const CreatorPage = () => {
                   "font-medium whitespace-nowrap",
                   "text-(color:--accent-700) dark:text-(color:--accent-300)",
                   validation.hasFieldError("read") &&
-                    "text-red-600 dark:text-red-400",
+                    "text-(color:--error-600) dark:text-(color:--error-400)",
                 )}
               >
                 Reading
@@ -360,7 +374,7 @@ const CreatorPage = () => {
                   checked={read !== null}
                   onChange={() => setRead(read === null ? "" : null)}
                   className={cn(
-                    "h-4 w-4 rounded border-(color:--accent-300) text-(color:--accent-600)",
+                    "-4 w-4 rounded border-(color:--input-border) text-(color:--accent-600)",
                     "focus:ring-(color:--accent-500) dark:border-(color:--accent-600) dark:bg-slate-700",
                     "dark:focus:ring-(color:--accent-400)",
                   )}
@@ -374,9 +388,13 @@ const CreatorPage = () => {
                   "focus:ring-1 focus:outline-none dark:bg-slate-700 dark:text-white",
                   "dark:placeholder-gray-400",
                   "disabled:cursor-not-allowed disabled:opacity-50",
-                  validation.hasFieldError("read")
-                    ? "border-red-500 focus:border-red-500 focus:ring-red-500 dark:border-red-400 dark:focus:border-red-400 dark:focus:ring-red-400"
-                    : "border-(color:--accent-300) focus:border-(color:--accent-500) focus:ring-(color:--accent-500) dark:border-(color:--accent-600) dark:focus:border-(color:--accent-400) dark:focus:ring-(color:--accent-400)",
+                  "border-(color:--input-border) focus:border-(color:--accent-500)",
+                  "focus:ring-(color:--accent-500)",
+                  "dark:focus:border-(color:--accent-400) dark:focus:ring-(color:--accent-400)",
+                  validation.hasFieldError("read") &&
+                    "border-(color:--error-500) focus:border-(color:--error-500)" +
+                      "focus:ring-(color:--error-500) dark:border-(color:--error-400)" +
+                      "dark:focus:border-(color:--error-400) dark:focus:ring-(color:--error-400)",
                 )}
                 placeholder="Reading"
                 type="text"
@@ -436,10 +454,10 @@ const CreatorPage = () => {
         </h2>
         <div
           className={cn(
-            "flex flex-col gap-2 rounded-xl border-2 border-(color:--accent-300)",
+            "flex flex-col gap-2 rounded-xl border-2 border-(color:--regular-border)",
             "bg-(color:--accent-50) p-2 shadow-sm",
             "h-full overflow-auto",
-            "dark:border-(color:--accent-600) dark:bg-slate-800",
+            "dark:bg-slate-800",
           )}
         >
           <SFXListPanel

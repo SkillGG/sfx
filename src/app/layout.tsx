@@ -24,9 +24,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={cn(geist.variable)}>
-      <body
-        className={cn("m-0 h-full w-full bg-gray-50 p-0 dark:bg-slate-900")}
-      >
+      <body className={cn("m-0 h-full w-full bg-(color:--main-bg) p-0")}>
         <TRPCReactProvider>
           <SFXLangProvider>
             <ThemeProvider>{children}</ThemeProvider>

@@ -24,9 +24,8 @@ const AccentSwitch = ({ className }: { className?: string }) => {
         "h-5 w-5 rounded-full border-2 border-(color:--neutral-300)",
         "cursor-pointer transition-colors",
         "bg-(color:--accent-500)",
-        "hover:bg-(color:--accent-600)",
-        "focus:ring-2 focus:ring-(color:--accent-400) focus:outline-none",
-        "dark:border-(color:--neutral-600)",
+        "hover:border-(color:--accent-900)",
+        "focus:ring-1 focus:ring-(color:--accent-400) focus:outline-none",
         className,
       )}
       aria-label="Switch accent color"

@@ -9,19 +9,88 @@
 @custom-variant dark (&:where(.dark, .dark *));
 @custom-variant light (&:where(.light, .light *));
 
+/* Shared UI tokens */
+:root {
+  --main-bg: var(--color-white);
+
+  --text-light: var(--accent-800);
+
+  --input-border: var(--accent-300);
+  --input-focus-border: var(--accent-500);
+
+  --input-label-text: var(--accent-600);
+
+  --input-bg: var(--color-white);
+  --input-hover-bg: var(--color-white);
+  --input-placeholder-text: var(--color-gray-600);
+  --input-text: var(--accent-600);
+  --input-hover-text: var(--accent-700);
+
+  --regular-border: var(--accent-700);
+
+  --button-remove-bg: var(--danger-700);
+  --button-remove-bg-hover: var(--danger-800);
+
+  --button-cancel-bg: var(--notice-700);
+  --button-cancel-bg-hover: var(--notice-800);
+
+  --button-neutral-bg: var(--accent-300);
+  --button-neutral-hover-bg: var(--accent-400);
+
+  --button-submit-bg: var(--accent-600);
+  --button-submit-hover-bg: var(--accent-700);
+  --button-submit-text: var(--text-white);
+
+  --dialog-bg: var(--color-gray-100);
+}
+
+:root .dark {
+  --main-bg: var(--color-slate-800);
+
+  --text-light: var(--accent-100);
+
+  --input-border: var(--accent-200);
+  --input-focus-border: var(--accent-400);
+
+  --input-label-text: var(--accent-400);
+  --input-placeholder-text: var(--color-gray-400);
+  --input-hover-text: var(--accent-100);
+  --input-text: var(--accent-300);
+
+  --input-bg: var(--color-slate-700);
+  --input-hover-bg: var(--color-slate-700);
+
+  --regular-border: var(--accent-700);
+
+  --button-remove-bg: var(--danger-600);
+  --button-remove-bg-hover: var(--danger-500);
+
+  --button-cancel-bg: var(--notice-600);
+  --button-cancel-bg-hover: var(--notice-500);
+
+  --button-neutral-bg: var(--accent-300);
+  --button-neutral-hover-bg: var(--accent-200);
+
+  --button-submit-bg: var(--accent-700);
+  --button-submit-hover-bg: var(--accent-600);
+
+  --dialog-bg: var(--main-bg);
+}
+
 /* Additional palettes */
 :root {
-  /* Danger (red) */
+  /* Danger (deep dark red) - Completely different from warm red accents */
+  /* Use these for error states, validation errors, destructive actions */
   --danger-50: #fef2f2;
-  --danger-100: #fee2e2;
-  --danger-200: #fecaca;
-  --danger-300: #fca5a5;
-  --danger-400: #f87171;
-  --danger-500: #ef4444;
-  --danger-600: #dc2626;
-  --danger-700: #b91c1c;
-  --danger-800: #991b1b;
-  --danger-900: #7f1d1d;
+  --danger-100: #fecaca;
+  --danger-200: #fca5a5;
+  --danger-300: #f87171;
+  --danger-400: #dc2626;
+  --danger-500: #991b1b;
+  --danger-600: #7f1d1d;
+  --danger-700: #450a0a;
+  --danger-800: #2d0a0a;
+  --danger-900: #1a0505;
 
   /* Success (green) */
   --success-50: #f0fdf4;
@@ -310,17 +379,6 @@
   --accent-orange-800: #9a3412;
   --accent-orange-900: #7c2d12;
 
-  --accent-red-50: #fef2f2;
-  --accent-red-100: #fee2e2;
-  --accent-red-200: #fecaca;
-  --accent-red-300: #fca5a5;
-  --accent-red-400: #f87171;
-  --accent-red-500: #ef4444;
-  --accent-red-600: #dc2626;
-  --accent-red-700: #b91c1c;
-  --accent-red-800: #991b1b;
-  --accent-red-900: #7f1d1d;
-
   --accent-slate-50: #f8fafc;
   --accent-slate-100: #f1f5f9;
   --accent-slate-200: #e2e8f0;
@@ -543,20 +601,6 @@
   --accent-700: var(--accent-orange-700);
   --accent-800: var(--accent-orange-800);
   --accent-900: var(--accent-orange-900);
-}
-
-:root[data-accent="red"],
-[data-accent="red"] {
-  --accent-50: var(--accent-red-50);
-  --accent-100: var(--accent-red-100);
-  --accent-200: var(--accent-red-200);
-  --accent-300: var(--accent-red-300);
-  --accent-400: var(--accent-red-400);
-  --accent-500: var(--accent-red-500);
-  --accent-600: var(--accent-red-600);
-  --accent-700: var(--accent-red-700);
-  --accent-800: var(--accent-red-800);
-  --accent-900: var(--accent-red-900);
 }
 
 :root[data-accent="slate"],

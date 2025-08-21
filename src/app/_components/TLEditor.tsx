@@ -61,7 +61,7 @@ export const TL = ({
               cancel:
                 removeOnCancel &&
                 !onceSaved &&
-                "bg-red-300/75 text-white dark:bg-red-600/75",
+                "bg-(color:--danger-400) text-white dark:bg-(color:--danger-500)",
             },
           }}
           labels={{
@@ -93,24 +93,33 @@ export const TL = ({
             setMode("view");
           }}
           tlAddInfoElem={
-            <div className={cn("flex flex-col gap-1")}>
-              <div>Additional info</div>
-              <input
-                id={`tl-additional-info-${tl.id}`}
+            <div className={cn("flex flex-row items-center gap-2")}>
+              <div
                 className={cn(
-                  "rounded border border-(color:--accent-300) bg-(color:--accent-50) px-3 py-2 text-sm",
-                  "text-(color:--accent-900) placeholder:text-(color:--accent-400)",
-                  "focus:ring-2 focus:ring-(color:--accent-500) focus:outline-none",
-                  "dark:border-(color:--accent-600) dark:bg-slate-800 dark:text-(color:--accent-100)",
-                  "dark:placeholder:text-(color:--accent-400)",
+                  "flex-1 text-(color:--accent-700) dark:text-(color:--accent-300)",
                 )}
-                type="text"
-                value={tl.additionalInfo ?? ""}
-                onChange={({ currentTarget: { value: additionalInfo } }) =>
-                  onChange?.({ ...tl, additionalInfo })
-                }
-                placeholder="Extra info"
-              />
+              >
+                TL info
+              </div>
+              <div className={cn("ml-auto flex flex-3 flex-col gap-2")}>
+                <input
+                  id={`tl-additional-info-${tl.id}`}
+                  className={cn(
+                    "ml-auto w-full rounded border bg-white px-2 py-1",
+                    "focus:ring-1 focus:outline-none dark:bg-slate-700 dark:text-white",
+                    "dark:placeholder-gray-400",
+                    "ocus:border-(color:--accent-500) border-(color:--input-border)",
+                    "focus:ring-(color:--accent-500)",
+                    "dark:focus:border-(color:--accent-400) dark:focus:ring-(color:--accent-400)",
+                  )}
+                  type="text"
+                  value={tl.additionalInfo ?? ""}
+                  onChange={({ currentTarget: { value: additionalInfo } }) =>
+                    onChange?.({ ...tl, additionalInfo })
+                  }
+                  placeholder="TL info"
+                />
+              </div>
             </div>
           }
         />
@@ -131,10 +140,13 @@ export const TL = ({
         classNames={{
           default: {
             container: cn(
-              tl.forDeletion && "border-red-400 dark:border-red-400",
+              tl.forDeletion &&
+                "border-(color:--error-400) dark:border-(color:--error-400)",
             ),
             topinfo: {
-              text: tl.forDeletion && "text-red-400 dark:text-red-400",
+              text:
+                tl.forDeletion &&
+                "text-(color:--error-400) dark:text-(color:--error-400)",
             },
           },
         }}
@@ -157,9 +169,9 @@ export const TL = ({
         </button>
         <button
           className={cn(
-            "inline-block flex-1 cursor-pointer rounded bg-red-500 px-4 py-2 text-white",
-            "hover:bg-red-600",
-            "dark:bg-red-600 dark:hover:bg-red-700",
+            "inline-block flex-1 cursor-pointer rounded bg-(color:--error-500) px-4 py-2 text-white",
+            "hover:bg-(color:--error-600)",
+            "dark:bg-(color:--error-600) dark:hover:bg-(color:--error-700)",
           )}
           onClick={async () => {
             await onSave?.(null);
@@ -198,8 +210,8 @@ const ConnectSFXDialog = ({
       id={SFXDialogID}
       ref={ref}
       className={cn(
-        "m-auto min-w-[50%] rounded-xl border border-(color:--accent-200) bg-white/95 p-6",
-        "shadow-lg backdrop-blur-sm dark:border-(color:--accent-700)",
+        "m-auto min-w-[50%] rounded-xl border border-(color:--regular-border) bg-white/95 p-6",
+        "shadow-lg backdrop-blur-sm",
         "dark:bg-slate-800/95 dark:text-white",
       )}
     >
@@ -243,8 +255,8 @@ const ConnectSFXDialog = ({
                     <li
                       key={connSFX.id}
                       className={cn(
-                        "flex flex-row items-center gap-4 rounded-lg border border-(color:--accent-100)",
-                        "bg-(color:--accent-50) p-3 shadow-sm dark:border-(color:--accent-700) dark:bg-slate-700",
+                        "flex flex-row items-center gap-4 rounded-lg border border-(color:--regular-border)",
+                        "bg-(color:--accent-50) p-3 shadow-sm dark:bg-slate-700",
                       )}
                     >
                       <div className={cn("flex-1")}>
@@ -328,16 +340,16 @@ export const TLEditorDirect = ({
     <div
       className={cn(
         "flex flex-col gap-2 rounded-xl border-2",
-        "border-(color:--accent-300) bg-(color:--accent-50) p-2 shadow-sm",
-        "dark:border-(color:--accent-600) dark:bg-slate-800",
+        "border-(color:--regular-border) bg-(color:--accent-50) p-2 shadow-sm",
+        "dark:bg-slate-800",
         "h-full max-h-[100dvh] min-h-0",
       )}
       style={{ height: "100%", minHeight: 0, maxHeight: "100dvh" }}
     >
       <div
         className={cn(
-          "border-b border-(color:--accent-200)",
-          "dark:border-(color:--accent-700) dark:text-(color:--accent-100)",
+          "border-b border-(color:--regular-border)",
+          "dark:text-(color:--accent-100)",
           "text-center text-xl font-bold",
           "text-(color:--accent-900)",
         )}
@@ -502,8 +514,8 @@ export const TLEditorSaveable = ({
             className={cn(
               "inline-block flex-1 rounded bg-(color:--success-500) px-4 py-2 text-white",
               "hover:bg-(color:--success-600)",
-              "dark:bg-(color:--dark-success-600)",
-              "dark:hover:bg-(color:--dark-success-700)",
+              "dark:bg-(color:--success-600)",
+              "dark:hover:bg-(color:--success-700)",
             )}
             disabled={saveState === "waiting"}
           >

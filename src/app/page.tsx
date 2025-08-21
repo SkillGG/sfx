@@ -119,8 +119,8 @@ const SearchPage = () => {
       <div
         className={cn(
           "z-10 mx-auto flex w-full max-w-2xl flex-col gap-8 rounded-xl",
-          "border border-(color:--accent-200) bg-white/80 p-8 shadow-lg",
-          "dark:border-(color:--accent-700) dark:bg-slate-800/80 dark:text-(color:--accent-100)",
+          "border border-(color:--regular-border)  bg-white/80 p-8 shadow-lg",
+          "  dark:bg-slate-800/80 dark:text-(color:--accent-100)",
         )}
       >
         <Suspense fallback={<PageLoad key={"load"} />}>

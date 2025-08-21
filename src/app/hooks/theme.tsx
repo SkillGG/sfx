@@ -12,7 +12,6 @@ export const ACCENTS = [
   "fuchsia",
   "pink",
   "rose",
-  "red",
   "orange",
   "amber",
   "yellow",

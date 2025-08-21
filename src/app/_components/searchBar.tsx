@@ -55,8 +55,11 @@ const SearchBar = () => {
         onChange={(e) => setSearch(e.currentTarget.value)}
         placeholder="waku waku"
         className={cn(
-          "rounded-md border border-(color:--accent-500) bg-white p-2",
-          "dark:border-(color:--accent-400) dark:bg-slate-700",
+          "rounded border bg-(color:--input-bg) px-2 py-2 text-(color:--input-text)",
+          "focus:border-(color:input-focus-border) focus:ring-1 focus:outline-none",
+          "dark:placeholder-(--input-placeholder-text)",
+          "border-(color:--input-border)",
+          "focus:ring-(color:--input-focus-border)",
         )}
       />
     </div>
