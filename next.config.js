@@ -7,8 +7,11 @@ import "./src/env.js";
 /** @type {import("next").NextConfig} */
 const config = {
   images: {
-    loader: "custom",
-    loaderFile: "./loader.js",
+    remotePatterns: [
+      new URL("https://picsum.dev/**"),
+      new URL("https://picsum.photos/**"),
+    ],
+    loader: "default",
   },
 };
 

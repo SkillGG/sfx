@@ -3,7 +3,7 @@
 import { api } from "@/trpc/react";
 import { cn } from "@/utils";
 import { useState } from "react";
-import DarkModeSwitch from "../_components/darkModeSwitch";
+import DarkModeSwitch, { AccentSwitch } from "../_components/darkModeSwitch";
 import { useTheme } from "../hooks/theme";
 
 const LoginPage = () => {
@@ -42,14 +42,15 @@ const LoginPage = () => {
         <label className={cn("flex flex-col gap-2")}>
           <div
             className={cn(
-              "mb-0",
+              "mb-0 flex items-center gap-2",
               "text-base font-medium text-slate-700 dark:text-slate-200",
               err && "text-red-500",
               err && "dark:text-red-500",
             )}
           >
             Password:
-            <DarkModeSwitch className={cn("float-end")} />
+            <AccentSwitch className={cn("ml-auto h-4 w-4")} />
+            <DarkModeSwitch />
           </div>
           <input
             type="password"

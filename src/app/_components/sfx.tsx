@@ -22,6 +22,7 @@ import type { ClassValue } from "clsx";
 import Image from "next/image";
 import { api } from "@/trpc/react";
 import { Spinner } from "./spinner";
+import { AsyncImage } from "./asyncImage";
 
 export type SaveState = "default" | "done" | "waiting";
 
@@ -78,8 +79,18 @@ const sfxFieldFromString = (str: string): Arrayable<SFXField | null> => {
   return null;
 };
 
-const GetLocalImg = ({ filename, alt }: { filename: string; alt: string }) => {
-  const [img] = api.picture.getPicture.useSuspenseQuery(filename);
+const GetLocalImg = ({
+  filename,
+  alt,
+  nonDB,
+}: {
+  filename: string;
+  alt: string;
+  nonDB?: React.ReactNode;
+}) => {
+  const [img] = nonDB
+    ? [filename]
+    : api.picture.getPicture.useSuspenseQuery(filename);
 
   const popupRef = useRef<HTMLDialogElement>(null);
 
@@ -93,13 +104,13 @@ const GetLocalImg = ({ filename, alt }: { filename: string; alt: string }) => {
       </span>
     );
 
-  const src = `data:image/png;base64,${img}`;
+  const src = nonDB ? img : `data:image/png;base64,${img}`;
 
   return (
     <>
       <div
         className={cn(
-          "relative w-fit",
+          "relative z-10 h-fit w-fit",
           "before:absolute before:hidden before:h-full before:w-full before:justify-center hover:before:flex",
           "font-bold before:items-center before:bg-(--accent-600) before:text-black before:opacity-0",
           "before:content-['show'] hover:cursor-pointer hover:before:opacity-75",
@@ -108,30 +119,65 @@ const GetLocalImg = ({ filename, alt }: { filename: string; alt: string }) => {
           popupRef.current?.showPopover();
         }}
       >
-        <Image
-          src={src}
-          alt={alt}
-          width={100}
-          height={100}
-          className={cn("h-auto max-h-[100px] w-auto", "hover:cursor-pointer")}
-        />
+        {nonDB ? (
+          <AsyncImage
+            src={src}
+            fallback={nonDB}
+            alt={alt}
+            width={100}
+            height={100}
+            className={cn(
+              "h-auto max-h-[100px] w-auto",
+              "hover:cursor-pointer",
+            )}
+          />
+        ) : (
+          <Image
+            src={src}
+            alt={alt}
+            width={100}
+            height={100}
+            className={cn(
+              "h-auto max-h-[100px] w-auto",
+              "hover:cursor-pointer",
+            )}
+          />
+        )}
       </div>
       <dialog
         ref={popupRef}
         popover="auto"
-        className="absolute top-0 right-0 left-0 h-full w-full items-center justify-center bg-(--accent-200)/50 dark:bg-(--accent-900)/15"
+        className={cn(
+          "absolute top-0 right-0 left-0 cursor-pointer",
+          "h-full w-full items-center justify-center",
+          "bg-(--accent-200)/50",
+          "dark:bg-(--accent-900)/15",
+        )}
         onClick={() => {
           popupRef.current?.hidePopover();
         }}
       >
         <div className={cn("flex h-full w-full items-center justify-center")}>
-          <Image
-            width={0}
-            height={0}
-            className={cn("h-auto w-auto")}
-            src={src}
-            alt={alt}
-          />
+          {nonDB ? (
+            <AsyncImage
+              fallback={nonDB}
+              width={0}
+              height={0}
+              containerClassName={cn("")}
+              className={cn("h-auto w-auto")}
+              src={src}
+              alt={alt}
+              loader={({ src }) => src}
+            />
+          ) : (
+            <Image
+              width={0}
+              height={0}
+              className={cn("h-auto w-auto")}
+              src={src}
+              alt={alt}
+            />
+          )}
         </div>
       </dialog>
     </>
@@ -176,7 +222,11 @@ const parseSFXText = (str?: string | null): ReactNode => {
                 {q.data.startsWith("@") ? (
                   <GetLocalImg alt={alt} filename={q.data.substring(1)} />
                 ) : (
-                  <Image alt={alt} src={q.data} width={50} height={50} />
+                  <GetLocalImg
+                    alt={alt}
+                    filename={q.data}
+                    nonDB={<Spinner className={cn("h-[75px] w-[75px]")} />}
+                  />
                 )}
               </Suspense>
             );
