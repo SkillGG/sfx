@@ -119,8 +119,8 @@ const SearchPage = () => {
       <div
         className={cn(
           "z-10 mx-auto flex w-full max-w-2xl flex-col gap-8 rounded-xl",
-          "border border-(color:--regular-border)  bg-white/80 p-8 shadow-lg",
-          "  dark:bg-slate-800/80 dark:text-(color:--accent-100)",
+          "border border-(color:--regular-border) bg-white/80 p-8 shadow-lg",
+          "dark:bg-slate-800/80 dark:text-(color:--accent-100)",
         )}
       >
         <Suspense fallback={<PageLoad key={"load"} />}>
@@ -132,7 +132,7 @@ const SearchPage = () => {
                   "text-(color:--accent-900) dark:text-(color:--accent-100)",
                 )}
               >
-                SFX Vault
+                SFX Vault*
               </h1>
               <SearchBar />
               <div className={cn("flex items-center gap-2")}>
