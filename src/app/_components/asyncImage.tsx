@@ -17,8 +17,6 @@ export const AsyncImage = ({
 }: AsyncImageProps) => {
   const [loading, setLoading] = useState(true);
 
-  console.log(loading, src);
-
   return (
     <div className={cn("relative -z-1 h-fit", containerClassName)}>
       {loading && fallback}
@@ -27,8 +25,7 @@ export const AsyncImage = ({
         alt={alt}
         src={src}
         className={cn(className, loading ? "invisible" : "block")}
-        onLoadingComplete={() => {
-          console.log("Loaded image!");
+        onLoad={() => {
           setLoading(false);
         }}
         onError={() => alert("error loading image")}

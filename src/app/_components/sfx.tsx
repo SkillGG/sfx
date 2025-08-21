@@ -121,23 +121,25 @@ const GetLocalImg = ({
             src={src}
             fallback={nonDB}
             alt={alt}
-            width={100}
-            height={100}
+            unoptimized
+            priority={true}
+            height={0}
+            width={0}
             className={cn(
-              "-z-10 h-auto max-h-[100px] w-auto",
-              "hover:cursor-pointer",
+              "-z-10 h-[100px] w-auto",
+              "relative hover:cursor-pointer",
             )}
+            containerClassName={cn("w-fit h-full")}
+            style={{ position: "initial", width: "auto" }}
           />
         ) : (
           <Image
             src={src}
             alt={alt}
-            width={100}
-            height={100}
-            className={cn(
-              "h-auto max-h-[100px] w-auto",
-              "hover:cursor-pointer",
-            )}
+            width={0}
+            height={0}
+            unoptimized
+            className={cn("h-[100px] w-auto", "hover:cursor-pointer")}
           />
         )}
       </div>
@@ -164,12 +166,15 @@ const GetLocalImg = ({
               className={cn("z-40 h-auto w-auto")}
               src={src}
               alt={alt}
+              unoptimized
+              priority={true}
               loader={({ src }) => src}
             />
           ) : (
             <Image
               width={0}
               height={0}
+              unoptimized
               className={cn("h-auto w-auto")}
               src={src}
               alt={alt}
