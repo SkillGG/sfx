@@ -75,7 +75,7 @@ export const EditableSelect = ({
       <div
         className={cn(
           "inline-flex w-fit cursor-pointer items-center overflow-hidden rounded",
-          "border border-blue-500 bg-white dark:border-blue-400 dark:bg-slate-700",
+          "border border-(color:--accent-500) bg-white dark:border-(color:--accent-400) dark:bg-slate-700",
           classNames?.main,
         )}
         style={styles?.main}
@@ -83,8 +83,8 @@ export const EditableSelect = ({
         <dialog
           id={dialogID}
           className={cn(
-            "m-auto rounded-xl border border-blue-200 bg-white/95 p-6",
-            "shadow-lg backdrop-blur-sm dark:border-blue-700",
+            "m-auto rounded-xl border border-(color:--accent-200) bg-white/95 p-6",
+            "shadow-lg backdrop-blur-sm dark:border-(color:--accent-700)",
             "dark:bg-slate-800/95 dark:text-white",
             classNames?.dialog,
           )}
@@ -119,7 +119,7 @@ export const EditableSelect = ({
                   placeholder={placeholders?.label}
                   id="label"
                   className={cn(
-                    "rounded-xl border-b-2 px-3 py-1 dark:border-blue-400 dark:bg-slate-700 dark:text-white dark:placeholder-gray-400",
+                    "rounded-xl border-b-2 px-3 py-1 dark:border-(color:--accent-400) dark:bg-slate-700 dark:text-white dark:placeholder-gray-400",
                   )}
                   name="label"
                 />
@@ -134,7 +134,7 @@ export const EditableSelect = ({
                   id="value"
                   className={cn(
                     "rounded-xl border-b-2 px-3 py-1",
-                    "dark:border-blue-400 dark:bg-slate-700 dark:text-white",
+                    "dark:border-(color:--accent-400) dark:bg-slate-700 dark:text-white",
                     "dark:placeholder-gray-400",
                   )}
                   name="value"
@@ -143,8 +143,8 @@ export const EditableSelect = ({
               <button
                 type="submit"
                 className={cn(
-                  "rounded-md bg-blue-500 px-4 py-2 text-white",
-                  "hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700",
+                  "rounded-md bg-(color:--accent-500) px-4 py-2 text-white",
+                  "hover:bg-(color:--accent-600) dark:bg-(color:--accent-600) dark:hover:bg-(color:--accent-700)",
                 )}
                 popoverTarget={dialogID}
                 popoverTargetAction="hide"
@@ -163,7 +163,7 @@ export const EditableSelect = ({
           className={cn(
             "cursor-pointer border-0 px-2 py-1 text-black",
             "focus:ring-0 focus:outline-none dark:bg-slate-700",
-            "dark:text-blue-300",
+            "dark:text-(color:--accent-300)",
             classNames?.select,
           )}
           value={selectedValue}
@@ -187,9 +187,9 @@ export const EditableSelect = ({
           popoverTarget={dialogID}
           popoverTargetAction="show"
           className={cn(
-            "cursor-pointer border-0 bg-transparent px-3 py-1 text-blue-500",
-            "hover:bg-blue-100 focus:ring-0 focus:outline-none",
-            "dark:text-blue-400 dark:hover:bg-slate-600",
+            "cursor-pointer border-0 bg-transparent px-3 py-1 text-(color:--accent-500)",
+            "hover:bg-(color:--accent-100) focus:ring-0 focus:outline-none",
+            "dark:text-(color:--accent-400) dark:hover:bg-slate-600",
             classNames?.button,
           )}
           type="button"

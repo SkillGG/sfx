@@ -5,6 +5,7 @@ import {
   type ValidationResult,
 } from "@/utils";
 import React, {
+  Suspense,
   useEffect,
   useMemo,
   useRef,
@@ -18,6 +19,9 @@ import { Validation } from "../hooks/validation";
 import { ValidationErrorDisplay } from "./validationError";
 import { TLEditorDirect } from "./TLEditor";
 import type { ClassValue } from "clsx";
+import Image from "next/image";
+import { api } from "@/trpc/react";
+import { Spinner } from "../creator/page";
 
 export type SaveState = "default" | "done" | "waiting";
 
@@ -54,16 +58,84 @@ type SFXField =
 type Arrayable<T> = T | T[];
 
 const sfxFieldFromString = (str: string): Arrayable<SFXField | null> => {
-  // const imgRegex = /(?<single>img:[\s])|(?<multiple>)/gi.exec(str);
+  const imgRegex =
+    /(img:(?<img>.+))|(imgs:\[(?<imgs>[^,]+,?(?:[^,]+,?)+)\])/gi.exec(str);
 
-  if (str.startsWith("img:")) {
-    return { type: "img", data: str.split("img:")[1] ?? "" };
+  if (!!imgRegex) {
+    if (!!imgRegex.groups?.img) {
+      return { type: "img", data: imgRegex.groups.img };
+    }
+    if (!!imgRegex.groups?.imgs) {
+      return imgRegex.groups.imgs.split(",").map((data) => {
+        return { data, type: "img" };
+      });
+    }
   }
 
   if (!str.includes(":")) {
     return { type: "string", data: str };
   }
   return null;
+};
+
+const GetLocalImg = ({ filename, alt }: { filename: string; alt: string }) => {
+  const [img, rest] = api.picture.getPicture.useSuspenseQuery(filename);
+
+  const popupRef = useRef<HTMLDialogElement>(null);
+
+  if (typeof img !== "string")
+    return (
+      <span
+        className={cn("text-red-900 dark:text-red-300")}
+        title={img.err.message}
+      >
+        {alt}
+      </span>
+    );
+
+  const src = `data:image/png;base64,${img}`;
+
+  return (
+    <>
+      <div
+        className={cn(
+          "relative w-fit",
+          "before:absolute before:hidden before:h-full before:w-full before:justify-center hover:before:flex",
+          "font-bold before:items-center before:bg-(--accent-600) before:text-black before:opacity-0",
+          "before:content-['show'] hover:cursor-pointer hover:before:opacity-75",
+        )}
+        onClick={() => {
+          popupRef.current?.showPopover();
+        }}
+      >
+        <Image
+          src={src}
+          alt={alt}
+          width={100}
+          height={100}
+          className={cn("h-auto max-h-[100px] w-auto", "hover:cursor-pointer")}
+        />
+      </div>
+      <dialog
+        ref={popupRef}
+        popover="auto"
+        className="absolute top-0 right-0 left-0 h-full w-full items-center justify-center bg-(--accent-200)/50 dark:bg-(--accent-900)/15"
+        onClick={() => {
+          popupRef.current?.hidePopover();
+        }}
+      >
+        <div className={cn("flex h-full w-full items-center justify-center")}>
+          <Image
+            width={0}
+            height={0}
+            className={cn("h-auto w-auto")}
+            src={src}
+            alt={alt}
+          />
+        </div>
+      </dialog>
+    </>
+  );
 };
 
 const parseSFXText = (str?: string | null): ReactNode => {
@@ -91,18 +163,27 @@ const parseSFXText = (str?: string | null): ReactNode => {
             </React.Fragment>
           );
         })}
-      {fields
-        .filter((q) => q.type !== "string")
-        .map((q, _i) => {
-          switch (q.type) {
-            default:
-              return (
-                <React.Fragment key={str ?? q.data}>
-                  {q.type}:{q.data}
-                </React.Fragment>
-              );
-          }
-        })}
+      <div className={cn("flex justify-around")}>
+        {fields
+          .filter((q) => q.type === "img")
+          .map((q, i) => {
+            const alt = `Example #${i + 1}`;
+            const img = (
+              <Suspense
+                key={`img_${q.data}`}
+                fallback={<Spinner className={cn("h-[75px] w-[75px]")} />}
+              >
+                {q.data.startsWith("@") ? (
+                  <GetLocalImg alt={alt} filename={q.data.substring(1)} />
+                ) : (
+                  <Image alt={alt} src={q.data} width={50} height={50} />
+                )}
+              </Suspense>
+            );
+
+            return img;
+          })}
+      </div>
     </>
   );
 };
@@ -119,9 +200,9 @@ const SFXCard = ({
   return (
     <div
       className={cn(
-        "flex flex-col gap-2 rounded-lg border border-dashed border-blue-300",
-        "min-w-44 bg-blue-50 px-4 py-3 shadow-sm",
-        "dark:border-blue-600 dark:bg-slate-800",
+        "flex flex-col gap-2 rounded-lg border border-dashed border-(color:--accent-300)",
+        "min-w-44 bg-(color:--accent-50) px-4 py-3 shadow-sm",
+        "dark:border-(color:--accent-600) dark:bg-slate-800",
         classNames?.container,
       )}
     >
@@ -133,7 +214,7 @@ const SFXCard = ({
       >
         <div
           className={cn(
-            "self-center pr-2 text-lg font-bold text-blue-900 dark:text-blue-100",
+            "self-center pr-2 text-lg font-bold text-(color:--accent-900) dark:text-(color:--accent-100)",
             classNames?.topinfo?.text,
           )}
         >
@@ -143,7 +224,7 @@ const SFXCard = ({
         {usedSFX.read && (
           <div
             className={cn(
-              "text-sm whitespace-pre-wrap text-blue-500 dark:text-blue-400",
+              "text-sm whitespace-pre-wrap text-(color:--accent-500) dark:text-(color:--accent-400)",
               classNames?.topinfo?.reading,
             )}
           >
@@ -153,8 +234,9 @@ const SFXCard = ({
         <div
           className={cn(
             "flex-1 text-right text-sm",
-            "text-blue-500 dark:text-blue-400",
-            !Number.isFinite(sfx.id) && "text-orange-700 dark:text-orange-200",
+            "text-(color:--accent-500) dark:text-(color:--accent-400)",
+            !Number.isFinite(sfx.id) &&
+              "text-(color:--notice-700) dark:text-(color:--dark-notice-200)",
             classNames?.topinfo?.language,
           )}
         >
@@ -168,19 +250,17 @@ const SFXCard = ({
         <div
           className={cn(
             "flex w-fit border-2 border-x-0 border-t-0 border-dashed border-red-300 px-1",
-            "text-base text-blue-400 dark:text-blue-300",
+            "text-base text-(color:--accent-400) dark:text-(color:--accent-300)",
           )}
         >
           <span>{tlExtra}</span>
         </div>
       )}
 
-      <div
-        className={cn(classNames?.bottominfo?.container, tlExtra && "text-xs")}
-      >
+      <div className={cn(classNames?.bottominfo?.container)}>
         <div
           className={cn(
-            "whitespace-pre-wrap text-blue-700 dark:text-blue-300",
+            "whitespace-pre-wrap text-(color:--accent-700) dark:text-(color:--accent-300)",
             classNames?.bottominfo?.def,
           )}
         >
@@ -188,7 +268,7 @@ const SFXCard = ({
         </div>
         <div
           className={cn(
-            "pl-8 text-sm whitespace-pre-wrap text-blue-400 dark:text-blue-500",
+            "pl-8 text-sm whitespace-pre-wrap text-(color:--accent-400) dark:text-(color:--accent-500)",
             classNames?.bottominfo?.extra,
           )}
         >
@@ -217,7 +297,8 @@ const SFXCard = ({
                       container: cn(
                         "border-2 dark:border-1",
                         classNames?.tls?.sfx?.default?.container,
-                        isReversed && "border-red-900 dark:border-yellow-400",
+                        isReversed &&
+                          "border-(color:--error-900) dark:border-(color:--warning-400)",
                       ),
                     },
                   }}
@@ -298,17 +379,17 @@ export const SFXEdit = ({
     <>
       <div
         className={cn(
-          "flex flex-col gap-2 rounded-xl border-2 border-blue-300",
-          "bg-blue-50 p-2 shadow-sm",
-          "dark:border-blue-600 dark:bg-slate-800",
+          "flex flex-col gap-2 rounded-xl border-2 border-(color:--accent-300)",
+          "bg-(color:--accent-50) p-2 shadow-sm",
+          "dark:border-(color:--accent-600) dark:bg-slate-800",
           classNames?.main,
         )}
       >
         <h2
           className={cn(
-            "flex items-center justify-center border-b border-blue-200",
-            "pb-2 text-center text-2xl font-semibold text-blue-800",
-            "dark:border-blue-700 dark:text-blue-200",
+            "flex items-center justify-center border-b border-(color:--accent-200)",
+            "pb-2 text-center text-2xl font-semibold text-(color:--accent-800)",
+            "dark:border-(color:--accent-700) dark:text-(color:--accent-200)",
           )}
         >
           {labels?.main ?? "Edit SFX"}{" "}
@@ -331,7 +412,7 @@ export const SFXEdit = ({
         <div
           className={cn(
             "flex w-full flex-col gap-2",
-            "text-base font-medium text-blue-700 dark:text-blue-300",
+            "text-base font-medium text-(color:--accent-700) dark:text-(color:--accent-300)",
           )}
         >
           <div className={cn("flex flex-row items-start gap-2")}>
@@ -339,7 +420,7 @@ export const SFXEdit = ({
               htmlFor="sfx"
               className={cn(
                 "flex-1 font-medium whitespace-nowrap",
-                "text-blue-700 dark:text-blue-300",
+                "text-(color:--accent-700) dark:text-(color:--accent-300)",
               )}
             >
               SFX
@@ -352,7 +433,7 @@ export const SFXEdit = ({
                   "dark:placeholder-gray-400",
                   validation.hasFieldError("text")
                     ? "border-red-500 focus:border-red-500 focus:ring-red-500 dark:border-red-400 dark:focus:border-red-400 dark:focus:ring-red-400"
-                    : "border-blue-300 focus:border-blue-500 focus:ring-blue-500 dark:border-blue-600 dark:focus:border-blue-400 dark:focus:ring-blue-400",
+                    : "border-(color:--accent-300) focus:border-(color:--accent-500) focus:ring-(color:--accent-500) dark:border-(color:--accent-600) dark:focus:border-(color:--accent-400) dark:focus:ring-(color:--accent-400)",
                 )}
                 placeholder="SFX"
                 type="text"
@@ -376,7 +457,7 @@ export const SFXEdit = ({
               htmlFor="def"
               className={cn(
                 "mt-1 flex-1 font-medium whitespace-nowrap",
-                "text-blue-700 dark:text-blue-300",
+                "text-(color:--accent-700) dark:text-(color:--accent-300)",
                 validation.hasFieldError("def") &&
                   "text-red-600 dark:text-red-400",
               )}
@@ -391,7 +472,7 @@ export const SFXEdit = ({
                   "dark:placeholder-gray-400",
                   validation.hasFieldError("def")
                     ? "border-red-500 focus:border-red-500 focus:ring-red-500 dark:border-red-400 dark:focus:border-red-400 dark:focus:ring-red-400"
-                    : "border-blue-300 focus:border-blue-500 focus:ring-blue-500 dark:border-blue-600 dark:focus:border-blue-400 dark:focus:ring-blue-400",
+                    : "border-(color:--accent-300) focus:border-(color:--accent-500) focus:ring-(color:--accent-500) dark:border-(color:--accent-600) dark:focus:border-(color:--accent-400) dark:focus:ring-(color:--accent-400)",
                 )}
                 placeholder="Definition"
                 type="text"
@@ -415,7 +496,7 @@ export const SFXEdit = ({
               htmlFor="extra"
               className={cn(
                 "flex-1 font-medium whitespace-nowrap",
-                "text-blue-700 dark:text-blue-300",
+                "text-(color:--accent-700) dark:text-(color:--accent-300)",
               )}
             >
               Extra
@@ -428,7 +509,7 @@ export const SFXEdit = ({
                   "dark:placeholder-gray-400",
                   validation.hasFieldError("extra")
                     ? "border-red-500 focus:border-red-500 focus:ring-red-500 dark:border-red-400 dark:focus:border-red-400 dark:focus:ring-red-400"
-                    : "border-blue-300 focus:border-blue-500 focus:ring-blue-500 dark:border-blue-600 dark:focus:border-blue-400 dark:focus:ring-blue-400",
+                    : "border-(color:--accent-300) focus:border-(color:--accent-500) focus:ring-(color:--accent-500) dark:border-(color:--accent-600) dark:focus:border-(color:--accent-400) dark:focus:ring-(color:--accent-400)",
                 )}
                 placeholder="Extra"
                 type="text"
@@ -454,7 +535,7 @@ export const SFXEdit = ({
                 htmlFor="read"
                 className={cn(
                   "font-medium whitespace-nowrap",
-                  "text-blue-700 dark:text-blue-300",
+                  "text-(color:--accent-700) dark:text-(color:--accent-300)",
                   validation.hasFieldError("read") &&
                     "text-red-600 dark:text-red-400",
                 )}
@@ -464,7 +545,7 @@ export const SFXEdit = ({
               <label
                 className={cn(
                   "flex items-center gap-1 text-sm",
-                  "text-blue-600 dark:text-blue-400",
+                  "text-(color:--accent-600) dark:text-(color:--accent-400)",
                 )}
               >
                 <input
@@ -477,9 +558,9 @@ export const SFXEdit = ({
                     }))
                   }
                   className={cn(
-                    "h-4 w-4 rounded border-blue-300 text-blue-600",
-                    "focus:ring-blue-500 dark:border-blue-600 dark:bg-slate-700",
-                    "dark:focus:ring-blue-400",
+                    "h-4 w-4 rounded border-(color:--accent-300) text-(color:--accent-600)",
+                    "focus:ring-(color:--accent-500) dark:border-(color:--accent-600) dark:bg-slate-700",
+                    "dark:focus:ring-(color:--accent-400)",
                   )}
                 />
               </label>
@@ -493,7 +574,7 @@ export const SFXEdit = ({
                   "disabled:cursor-not-allowed disabled:opacity-50",
                   validation.hasFieldError("read")
                     ? "border-red-500 focus:border-red-500 focus:ring-red-500 dark:border-red-400 dark:focus:border-red-400 dark:focus:ring-red-400"
-                    : "border-blue-300 focus:border-blue-500 focus:ring-blue-500 dark:border-blue-600 dark:focus:border-blue-400 dark:focus:ring-blue-400",
+                    : "border-(color:--accent-300) focus:border-(color:--accent-500) focus:ring-(color:--accent-500) dark:border-(color:--accent-600) dark:focus:border-(color:--accent-400) dark:focus:ring-(color:--accent-400)",
                 )}
                 placeholder="Reading"
                 type="text"
@@ -521,10 +602,10 @@ export const SFXEdit = ({
         <div className={cn("mt-2 flex flex-row gap-2")}>
           <button
             className={cn(
-              "rounded bg-blue-600 px-4 py-2 text-white transition-colors",
-              "cursor-pointer hover:bg-blue-700",
-              "focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none",
-              "dark:bg-blue-700 dark:hover:bg-blue-600 dark:focus:ring-blue-400 dark:focus:ring-offset-slate-800",
+              "rounded bg-(color:--accent-600) px-4 py-2 text-white transition-colors",
+              "cursor-pointer hover:bg-(color:--accent-700)",
+              "focus:ring-2 focus:ring-(color:--accent-500) focus:ring-offset-2 focus:outline-none",
+              "dark:bg-(color:--accent-700) dark:hover:bg-(color:--accent-600) dark:focus:ring-(color:--accent-400) dark:focus:ring-offset-slate-800",
             )}
             onClick={async () => {
               const validation = onValidate?.(sfx);
@@ -549,8 +630,8 @@ export const SFXEdit = ({
               <dialog
                 id={`tleditdialog_${sfx.id}`}
                 className={cn(
-                  "m-auto min-w-[50%] rounded-xl border border-blue-200 bg-white/95 p-6",
-                  "shadow-lg backdrop-blur-sm dark:border-blue-700",
+                  "m-auto min-w-[50%] rounded-xl border border-(color:--accent-200) bg-white/95 p-6",
+                  "shadow-lg backdrop-blur-sm dark:border-(color:--accent-700)",
                   "dark:bg-slate-800/95 dark:text-white",
                 )}
                 ref={tlEditDialogRef}
@@ -669,10 +750,10 @@ export const SFX = ({
           >
             <button
               className={cn(
-                "flex-1 cursor-pointer rounded bg-blue-600 px-4 py-2 text-white transition-colors",
-                "hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2",
-                "focus:outline-none dark:bg-blue-700 dark:hover:bg-blue-600",
-                "dark:focus:ring-blue-400 dark:focus:ring-offset-slate-800",
+                "flex-1 cursor-pointer rounded bg-(color:--accent-600) px-4 py-2 text-white transition-colors",
+                "hover:bg-(color:--accent-700) focus:ring-2 focus:ring-(color:--accent-500) focus:ring-offset-2",
+                "focus:outline-none dark:bg-(color:--accent-700) dark:hover:bg-(color:--accent-600)",
+                "dark:focus:ring-(color:--accent-400) dark:focus:ring-offset-slate-800",
                 "disabled:bg-slate-200 disabled:text-black dark:disabled:bg-slate-700 dark:disabled:text-white",
                 classNames?.editable?.edit?.buttonEdit,
               )}

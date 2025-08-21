@@ -2,8 +2,8 @@
 
 import { api } from "@/trpc/react";
 import { useEffect, useState } from "react";
-import { useDarkMode } from "../hooks/darkmode";
-import DarkModeSwitch from "../_components/darkModeSwitch";
+import { useTheme } from "../hooks/theme";
+import DarkModeSwitch, { AccentSwitch } from "../_components/darkModeSwitch";
 import { SFXLangSelect } from "../_components/sfxLangSelect";
 import { useRouter } from "next/navigation";
 import { cn, type CollapsedOnomatopoeia, type CollapsedTL } from "@/utils";
@@ -13,6 +13,7 @@ import { TLEditorDirect } from "../_components/TLEditor";
 import type { SFXLang } from "../hooks/langs";
 import { useUser, type UserSessionData } from "../hooks/userlogin";
 import { SFXListPanel } from "../_components/sfxList.";
+import { Spinner } from "./page";
 
 // SFX creator page
 const CreatorPage = () => {
@@ -36,7 +37,7 @@ const CreatorPage = () => {
 
   const router = useRouter();
 
-  const { mode } = useDarkMode();
+  const { mode, accent } = useTheme();
 
   const [firstRun, setFirstRun] = useState(false);
 
@@ -88,7 +89,12 @@ const CreatorPage = () => {
     localStorage.setItem("creatememory", JSON.stringify(memory));
   }, [sfx, def, extra, lang, read, tls, firstRun]);
 
-  if (!auth) return <>Loading...</>;
+  if (!auth)
+    return (
+      <>
+        <Spinner />
+      </>
+    );
 
   const handleCreate = async () => {
     const sfxData = {
@@ -157,21 +163,24 @@ const CreatorPage = () => {
     <div
       className={cn(
         "flex h-[100vh] w-full basis-1/2 flex-row",
-        "gap-8 bg-blue-50 p-4 dark:bg-slate-900",
+        "gap-8 bg-(color:--accent-50) p-4 dark:bg-slate-900",
         mode,
       )}
+      data-accent={accent}
     >
       {/* Main creator form */}
       <div className={cn("flex flex-1 flex-col gap-4")}>
         <h1
-          className={cn("text-4xl font-bold text-blue-900 dark:text-blue-100")}
+          className={cn(
+            "text-4xl font-bold text-(color:--accent-900) dark:text-(color:--accent-100)",
+          )}
         >
           <div className={cn("flex w-full items-center justify-between")}>
             <button
               className={cn(
-                "mr-4 cursor-pointer rounded bg-blue-100 px-3 py-1",
-                "text-blue-700 transition hover:bg-blue-200",
-                "dark:bg-slate-700 dark:text-blue-200 dark:hover:bg-slate-600",
+                "mr-4 cursor-pointer rounded bg-(color:--accent-100) px-3 py-1",
+                "text-(color:--accent-700) transition hover:bg-(color:--accent-200)",
+                "dark:bg-slate-700 dark:text-(color:--accent-200) dark:hover:bg-slate-600",
               )}
               title="Back"
               onClick={() => {
@@ -183,28 +192,31 @@ const CreatorPage = () => {
             <span
               className={cn(
                 "flex-1 text-center text-4xl font-bold",
-                "text-blue-900 dark:text-blue-100",
+                "text-(color:--accent-900) dark:text-(color:--accent-100)",
               )}
             >
               Creator
             </span>
             <div className={cn("ml-auto")}>
-              <DarkModeSwitch />
+              <div className={cn("flex items-center gap-2")}>
+                <AccentSwitch className={cn("w-8")} />
+                <DarkModeSwitch className={cn("h-8 text-2xl")} />
+              </div>
             </div>
           </div>
         </h1>
         <div
           className={cn(
-            "flex flex-col gap-2 rounded-xl border-2 border-blue-300",
-            "bg-blue-50 p-2 shadow-sm",
-            "dark:border-blue-600 dark:bg-slate-800",
+            "flex flex-col gap-2 rounded-xl border-2 border-(color:--accent-300)",
+            "bg-(color:--accent-50) p-2 shadow-sm",
+            "dark:border-(color:--accent-600) dark:bg-slate-800",
           )}
         >
           <h2
             className={cn(
-              "flex items-center justify-center border-b border-blue-200",
-              "pb-2 text-center text-2xl font-semibold text-blue-800",
-              "dark:border-blue-700 dark:text-blue-200",
+              "flex items-center justify-center border-b border-(color:--accent-200)",
+              "pb-2 text-center text-2xl font-semibold text-(color:--accent-800)",
+              "dark:border-(color:--accent-700) dark:text-(color:--accent-200)",
             )}
           >
             New SFX
@@ -223,7 +235,7 @@ const CreatorPage = () => {
               htmlFor="sfx"
               className={cn(
                 "mt-1 flex-1 font-medium whitespace-nowrap",
-                "text-blue-700 dark:text-blue-300",
+                "text-(color:--accent-700) dark:text-(color:--accent-300)",
                 validation.hasFieldError("text") &&
                   "text-red-600 dark:text-red-400",
               )}
@@ -238,7 +250,7 @@ const CreatorPage = () => {
                   "dark:placeholder-gray-400",
                   validation.hasFieldError("text")
                     ? "border-red-500 focus:border-red-500 focus:ring-red-500 dark:border-red-400 dark:focus:border-red-400 dark:focus:ring-red-400"
-                    : "border-blue-300 focus:border-blue-500 focus:ring-blue-500 dark:border-blue-600 dark:focus:border-blue-400 dark:focus:ring-blue-400",
+                    : "border-(color:--accent-300) focus:border-(color:--accent-500) focus:ring-(color:--accent-500) dark:border-(color:--accent-600) dark:focus:border-(color:--accent-400) dark:focus:ring-(color:--accent-400)",
                 )}
                 placeholder="SFX"
                 type="text"
@@ -259,7 +271,7 @@ const CreatorPage = () => {
               htmlFor="def"
               className={cn(
                 "mt-1 flex-1 font-medium whitespace-nowrap",
-                "text-blue-700 dark:text-blue-300",
+                "text-(color:--accent-700) dark:text-(color:--accent-300)",
                 validation.hasFieldError("def") &&
                   "text-red-600 dark:text-red-400",
               )}
@@ -274,7 +286,7 @@ const CreatorPage = () => {
                   "dark:placeholder-gray-400",
                   validation.hasFieldError("def")
                     ? "border-red-500 focus:border-red-500 focus:ring-red-500 dark:border-red-400 dark:focus:border-red-400 dark:focus:ring-red-400"
-                    : "border-blue-300 focus:border-blue-500 focus:ring-blue-500 dark:border-blue-600 dark:focus:border-blue-400 dark:focus:ring-blue-400",
+                    : "border-(color:--accent-300) focus:border-(color:--accent-500) focus:ring-(color:--accent-500) dark:border-(color:--accent-600) dark:focus:border-(color:--accent-400) dark:focus:ring-(color:--accent-400)",
                 )}
                 placeholder="Definition"
                 type="text"
@@ -295,7 +307,7 @@ const CreatorPage = () => {
               htmlFor="extra"
               className={cn(
                 "flex-1 font-medium whitespace-nowrap",
-                "text-blue-700 dark:text-blue-300",
+                "text-(color:--accent-700) dark:text-(color:--accent-300)",
                 validation.hasFieldError("extra") &&
                   "text-red-600 dark:text-red-400",
               )}
@@ -310,7 +322,7 @@ const CreatorPage = () => {
                   "dark:placeholder-gray-400",
                   validation.hasFieldError("extra")
                     ? "border-red-500 focus:border-red-500 focus:ring-red-500 dark:border-red-400 dark:focus:border-red-400 dark:focus:ring-red-400"
-                    : "border-blue-300 focus:border-blue-500 focus:ring-blue-500 dark:border-blue-600 dark:focus:border-blue-400 dark:focus:ring-blue-400",
+                    : "border-(color:--accent-300) focus:border-(color:--accent-500) focus:ring-(color:--accent-500) dark:border-(color:--accent-600) dark:focus:border-(color:--accent-400) dark:focus:ring-(color:--accent-400)",
                 )}
                 placeholder="Extra"
                 type="text"
@@ -331,7 +343,7 @@ const CreatorPage = () => {
                 htmlFor="read"
                 className={cn(
                   "font-medium whitespace-nowrap",
-                  "text-blue-700 dark:text-blue-300",
+                  "text-(color:--accent-700) dark:text-(color:--accent-300)",
                   validation.hasFieldError("read") &&
                     "text-red-600 dark:text-red-400",
                 )}
@@ -341,7 +353,7 @@ const CreatorPage = () => {
               <label
                 className={cn(
                   "flex items-center gap-1 text-sm",
-                  "text-blue-600 dark:text-blue-400",
+                  "text-(color:--accent-600) dark:text-(color:--accent-400)",
                 )}
               >
                 <input
@@ -349,9 +361,9 @@ const CreatorPage = () => {
                   checked={read !== null}
                   onChange={() => setRead(read === null ? "" : null)}
                   className={cn(
-                    "h-4 w-4 rounded border-blue-300 text-blue-600",
-                    "focus:ring-blue-500 dark:border-blue-600 dark:bg-slate-700",
-                    "dark:focus:ring-blue-400",
+                    "h-4 w-4 rounded border-(color:--accent-300) text-(color:--accent-600)",
+                    "focus:ring-(color:--accent-500) dark:border-(color:--accent-600) dark:bg-slate-700",
+                    "dark:focus:ring-(color:--accent-400)",
                   )}
                 />
               </label>
@@ -365,7 +377,7 @@ const CreatorPage = () => {
                   "disabled:cursor-not-allowed disabled:opacity-50",
                   validation.hasFieldError("read")
                     ? "border-red-500 focus:border-red-500 focus:ring-red-500 dark:border-red-400 dark:focus:border-red-400 dark:focus:ring-red-400"
-                    : "border-blue-300 focus:border-blue-500 focus:ring-blue-500 dark:border-blue-600 dark:focus:border-blue-400 dark:focus:ring-blue-400",
+                    : "border-(color:--accent-300) focus:border-(color:--accent-500) focus:ring-(color:--accent-500) dark:border-(color:--accent-600) dark:focus:border-(color:--accent-400) dark:focus:ring-(color:--accent-400)",
                 )}
                 placeholder="Reading"
                 type="text"
@@ -401,10 +413,10 @@ const CreatorPage = () => {
         />
         <button
           className={cn(
-            "cursor-pointer rounded bg-blue-600 px-4 py-2 text-white",
-            "transition-colors hover:bg-blue-700 focus:ring-2 focus:ring-blue-500",
-            "focus:ring-offset-2 focus:outline-none dark:bg-blue-700 dark:hover:bg-blue-600",
-            "dark:focus:ring-blue-400 dark:focus:ring-offset-slate-800",
+            "cursor-pointer rounded bg-(color:--accent-600) px-4 py-2 text-white",
+            "transition-colors hover:bg-(color:--accent-700) focus:ring-2 focus:ring-(color:--accent-500)",
+            "focus:ring-offset-2 focus:outline-none dark:bg-(color:--accent-700) dark:hover:bg-(color:--accent-600)",
+            "dark:focus:ring-(color:--accent-400) dark:focus:ring-offset-slate-800",
             "disabled:cursor-not-allowed disabled:opacity-50",
           )}
           onClick={handleCreate}
@@ -418,17 +430,17 @@ const CreatorPage = () => {
       <div className={cn("flex flex-1 flex-col gap-4")}>
         <h2
           className={cn(
-            "py-2 text-center text-2xl font-bold text-blue-900 dark:text-blue-100",
+            "py-2 text-center text-2xl font-bold text-(color:--accent-900) dark:text-(color:--accent-100)",
           )}
         >
           Past Created SFX
         </h2>
         <div
           className={cn(
-            "flex flex-col gap-2 rounded-xl border-2 border-blue-300",
-            "bg-blue-50 p-2 shadow-sm",
+            "flex flex-col gap-2 rounded-xl border-2 border-(color:--accent-300)",
+            "bg-(color:--accent-50) p-2 shadow-sm",
             "h-full overflow-auto",
-            "dark:border-blue-600 dark:bg-slate-800",
+            "dark:border-(color:--accent-600) dark:bg-slate-800",
           )}
         >
           <SFXListPanel
@@ -464,10 +476,10 @@ const CreatorPage = () => {
         <div className={cn("flex justify-around gap-3")}>
           <button
             className={cn(
-              "flex-1 cursor-pointer rounded bg-blue-600 px-4 py-2 text-white",
-              "transition-colors hover:bg-blue-700 focus:ring-2 focus:ring-blue-500",
-              "focus:ring-offset-2 focus:outline-none dark:bg-blue-700 dark:hover:bg-blue-600",
-              "dark:focus:ring-blue-400 dark:focus:ring-offset-slate-800",
+              "flex-1 cursor-pointer rounded bg-(color:--accent-600) px-4 py-2 text-white",
+              "transition-colors hover:bg-(color:--accent-700) focus:ring-2 focus:ring-(color:--accent-500)",
+              "focus:ring-offset-2 focus:outline-none dark:bg-(color:--accent-700) dark:hover:bg-(color:--accent-600)",
+              "dark:focus:ring-(color:--accent-400) dark:focus:ring-offset-slate-800",
               "disabled:cursor-not-allowed disabled:opacity-50",
             )}
             onClick={handleCreate}
@@ -477,10 +489,10 @@ const CreatorPage = () => {
           </button>
           <button
             className={cn(
-              "flex-1 cursor-pointer rounded bg-blue-600 px-4 py-2 text-white",
-              "transition-colors hover:bg-blue-700 focus:ring-2 focus:ring-blue-500",
-              "focus:ring-offset-2 focus:outline-none dark:bg-blue-700 dark:hover:bg-blue-600",
-              "dark:focus:ring-blue-400 dark:focus:ring-offset-slate-800",
+              "flex-1 cursor-pointer rounded bg-(color:--accent-600) px-4 py-2 text-white",
+              "transition-colors hover:bg-(color:--accent-700) focus:ring-2 focus:ring-(color:--accent-500)",
+              "focus:ring-offset-2 focus:outline-none dark:bg-(color:--accent-700) dark:hover:bg-(color:--accent-600)",
+              "dark:focus:ring-(color:--accent-400) dark:focus:ring-offset-slate-800",
               "disabled:cursor-not-allowed disabled:opacity-50",
             )}
             onClick={handleCreate}

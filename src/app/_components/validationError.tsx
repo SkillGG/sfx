@@ -32,7 +32,7 @@ export const ValidationErrorDisplay = ({
             key={`${error.field}-${index}`}
             className={cn(
               "flex items-center gap-1 text-xs",
-              "text-red-600 dark:text-red-400",
+              "text-(color:--neutral-600) dark:text-(color:--dark-neutral-400)",
             )}
           >
             <svg
@@ -61,8 +61,8 @@ export const ValidationErrorDisplay = ({
         <div
           key={`${error.field}-${index}`}
           className={cn(
-            "flex items-start gap-2 rounded-md bg-red-50 p-2",
-            "text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400",
+            "flex items-start gap-2 rounded-md bg-(color:--neutral-50) p-2",
+            "text-sm text-(color:--neutral-700) dark:bg-(color:--dark-neutral-900)/20 dark:text-(color:--dark-neutral-400)",
           )}
         >
           <svg
@@ -103,8 +103,8 @@ export const ValidationErrorSummary = ({
   return (
     <div
       className={cn(
-        "rounded-lg border border-red-200 bg-red-50 p-4",
-        "dark:border-red-800 dark:bg-red-900/20",
+        "rounded-lg border border-(color:--neutral-200) bg-(color:--neutral-50) p-4",
+        "dark:border-(color:--dark-neutral-800) dark:bg-(color:--dark-neutral-900)/20",
         className,
       )}
     >
@@ -112,7 +112,7 @@ export const ValidationErrorSummary = ({
         <svg
           className={cn(
             "mt-0.5 h-5 w-5 flex-shrink-0",
-            "text-red-600 dark:text-red-400",
+            "text-(color:--neutral-600) dark:text-(color:--dark-neutral-400)",
           )}
           fill="none"
           stroke="currentColor"
@@ -129,7 +129,7 @@ export const ValidationErrorSummary = ({
           <h3
             className={cn(
               "text-sm font-medium",
-              "text-red-800 dark:text-red-200",
+              "text-(color:--neutral-800) dark:text-(color:--dark-neutral-200)",
             )}
           >
             {title}
@@ -138,7 +138,10 @@ export const ValidationErrorSummary = ({
             {errors.map((error, index) => (
               <div
                 key={`${error.field}-${index}`}
-                className={cn("text-sm", "text-red-700 dark:text-red-300")}
+                className={cn(
+                  "text-sm",
+                  "text-(color:--neutral-700) dark:text-(color:--dark-neutral-300)",
+                )}
               >
                 <span className="font-medium capitalize">
                   {error.field.replace(/([A-Z])/g, " $1").toLowerCase()}:

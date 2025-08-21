@@ -3,14 +3,14 @@
 import { api } from "@/trpc/react";
 import { cn } from "@/utils";
 import { useState } from "react";
-import { useDarkMode } from "../hooks/darkmode";
 import DarkModeSwitch from "../_components/darkModeSwitch";
+import { useTheme } from "../hooks/theme";
 
 const LoginPage = () => {
   const [pass, setPass] = useState<string>("");
   const login = api.user.logIn.useMutation();
 
-  const { mode } = useDarkMode();
+  const { mode } = useTheme();
 
   const [err, setError] = useState("");
 
@@ -78,9 +78,9 @@ const LoginPage = () => {
         <button
           type="submit"
           className={cn(
-            "mt-3 rounded-md bg-blue-600 px-4 py-2 font-semibold text-white",
-            "hover:bg-blue-700",
-            "focus:ring-2 focus:ring-blue-500 focus:outline-none",
+            "mt-3 rounded-md bg-(color:--accent-600) px-4 py-2 font-semibold text-white",
+            "hover:bg-(color:--accent-700)",
+            "focus:ring-2 focus:ring-(color:--accent-500) focus:outline-none",
             "disabled:cursor-not-allowed disabled:opacity-50",
           )}
           disabled={login.isPending}

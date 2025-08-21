@@ -98,11 +98,11 @@ export const TL = ({
               <input
                 id={`tl-additional-info-${tl.id}`}
                 className={cn(
-                  "rounded border border-blue-300 bg-blue-50 px-3 py-2 text-sm",
-                  "text-blue-900 placeholder:text-blue-400",
-                  "focus:ring-2 focus:ring-blue-500 focus:outline-none",
-                  "dark:border-blue-600 dark:bg-slate-800 dark:text-blue-100",
-                  "dark:placeholder:text-blue-400",
+                  "rounded border border-(color:--accent-300) bg-(color:--accent-50) px-3 py-2 text-sm",
+                  "text-(color:--accent-900) placeholder:text-(color:--accent-400)",
+                  "focus:ring-2 focus:ring-(color:--accent-500) focus:outline-none",
+                  "dark:border-(color:--accent-600) dark:bg-slate-800 dark:text-(color:--accent-100)",
+                  "dark:placeholder:text-(color:--accent-400)",
                 )}
                 type="text"
                 value={tl.additionalInfo ?? ""}
@@ -142,9 +142,9 @@ export const TL = ({
       <div className={cn("flex flex-row gap-2")}>
         <button
           className={cn(
-            "inline-block flex-1 cursor-pointer rounded bg-blue-500 px-4 py-2 text-white",
-            "hover:bg-blue-600",
-            "dark:bg-blue-600 dark:hover:bg-blue-700",
+            "inline-block flex-1 cursor-pointer rounded bg-(color:--accent-500) px-4 py-2 text-white",
+            "hover:bg-(color:--accent-600)",
+            "dark:bg-(color:--accent-600) dark:hover:bg-(color:--accent-700)",
             "disabled:cursor-not-allowed disabled:bg-gray-400",
             "disabled:hover:bg-gray-400",
           )}
@@ -198,16 +198,16 @@ const ConnectSFXDialog = ({
       id={SFXDialogID}
       ref={ref}
       className={cn(
-        "m-auto min-w-[50%] rounded-xl border border-blue-200 bg-white/95 p-6",
-        "shadow-lg backdrop-blur-sm dark:border-blue-700",
+        "m-auto min-w-[50%] rounded-xl border border-(color:--accent-200) bg-white/95 p-6",
+        "shadow-lg backdrop-blur-sm dark:border-(color:--accent-700)",
         "dark:bg-slate-800/95 dark:text-white",
       )}
     >
       <button
         className={cn(
           "absolute top-4 right-4 z-10 rounded-full bg-gray-200 p-2",
-          "text-blue-700 hover:bg-gray-300",
-          "dark:bg-slate-700 dark:text-blue-100 dark:hover:bg-slate-600",
+          "text-(color:--accent-700) hover:bg-gray-300",
+          "dark:bg-slate-700 dark:text-(color:--accent-100) dark:hover:bg-slate-600",
         )}
         type="button"
         popoverTarget={SFXDialogID}
@@ -218,7 +218,9 @@ const ConnectSFXDialog = ({
       </button>
       {sfxs.isFetching && (
         <div
-          className={cn("py-4 text-center text-blue-700 dark:text-blue-200")}
+          className={cn(
+            "py-4 text-center text-(color:--accent-700) dark:text-(color:--accent-200)",
+          )}
         >
           Loading...
         </div>
@@ -227,7 +229,7 @@ const ConnectSFXDialog = ({
         <div>
           <div
             className={cn(
-              "mb-4 text-lg font-semibold text-blue-900 dark:text-blue-100",
+              "mb-4 text-lg font-semibold text-(color:--accent-900) dark:text-(color:--accent-100)",
             )}
           >
             Connect to another SFX:
@@ -241,8 +243,8 @@ const ConnectSFXDialog = ({
                     <li
                       key={connSFX.id}
                       className={cn(
-                        "flex flex-row items-center gap-4 rounded-lg border border-blue-100",
-                        "bg-blue-50 p-3 shadow-sm dark:border-blue-700 dark:bg-slate-700",
+                        "flex flex-row items-center gap-4 rounded-lg border border-(color:--accent-100)",
+                        "bg-(color:--accent-50) p-3 shadow-sm dark:border-(color:--accent-700) dark:bg-slate-700",
                       )}
                     >
                       <div className={cn("flex-1")}>
@@ -250,10 +252,10 @@ const ConnectSFXDialog = ({
                       </div>
                       <button
                         className={cn(
-                          "cursor-pointer rounded bg-blue-600 px-3 py-1 text-sm text-white",
-                          "transition-colors hover:bg-blue-700",
-                          "focus:ring-2 focus:ring-blue-500 focus:outline-none",
-                          "dark:bg-blue-700 dark:hover:bg-blue-600 dark:focus:ring-blue-400",
+                          "cursor-pointer rounded bg-(color:--accent-600) px-3 py-1 text-sm text-white",
+                          "transition-colors hover:bg-(color:--accent-700)",
+                          "focus:ring-2 focus:ring-(color:--accent-500) focus:outline-none",
+                          "dark:bg-(color:--accent-700) dark:hover:bg-(color:--accent-600) dark:focus:ring-(color:--accent-400)",
                         )}
                         popoverTargetAction="hide"
                         popoverTarget={SFXDialogID}
@@ -326,18 +328,18 @@ export const TLEditorDirect = ({
     <div
       className={cn(
         "flex flex-col gap-2 rounded-xl border-2",
-        "border-blue-300 bg-blue-50 p-2 shadow-sm",
-        "dark:border-blue-600 dark:bg-slate-800",
+        "border-(color:--accent-300) bg-(color:--accent-50) p-2 shadow-sm",
+        "dark:border-(color:--accent-600) dark:bg-slate-800",
         "h-full max-h-[100dvh] min-h-0",
       )}
       style={{ height: "100%", minHeight: 0, maxHeight: "100dvh" }}
     >
       <div
         className={cn(
-          "border-b border-blue-200",
-          "dark:border-blue-700 dark:text-blue-100",
+          "border-b border-(color:--accent-200)",
+          "dark:border-(color:--accent-700) dark:text-(color:--accent-100)",
           "text-center text-xl font-bold",
-          "text-blue-900",
+          "text-(color:--accent-900)",
         )}
       >
         Translations
@@ -391,11 +393,11 @@ export const TLEditorDirect = ({
         />
         <button
           className={cn(
-            "inline-block flex-1 cursor-pointer rounded bg-blue-500 px-4 py-2",
+            "inline-block flex-1 cursor-pointer rounded bg-(color:--accent-500) px-4 py-2",
             "text-white",
-            "hover:bg-blue-600",
-            "dark:bg-blue-600",
-            "dark:hover:bg-blue-700",
+            "hover:bg-(color:--accent-600)",
+            "dark:bg-(color:--accent-600)",
+            "dark:hover:bg-(color:--accent-700)",
           )}
           onClick={async () => {
             const newTLs = [...tls, newTL];
@@ -421,11 +423,11 @@ export const TLEditorDirect = ({
         )}
         <button
           className={cn(
-            "inline-block flex-1 cursor-pointer rounded bg-blue-500 px-4 py-2",
+            "inline-block flex-1 cursor-pointer rounded bg-(color:--accent-500) px-4 py-2",
             "text-white",
-            "hover:bg-blue-600",
-            "dark:bg-blue-600",
-            "dark:hover:bg-blue-700",
+            "hover:bg-(color:--accent-600)",
+            "dark:bg-(color:--accent-600)",
+            "dark:hover:bg-(color:--accent-700)",
           )}
           onClick={() => {
             connSFXDialog.current?.showPopover();
@@ -483,10 +485,10 @@ export const TLEditorSaveable = ({
           />
           <button
             className={cn(
-              "inline-block flex-1 rounded bg-blue-500 px-4 py-2 text-white",
-              "hover:bg-blue-600",
-              "dark:bg-blue-600",
-              "dark:hover:bg-blue-700",
+              "inline-block flex-1 rounded bg-(color:--accent-500) px-4 py-2 text-white",
+              "hover:bg-(color:--accent-600)",
+              "dark:bg-(color:--accent-600)",
+              "dark:hover:bg-(color:--accent-700)",
             )}
             onClick={() => {
               setTLs((prev) => [...prev, newTL]);
@@ -498,10 +500,10 @@ export const TLEditorSaveable = ({
           <button
             onClick={async () => await onSave?.(tls)}
             className={cn(
-              "inline-block flex-1 rounded bg-green-500 px-4 py-2 text-white",
-              "hover:bg-green-600",
-              "dark:bg-green-600",
-              "dark:hover:bg-green-700",
+              "inline-block flex-1 rounded bg-(color:--success-500) px-4 py-2 text-white",
+              "hover:bg-(color:--success-600)",
+              "dark:bg-(color:--dark-success-600)",
+              "dark:hover:bg-(color:--dark-success-700)",
             )}
             disabled={saveState === "waiting"}
           >

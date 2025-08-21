@@ -1,18 +1,23 @@
 "use client";
 
 import { api } from "@/trpc/react";
-import DarkModeSwitch from "./_components/darkModeSwitch";
-import { useDarkMode } from "./hooks/darkmode";
+import DarkModeSwitch, { AccentSwitch } from "./_components/darkModeSwitch";
+import { useTheme } from "./hooks/theme";
 import { cn } from "@/utils";
 import Link from "next/link";
 import SearchBar from "./_components/searchBar";
 import { Suspense } from "react";
 import { SFXListPanel } from "./_components/sfxList.";
 import { isValidSearch, SearchProvider, useSearch } from "./hooks/search";
+import { Spinner } from "./creator/page";
 
 const PageLoad = () => {
-  const { mode } = useDarkMode();
-  return <div className={cn(mode)}>Loading...</div>;
+  const { mode } = useTheme();
+  return (
+    <div className={cn(mode)}>
+      <Spinner className={cn("m-auto")} />
+    </div>
+  );
 };
 
 const List = () => {
@@ -27,19 +32,26 @@ const List = () => {
 
   if (isLoading) return <PageLoad key={"load"} />;
 
-  if (search.value === "#creator") {
+  if (
+    search.value.startsWith("#creat") ||
+    search.value.startsWith("#edit") ||
+    search.value.startsWith("#new") ||
+    search.value.startsWith("#dash")
+  ) {
     return (
       <div
         className={cn(
           "py-12 text-center text-lg",
-          "text-blue-500 dark:text-blue-300",
+          "text-(color:--accent-500) dark:text-(color:--accent-300)",
         )}
       >
         <Link
           href="/creator"
-          className={cn("text-blue-700 dark:text-blue-500")}
+          className={cn(
+            "text-(color:--accent-700) dark:text-(color:--accent-500)",
+          )}
         >
-          Open the creator
+          Dashboard
         </Link>
       </div>
     );
@@ -51,7 +63,7 @@ const List = () => {
         <div
           className={cn(
             "py-12 text-center text-lg",
-            "text-blue-500 dark:text-blue-300",
+            "text-(color:--accent-500) dark:text-(color:--accent-300)",
           )}
         >
           No SFX found.
@@ -60,7 +72,10 @@ const List = () => {
           <br />
           <Link
             href="mailto:request@sfxvault.org"
-            className={cn("text-blue-700", "dark:text-blue-500")}
+            className={cn(
+              "text-(color:--accent-700)",
+              "dark:text-(color:--accent-500)",
+            )}
           >
             request@sfxvault.org
           </Link>
@@ -91,7 +106,7 @@ const List = () => {
 };
 
 const SearchPage = () => {
-  const { mode } = useDarkMode();
+  const { mode, accent } = useTheme();
   return (
     <div
       className={cn(
@@ -99,12 +114,13 @@ const SearchPage = () => {
         mode,
         "dark:bg-slate-900",
       )}
+      data-accent={accent}
     >
       <div
         className={cn(
           "z-10 mx-auto flex w-full max-w-2xl flex-col gap-8 rounded-xl",
-          "border border-blue-200 bg-white/80 p-8 shadow-lg",
-          "dark:border-blue-700 dark:bg-slate-800/80 dark:text-blue-100",
+          "border border-(color:--accent-200) bg-white/80 p-8 shadow-lg",
+          "dark:border-(color:--accent-700) dark:bg-slate-800/80 dark:text-(color:--accent-100)",
         )}
       >
         <Suspense fallback={<PageLoad key={"load"} />}>
@@ -113,15 +129,22 @@ const SearchPage = () => {
               <h1
                 className={cn(
                   "m-0 text-4xl font-extrabold tracking-tight",
-                  "text-blue-900 dark:text-blue-100",
+                  "text-(color:--accent-900) dark:text-(color:--accent-100)",
                 )}
               >
                 SFX Vault
               </h1>
               <SearchBar />
-              <DarkModeSwitch />
+              <div className={cn("flex items-center gap-2")}>
+                <AccentSwitch />
+                <DarkModeSwitch />
+              </div>
             </div>
-            <hr className={cn("mb-4 border-blue-200 dark:border-blue-700")} />
+            <hr
+              className={cn(
+                "mb-4 border-(color:--accent-200) dark:border-(color:--accent-700)",
+              )}
+            />
             <List />
           </SearchProvider>
         </Suspense>

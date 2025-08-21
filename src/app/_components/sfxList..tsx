@@ -2,6 +2,7 @@ import { api } from "@/trpc/react";
 import { cn, type CollapsedOnomatopoeia, type Promisable } from "@/utils";
 import { SFX, type SFXClasses } from "./sfx";
 import type { ClassValue } from "clsx";
+import { Spinner } from "../creator/page";
 
 export const SFXListPanel = ({
   editable,
@@ -40,7 +41,11 @@ export const SFXListPanel = ({
   const sfxs = sfxList ?? dbSFX.data;
 
   if (dbSFX.isLoading || !sfxs) {
-    return <div className={cn(classNames?.loading)}>Loading SFX List</div>;
+    return (
+      <div className={(cn(classNames?.loading), "flex h-full")}>
+        <Spinner className={cn("mx-auto my-auto")} />
+      </div>
+    );
   }
 
   return (

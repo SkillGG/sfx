@@ -17,6 +17,7 @@ export const env = createEnv({
     DATABASE_URL: z.string().url(),
     DIRECT_URL: z.string().url(),
     CREATOR_PASSWORD: z.string(),
+    DB_STORAGE: z.string().url(),
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),
@@ -44,6 +45,7 @@ export const env = createEnv({
     DATABASE_URL: process.env.DATABASE_URL,
     CREATOR_PASSWORD: process.env.CREATOR_PASSWORD,
     NODE_ENV,
+    DB_STORAGE: process.env.DB_STORAGE,
     NEXT_PUBLIC_DEVENV: NODE_ENV,
     NEXT_PUBLIC_SESSIONTOKEN: process.env.NEXT_PUBLIC_SESSIONTOKEN,
     // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,

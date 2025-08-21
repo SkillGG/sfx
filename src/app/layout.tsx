@@ -5,7 +5,7 @@ import { Geist } from "next/font/google";
 
 import { TRPCReactProvider } from "@/trpc/react";
 import { SFXLangProvider } from "./hooks/langs";
-import { DarkModeProvider } from "./hooks/darkmode";
+import { ThemeProvider } from "./hooks/theme";
 import { cn } from "@/utils";
 
 export const metadata: Metadata = {
@@ -29,7 +29,7 @@ export default function RootLayout({
       >
         <TRPCReactProvider>
           <SFXLangProvider>
-            <DarkModeProvider>{children}</DarkModeProvider>
+            <ThemeProvider>{children}</ThemeProvider>
           </SFXLangProvider>
         </TRPCReactProvider>
       </body>

@@ -6,14 +6,28 @@ import { api } from "@/trpc/react";
 import { cn } from "@/utils";
 import LoginPage from "./login";
 import { UserSessionProvider } from "../hooks/userlogin";
-import { useDarkMode } from "../hooks/darkmode";
+import type { ClassValue } from "clsx";
+import { useTheme } from "../hooks/theme";
 
-const LoadPageSpinner = () => {
-  const { mode } = useDarkMode();
+export const Spinner = ({ className }: { className?: ClassValue }) => {
   return (
     <div
       className={cn(
-        "flex h-screen w-full items-center justify-center bg-blue-50",
+        "h-8 w-8 animate-spin rounded-full border-4 border-(color:--accent-400) border-t-transparent",
+        "dark:border-(color:--accent-300) dark:border-t-transparent",
+        className,
+      )}
+      aria-label="Loading spinner"
+    />
+  );
+};
+
+const LoadPageSpinner = () => {
+  const { mode } = useTheme();
+  return (
+    <div
+      className={cn(
+        "flex h-screen w-full items-center justify-center bg-(color:--accent-50)",
         "dark:bg-slate-900",
         mode,
       )}
@@ -24,13 +38,7 @@ const LoadPageSpinner = () => {
           "dark:bg-slate-800",
         )}
       >
-        <div
-          className={cn(
-            "h-8 w-8 animate-spin rounded-full border-4 border-blue-400 border-t-transparent",
-            "dark:border-blue-300 dark:border-t-transparent",
-          )}
-          aria-label="Loading spinner"
-        />
+        <Spinner />
       </div>
     </div>
   );
