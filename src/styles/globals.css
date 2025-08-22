@@ -13,6 +13,8 @@
 :root {
   --main-bg: var(--color-white);
 
+  --error-text: var(--error-300);
+
   --text-light: var(--accent-800);
 
   --input-border: var(--accent-300);
@@ -25,27 +27,55 @@
   --input-placeholder-text: var(--color-gray-600);
   --input-text: var(--accent-600);
   --input-hover-text: var(--accent-700);
+  --input-focus-border: var(--accent-600);
 
   --regular-border: var(--accent-700);
 
   --button-remove-bg: var(--danger-700);
   --button-remove-bg-hover: var(--danger-800);
+  --button-remove-text: var(--color-white);
 
   --button-cancel-bg: var(--notice-700);
   --button-cancel-bg-hover: var(--notice-800);
+  --button-cancel-text: var(--color-white);
 
   --button-neutral-bg: var(--accent-300);
   --button-neutral-hover-bg: var(--accent-400);
+  --button-neutral-text: var(--color-black);
 
   --button-submit-bg: var(--accent-600);
   --button-submit-hover-bg: var(--accent-700);
-  --button-submit-text: var(--text-white);
+  --button-submit-text: var(--color-white);
+
+  --button-checkbox-checked-bg: var(--complement-500);
+  --button-disabled-bg: var(--muted-400);
 
   --dialog-bg: var(--color-gray-100);
+
+  --sfx-card-bg: var(--accent-50);
+
+  --sfx-text-text: var(--complement-700);
+  --sfx-read-text: var(--accent-500);
+  --sfx-lang-text: var(--accent-500);
+  --sfx-lang-new-text: var(--notice-700);
+  --sfx-tlextra-text: var(--accent-400);
+  --sfx-tlextra-underline: var(--error-300);
+  --sfx-def-text: var(--accent-700);
+  --sfx-extra-text: var(--accent-400);
+
+  --sfx-header-text: var(--complement-700);
+  --sfx-label-text: var(--complement-500);
+  --sfx-input-error-border: var(--error-500);
+  --sfx-input-error-text: var(--error-400);
+  --sfx-label-error-text: var(--error-400);
+
+  --sfx-reversed-border: var(--error-400);
 }
 
 :root .dark {
   --main-bg: var(--color-slate-800);
+
+  --error-text: var(--error-900);
 
   --text-light: var(--accent-100);
 
@@ -56,6 +86,7 @@
   --input-placeholder-text: var(--color-gray-400);
   --input-hover-text: var(--accent-100);
   --input-text: var(--accent-300);
+  --input-focus-border: var(--accent-400);
 
   --input-bg: var(--color-slate-700);
   --input-hover-bg: var(--color-slate-700);
@@ -72,15 +103,32 @@
   --button-neutral-hover-bg: var(--accent-200);
 
   --button-submit-bg: var(--accent-700);
+  --button-submit-text: var(--color-white);
   --button-submit-hover-bg: var(--accent-600);
 
   --dialog-bg: var(--main-bg);
+
+  --sfx-card-bg: var(--color-slate-800);
+
+  --sfx-text-text: var(--complement-100);
+  --sfx-read-text: var(--accent-400);
+  --sfx-lang-text: var(--accent-400);
+  --sfx-lang-new-text: var(--notice-200);
+  --sfx-tlextra-text: var(--accent-300);
+  --sfx-tlextra-underline: var(--error-300);
+  --sfx-def-text: var(--accent-300);
+  --sfx-extra-text: var(--accent-500);
+
+  --sfx-header-text: var(--complement-300);
+  --sfx-label-text: var(--accent-300);
+  --sfx-input-error-border: var(--error-500);
+  --sfx-input-error-text: var(--error-300);
+  --sfx-label-error-text: var(--error-400);
+
+  --sfx-reversed-border: var(--error-400);
 }
 
-/* Additional palettes */
 :root {
-  /* Danger (deep dark red) - Completely different from warm red accents */
-  /* Use these for error states, validation errors, destructive actions */
   --danger-50: #fef2f2;
   --danger-100: #fecaca;
   --danger-200: #fca5a5;
@@ -92,7 +140,6 @@
   --danger-800: #2d0a0a;
   --danger-900: #1a0505;
 
-  /* Success (green) */
   --success-50: #f0fdf4;
   --success-100: #dcfce7;
   --success-200: #bbf7d0;
@@ -104,7 +151,6 @@
   --success-800: #166534;
   --success-900: #14532d;
 
-  /* Warning (yellow) */
   --warning-50: #fefce8;
   --warning-100: #fef9c3;
   --warning-200: #fef08a;
@@ -116,7 +162,6 @@
   --warning-800: #854d0e;
   --warning-900: #713f12;
 
-  /* Orange */
   --orange-50: #fff7ed;
   --orange-100: #ffedd5;
   --orange-200: #fed7aa;
@@ -128,7 +173,6 @@
   --orange-800: #9a3412;
   --orange-900: #7c2d12;
 
-  /* Muted (gray) */
   --muted-50: #f9fafb;
   --muted-100: #f3f4f6;
   --muted-200: #e5e7eb;
@@ -140,9 +184,8 @@
   --muted-800: #1f2937;
   --muted-900: #111827;
 }
-/* Semantic aliases */
+
 :root {
-  /* Map semantic roles to palettes */
   --error-50: var(--danger-50);
   --error-100: var(--danger-100);
   --error-200: var(--danger-200);
@@ -209,10 +252,7 @@
   --info-800: var(--accent-800);
   --info-900: var(--accent-900);
 }
-
-/* Accent theme palettes */
 :root {
-  /* blue already defined via --accent-*, keep as default */
   --accent-blue-50: #eff6ff;
   --accent-blue-100: #dbeafe;
   --accent-blue-200: #bfdbfe;
@@ -223,6 +263,17 @@
   --accent-blue-700: #1d4ed8;
   --accent-blue-800: #1e40af;
   --accent-blue-900: #1e3a8a;
+
+  --accent-50: var(--accent-blue-50);
+  --accent-100: var(--accent-blue-100);
+  --accent-200: var(--accent-blue-200);
+  --accent-300: var(--accent-blue-300);
+  --accent-400: var(--accent-blue-400);
+  --accent-500: var(--accent-blue-500);
+  --accent-600: var(--accent-blue-600);
+  --accent-700: var(--accent-blue-700);
+  --accent-800: var(--accent-blue-800);
+  --accent-900: var(--accent-blue-900);
 
   --accent-green-50: #f0fdf4;
   --accent-green-100: #dcfce7;
@@ -279,7 +330,6 @@
   --accent-pink-800: #9d174d;
   --accent-pink-900: #831843;
 
-  /* New accent colors */
   --accent-yellow-50: #fefce8;
   --accent-yellow-100: #fef9c3;
   --accent-yellow-200: #fef08a;
@@ -391,7 +441,7 @@
   --accent-slate-900: #0f172a;
 }
 
-/* data-accent switcher: remap --accent-* to chosen palette */
+/* color palletes */
 :root[data-accent="green"],
 [data-accent="green"] {
   --accent-50: var(--accent-green-50);
@@ -404,6 +454,18 @@
   --accent-700: var(--accent-green-700);
   --accent-800: var(--accent-green-800);
   --accent-900: var(--accent-green-900);
+
+  /* complement: Red */
+  --complement-50: var(--accent-rose-50);
+  --complement-100: var(--accent-rose-100);
+  --complement-200: var(--accent-rose-200);
+  --complement-300: var(--accent-rose-300);
+  --complement-400: var(--accent-rose-400);
+  --complement-500: var(--accent-rose-500);
+  --complement-600: var(--accent-rose-600);
+  --complement-700: var(--accent-rose-700);
+  --complement-800: var(--accent-rose-800);
+  --complement-900: var(--accent-rose-900);
 }
 
 :root[data-accent="purple"],
@@ -418,6 +480,18 @@
   --accent-700: var(--accent-purple-700);
   --accent-800: var(--accent-purple-800);
   --accent-900: var(--accent-purple-900);
+
+  /* complement: Yellow */
+  --complement-50: var(--accent-yellow-50);
+  --complement-100: var(--accent-yellow-100);
+  --complement-200: var(--accent-yellow-200);
+  --complement-300: var(--accent-yellow-300);
+  --complement-400: var(--accent-yellow-400);
+  --complement-500: var(--accent-yellow-500);
+  --complement-600: var(--accent-yellow-600);
+  --complement-700: var(--accent-yellow-700);
+  --complement-800: var(--accent-yellow-800);
+  --complement-900: var(--accent-yellow-900);
 }
 
 :root[data-accent="rose"],
@@ -432,6 +506,18 @@
   --accent-700: var(--accent-rose-700);
   --accent-800: var(--accent-rose-800);
   --accent-900: var(--accent-rose-900);
+
+  /* complement: Green */
+  --complement-50: var(--accent-green-50);
+  --complement-100: var(--accent-green-100);
+  --complement-200: var(--accent-green-200);
+  --complement-300: var(--accent-green-300);
+  --complement-400: var(--accent-green-400);
+  --complement-500: var(--accent-green-500);
+  --complement-600: var(--accent-green-600);
+  --complement-700: var(--accent-green-700);
+  --complement-800: var(--accent-green-800);
+  --complement-900: var(--accent-green-900);
 }
 
 :root[data-accent="amber"],
@@ -446,6 +532,18 @@
   --accent-700: var(--accent-amber-700);
   --accent-800: var(--accent-amber-800);
   --accent-900: var(--accent-amber-900);
+
+  /* complement: Blue */
+  --complement-50: var(--accent-blue-50);
+  --complement-100: var(--accent-blue-100);
+  --complement-200: var(--accent-blue-200);
+  --complement-300: var(--accent-blue-300);
+  --complement-400: var(--accent-blue-400);
+  --complement-500: var(--accent-blue-500);
+  --complement-600: var(--accent-blue-600);
+  --complement-700: var(--accent-blue-700);
+  --complement-800: var(--accent-blue-800);
+  --complement-900: var(--accent-blue-900);
 }
 
 :root[data-accent="pink"],
@@ -460,6 +558,18 @@
   --accent-700: var(--accent-pink-700);
   --accent-800: var(--accent-pink-800);
   --accent-900: var(--accent-pink-900);
+
+  /* complement: Lime */
+  --complement-50: var(--accent-indigo-50);
+  --complement-100: var(--accent-indigo-100);
+  --complement-200: var(--accent-indigo-200);
+  --complement-300: var(--accent-indigo-300);
+  --complement-400: var(--accent-indigo-400);
+  --complement-500: var(--accent-indigo-500);
+  --complement-600: var(--accent-indigo-600);
+  --complement-700: var(--accent-indigo-700);
+  --complement-800: var(--accent-indigo-800);
+  --complement-900: var(--accent-indigo-900);
 }
 
 :root[data-accent="blue"],
@@ -474,6 +584,18 @@
   --accent-700: var(--accent-blue-700);
   --accent-800: var(--accent-blue-800);
   --accent-900: var(--accent-blue-900);
+
+  /* complement: Amber (yellow/orange) */
+  --complement-50: var(--accent-amber-50);
+  --complement-100: var(--accent-amber-100);
+  --complement-200: var(--accent-amber-200);
+  --complement-300: var(--accent-amber-300);
+  --complement-400: var(--accent-amber-400);
+  --complement-500: var(--accent-amber-500);
+  --complement-600: var(--accent-amber-600);
+  --complement-700: var(--accent-amber-700);
+  --complement-800: var(--accent-amber-800);
+  --complement-900: var(--accent-amber-900);
 }
 
 /* New accent color rules */
@@ -489,6 +611,18 @@
   --accent-700: var(--accent-yellow-700);
   --accent-800: var(--accent-yellow-800);
   --accent-900: var(--accent-yellow-900);
+
+  /* complement: Purple */
+  --complement-50: var(--accent-purple-50);
+  --complement-100: var(--accent-purple-100);
+  --complement-200: var(--accent-purple-200);
+  --complement-300: var(--accent-purple-300);
+  --complement-400: var(--accent-purple-400);
+  --complement-500: var(--accent-purple-500);
+  --complement-600: var(--accent-purple-600);
+  --complement-700: var(--accent-purple-700);
+  --complement-800: var(--accent-purple-800);
+  --complement-900: var(--accent-purple-900);
 }
 
 :root[data-accent="teal"],
@@ -503,6 +637,18 @@
   --accent-700: var(--accent-teal-700);
   --accent-800: var(--accent-teal-800);
   --accent-900: var(--accent-teal-900);
+
+  /* complement: Orange */
+  --complement-50: var(--accent-orange-50);
+  --complement-100: var(--accent-orange-100);
+  --complement-200: var(--accent-orange-200);
+  --complement-300: var(--accent-orange-300);
+  --complement-400: var(--accent-orange-400);
+  --complement-500: var(--accent-orange-500);
+  --complement-600: var(--accent-orange-600);
+  --complement-700: var(--accent-orange-700);
+  --complement-800: var(--accent-orange-800);
+  --complement-900: var(--accent-orange-900);
 }
 
 :root[data-accent="indigo"],
@@ -517,6 +663,18 @@
   --accent-700: var(--accent-indigo-700);
   --accent-800: var(--accent-indigo-800);
   --accent-900: var(--accent-indigo-900);
+
+  /* complement: Orange */
+  --complement-50: var(--accent-orange-50);
+  --complement-100: var(--accent-orange-100);
+  --complement-200: var(--accent-orange-200);
+  --complement-300: var(--accent-orange-300);
+  --complement-400: var(--accent-orange-400);
+  --complement-500: var(--accent-orange-500);
+  --complement-600: var(--accent-orange-600);
+  --complement-700: var(--accent-orange-700);
+  --complement-800: var(--accent-orange-800);
+  --complement-900: var(--accent-orange-900);
 }
 
 :root[data-accent="emerald"],
@@ -531,6 +689,18 @@
   --accent-700: var(--accent-emerald-700);
   --accent-800: var(--accent-emerald-800);
   --accent-900: var(--accent-emerald-900);
+
+  /* complement: Fuchsia */
+  --complement-50: var(--accent-fuchsia-50);
+  --complement-100: var(--accent-fuchsia-100);
+  --complement-200: var(--accent-fuchsia-200);
+  --complement-300: var(--accent-fuchsia-300);
+  --complement-400: var(--accent-fuchsia-400);
+  --complement-500: var(--accent-fuchsia-500);
+  --complement-600: var(--accent-fuchsia-600);
+  --complement-700: var(--accent-fuchsia-700);
+  --complement-800: var(--accent-fuchsia-800);
+  --complement-900: var(--accent-fuchsia-900);
 }
 
 :root[data-accent="cyan"],
@@ -545,6 +715,18 @@
   --accent-700: var(--accent-cyan-700);
   --accent-800: var(--accent-cyan-800);
   --accent-900: var(--accent-cyan-900);
+
+  /* complement: Red (rose) */
+  --complement-50: var(--accent-rose-50);
+  --complement-100: var(--accent-rose-100);
+  --complement-200: var(--accent-rose-200);
+  --complement-300: var(--accent-rose-300);
+  --complement-400: var(--accent-rose-400);
+  --complement-500: var(--accent-rose-500);
+  --complement-600: var(--accent-rose-600);
+  --complement-700: var(--accent-rose-700);
+  --complement-800: var(--accent-rose-800);
+  --complement-900: var(--accent-rose-900);
 }
 
 :root[data-accent="violet"],
@@ -559,6 +741,18 @@
   --accent-700: var(--accent-violet-700);
   --accent-800: var(--accent-violet-800);
   --accent-900: var(--accent-violet-900);
+
+  /* complement: Lime */
+  --complement-50: var(--accent-lime-50);
+  --complement-100: var(--accent-lime-100);
+  --complement-200: var(--accent-lime-200);
+  --complement-300: var(--accent-lime-300);
+  --complement-400: var(--accent-lime-400);
+  --complement-500: var(--accent-lime-500);
+  --complement-600: var(--accent-lime-600);
+  --complement-700: var(--accent-lime-700);
+  --complement-800: var(--accent-lime-800);
+  --complement-900: var(--accent-lime-900);
 }
 
 :root[data-accent="fuchsia"],
@@ -573,6 +767,18 @@
   --accent-700: var(--accent-fuchsia-700);
   --accent-800: var(--accent-fuchsia-800);
   --accent-900: var(--accent-fuchsia-900);
+
+  /* complement: Emerald (green) */
+  --complement-50: var(--accent-emerald-50);
+  --complement-100: var(--accent-emerald-100);
+  --complement-200: var(--accent-emerald-200);
+  --complement-300: var(--accent-emerald-300);
+  --complement-400: var(--accent-emerald-400);
+  --complement-500: var(--accent-emerald-500);
+  --complement-600: var(--accent-emerald-600);
+  --complement-700: var(--accent-emerald-700);
+  --complement-800: var(--accent-emerald-800);
+  --complement-900: var(--accent-emerald-900);
 }
 
 :root[data-accent="lime"],
@@ -587,6 +793,18 @@
   --accent-700: var(--accent-lime-700);
   --accent-800: var(--accent-lime-800);
   --accent-900: var(--accent-lime-900);
+
+  /* complement: Violet */
+  --complement-50: var(--accent-violet-50);
+  --complement-100: var(--accent-violet-100);
+  --complement-200: var(--accent-violet-200);
+  --complement-300: var(--accent-violet-300);
+  --complement-400: var(--accent-violet-400);
+  --complement-500: var(--accent-violet-500);
+  --complement-600: var(--accent-violet-600);
+  --complement-700: var(--accent-violet-700);
+  --complement-800: var(--accent-violet-800);
+  --complement-900: var(--accent-violet-900);
 }
 
 :root[data-accent="orange"],
@@ -601,6 +819,18 @@
   --accent-700: var(--accent-orange-700);
   --accent-800: var(--accent-orange-800);
   --accent-900: var(--accent-orange-900);
+
+  /* complement: Teal */
+  --complement-50: var(--accent-teal-50);
+  --complement-100: var(--accent-teal-100);
+  --complement-200: var(--accent-teal-200);
+  --complement-300: var(--accent-teal-300);
+  --complement-400: var(--accent-teal-400);
+  --complement-500: var(--accent-teal-500);
+  --complement-600: var(--accent-teal-600);
+  --complement-700: var(--accent-teal-700);
+  --complement-800: var(--accent-teal-800);
+  --complement-900: var(--accent-teal-900);
 }
 
 :root[data-accent="slate"],
@@ -615,4 +845,16 @@
   --accent-700: var(--accent-slate-700);
   --accent-800: var(--accent-slate-800);
   --accent-900: var(--accent-slate-900);
+
+  /* complement: Fuchsia */
+  --complement-50: var(--accent-fuchsia-50);
+  --complement-100: var(--accent-fuchsia-100);
+  --complement-200: var(--accent-fuchsia-200);
+  --complement-300: var(--accent-fuchsia-300);
+  --complement-400: var(--accent-fuchsia-400);
+  --complement-500: var(--accent-fuchsia-500);
+  --complement-600: var(--accent-fuchsia-600);
+  --complement-700: var(--accent-fuchsia-700);
+  --complement-800: var(--accent-fuchsia-800);
+  --complement-900: var(--accent-fuchsia-900);
 }

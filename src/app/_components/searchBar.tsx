@@ -2,24 +2,40 @@ import { cn } from "@/utils";
 import { useEffect, useState } from "react";
 import { useSearch, type SearchQuery } from "../hooks/search";
 
-const parseSearchQuery = (query: string, stop: boolean) => {
+const parseSearchQuery = (query: string, stop: boolean): SearchQuery => {
   const langRegex = /lang:(?<langs>(?:[a-z]){2,4},?)+/i;
   const langMatch = langRegex.exec(query);
 
   const langs = langMatch?.groups?.langs?.split(",") ?? [];
 
-  const value = query.replace(langRegex, "").trim();
+  const idRegex = /id:(?<id>\d+)/i;
+  const idMatch = idRegex.exec(query);
 
-  return { value, langs, stop };
+  const id = Number(idMatch?.groups?.id) || 0;
+
+  const value = query.replace(langRegex, "").replace(idRegex, "").trim();
+
+  return { query: value, langs, stop, id: id > 0 ? id : 0 };
+};
+
+const queryToString = (query: SearchQuery): string => {
+  const qStr = query.query ?? "";
+
+  const langs = query.langs?.map((q) => `lang:${q}`).join(" ") ?? "";
+
+  const idStr = `${(query.id ?? 0) > 0 ? `id:${query.id}` : ""}`;
+
+  const space1 = !!qStr ? " " : "";
+  const space2 = !!qStr || !!langs.length ? " " : "";
+
+  return `${qStr}${!!langs ? space1 + langs : ""}${!!idStr ? space2 + idStr : ""}`;
 };
 
 const SearchBar = () => {
   const globalSearch = useSearch();
 
   const [search, setSearch] = useState<string>(
-    globalSearch.search.value +
-      (globalSearch.search.langs.length ? " " : "") +
-      globalSearch.search.langs.map((q) => `lang:${q}`).join(" "),
+    queryToString(globalSearch.search),
   );
 
   const [debouncedSearch, setDebouncedSearch] = useState<SearchQuery>(
@@ -28,12 +44,7 @@ const SearchBar = () => {
 
   useEffect(() => {
     if (globalSearch.search.stop) return;
-    setSearch(
-      globalSearch.search.value +
-        (globalSearch.search.langs.length > 0
-          ? ` lang:${globalSearch.search.langs.join(",")}`
-          : ""),
-    );
+    setSearch(queryToString(globalSearch.search));
   }, [globalSearch.search]);
 
   useEffect(() => {
@@ -56,9 +67,8 @@ const SearchBar = () => {
         placeholder="waku waku"
         className={cn(
           "rounded border bg-(color:--input-bg) px-2 py-2 text-(color:--input-text)",
+          "border-(color:--input-border) placeholder-(--input-placeholder-text)",
           "focus:border-(color:input-focus-border) focus:ring-1 focus:outline-none",
-          "dark:placeholder-(--input-placeholder-text)",
-          "border-(color:--input-border)",
           "focus:ring-(color:--input-focus-border)",
         )}
       />

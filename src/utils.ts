@@ -5,6 +5,19 @@ import type z from "zod/v4";
 import { array, boolean, literal, number, object, string } from "zod/v4";
 import { generate } from "random-words";
 
+export const SearchOptions = object({
+  limit: number().default(100),
+  skip: number().default(0),
+  query: string(),
+  langs: array(string()),
+  order: literal("asc").or(literal("desc")).default("asc"),
+  id: number().int(),
+})
+  .partial()
+  .or(literal("list"));
+
+export type SearchOptions = z.infer<typeof SearchOptions>;
+
 export type CollapsedTL = Omit<
   Translation & {
     sfx: CollapsedOnomatopoeia;

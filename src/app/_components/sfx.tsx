@@ -17,7 +17,7 @@ import { SFXLangSelect } from "./sfxLangSelect";
 import { env } from "@/env";
 import { Validation } from "../hooks/validation";
 import { ValidationErrorDisplay } from "./validationError";
-import { TLEditorDirect } from "./TLEditor";
+import { TL, TLEditorDirect } from "./TLEditor";
 import type { ClassValue } from "clsx";
 import Image from "next/image";
 import { api } from "@/trpc/react";
@@ -93,10 +93,7 @@ const GetLocalImg = ({
 
   if (typeof img !== "string")
     return (
-      <span
-        className={cn("text-(color:--error-900) dark:text-(color:--error-300)")}
-        title={img.err.message}
-      >
+      <span className={cn("text-(--error-text)")} title={img.err.message}>
         {alt}
       </span>
     );
@@ -107,10 +104,12 @@ const GetLocalImg = ({
     <>
       <div
         className={cn(
-          "relative z-0 h-fit w-fit",
-          "before:absolute before:hidden before:h-full before:w-full before:justify-center hover:before:flex",
-          "font-bold before:items-center before:bg-(--accent-600) before:text-black before:opacity-0",
-          "before:content-['show'] hover:cursor-pointer hover:before:opacity-75",
+          "relative z-0 h-fit w-fit font-bold",
+          "before:items-center before:bg-(--accent-600)",
+          "before:text-black before:opacity-0",
+          "before:absolute before:hidden before:h-full",
+          "before:w-full before:justify-center before:content-['show']",
+          "hover:cursor-pointer hover:before:flex hover:before:opacity-75",
         )}
         onClick={() => {
           popupRef.current?.showPopover();
@@ -149,8 +148,7 @@ const GetLocalImg = ({
         className={cn(
           "absolute top-0 right-0 left-0 cursor-pointer",
           "z-20 h-full w-full items-center justify-center",
-          "bg-(--accent-200)/70",
-          "dark:bg-(--accent-900)/40",
+          "bg-(--dialog-bg)/70",
         )}
         onClick={() => {
           popupRef.current?.hidePopover();
@@ -195,6 +193,8 @@ const parseSFXText = (str?: string | null): ReactNode => {
       })
       .flat(1)
       .filter((q) => !!q) ?? [];
+
+  // TODO: make extra and fields intertwine or add (sm:) option
 
   return (
     <>
@@ -252,9 +252,9 @@ const SFXCard = ({
   return (
     <div
       className={cn(
-        "flex flex-col gap-2 rounded-lg border border-dashed border-(color:--regular-border)",
-        "min-w-44 bg-(color:--accent-50) px-4 py-3 shadow-sm",
-        "dark:bg-slate-800",
+        "flex flex-col gap-2 rounded-lg border",
+        "border-dashed border-(--regular-border)",
+        "min-w-44 bg-(--sfx-card-bg)/50 px-4 py-3 shadow-sm shadow-(color:--accent-900)",
         classNames?.container,
       )}
     >
@@ -266,7 +266,8 @@ const SFXCard = ({
       >
         <div
           className={cn(
-            "self-center pr-2 text-lg font-bold text-(color:--accent-900) dark:text-(color:--accent-100)",
+            "self-center pr-2 text-lg font-bold",
+            "text-(--sfx-text-text)",
             classNames?.topinfo?.text,
           )}
         >
@@ -276,7 +277,7 @@ const SFXCard = ({
         {usedSFX.read && (
           <div
             className={cn(
-              "text-sm whitespace-pre-wrap text-(color:--accent-500) dark:text-(color:--accent-400)",
+              "text-sm whitespace-pre-wrap text-(--sfx-read-text)",
               classNames?.topinfo?.reading,
             )}
           >
@@ -286,9 +287,8 @@ const SFXCard = ({
         <div
           className={cn(
             "flex-1 text-right text-sm",
-            "text-(color:--accent-500) dark:text-(color:--accent-400)",
-            !Number.isFinite(sfx.id) &&
-              "text-(color:--notice-700) dark:text-(color:--notice-200)",
+            "text-(--sfx-lang-text)",
+            !Number.isFinite(sfx.id) && "text-(--sfx-lang-new-text)",
             classNames?.topinfo?.language,
           )}
         >
@@ -301,8 +301,9 @@ const SFXCard = ({
       {tlExtra && (
         <div
           className={cn(
-            "flex w-fit border-2 border-x-0 border-t-0 border-dashed border-(color:--error-300) px-1",
-            "text-base text-(color:--accent-400) dark:text-(color:--accent-300)",
+            "flex w-fit border-2 border-x-0 border-t-0 border-dashed",
+            "border-(--sfx-tlextra-underline) px-1",
+            "text-base text-(--sfx-tlextra-text)",
           )}
         >
           <span>{tlExtra}</span>
@@ -312,7 +313,7 @@ const SFXCard = ({
       <div className={cn(classNames?.bottominfo?.container)}>
         <div
           className={cn(
-            "whitespace-pre-wrap text-(color:--accent-700) dark:text-(color:--accent-300)",
+            "whitespace-pre-wrap text-(--sfx-def-text)",
             classNames?.bottominfo?.def,
           )}
         >
@@ -320,7 +321,7 @@ const SFXCard = ({
         </div>
         <div
           className={cn(
-            "pl-8 text-sm whitespace-pre-wrap text-(color:--accent-400) dark:text-(color:--accent-500)",
+            "pl-8 text-sm whitespace-pre-wrap text-(--sfx-extra-text)",
             classNames?.bottominfo?.extra,
           )}
         >
@@ -339,22 +340,25 @@ const SFXCard = ({
             {usedSFX.tls.map((tl) => {
               const isReversed = tl.additionalInfo?.startsWith("⏉");
               return (
-                <SFX
+                <TL
                   key={tl.sfx1Id + "." + tl.sfx2Id}
-                  sfx={tl.sfx}
+                  tl={tl}
                   classNames={{
                     ...classNames?.tls?.sfx,
+                    container: cn(
+                      "flex flex-col gap-2 min-w-44 basis-[45%] grow",
+                    ),
+                    tlNum: "hidden",
                     default: {
                       ...classNames?.tls?.sfx?.default,
                       container: cn(
-                        "border-2 dark:border-1",
+                        "border-2",
                         classNames?.tls?.sfx?.default?.container,
-                        isReversed &&
-                          "border-(color:--error-900) dark:border-(color:--warning-400)",
+                        isReversed && "border-4 border-(--sfx-reversed-border)",
                       ),
                     },
                   }}
-                  tlExtra={tl.additionalInfo?.replace("⏉", "") ?? undefined}
+                  editable={false}
                 />
               );
             })}
@@ -371,6 +375,27 @@ type SFXEditClassNames = {
     cancel?: ClassValue;
   };
 };
+
+const DEFAULT_SFX_INPUT_STYLES = (validation: Validation, field: string) =>
+  cn(
+    "rounded border px-2 py-1 text-(--input-text)",
+    "bg-(--input-bg) placeholder-(--input-placeholder-text) focus:ring-1 focus:outline-none",
+    "border-(--input-border) focus:border-(--input-focus-border)",
+    "focus:ring-(--input-focus-border)",
+    validation.hasFieldError(field) &&
+      "border-2 border-(--sfx-input-error-border)" +
+        " " +
+        "placeholder-(--sfx-input-error-text)" +
+        " " +
+        "focus:border-(--sfx-input-error-border)" +
+        " " +
+        "focus:ring-(--sfx-input-error-border)",
+  );
+
+const DEFAULT_SFX_LABEL_STYLES = cn(
+  "mt-1 flex-1 font-medium whitespace-nowrap",
+  "text-(color:--sfx-label-text)",
+);
 
 export const SFXEdit = ({
   sfx,
@@ -431,20 +456,18 @@ export const SFXEdit = ({
     <>
       <div
         className={cn(
-          "flex flex-col gap-2 rounded-xl border-2 border-(color:--regular-border)",
-          "bg-(color:--accent-50) p-2 shadow-sm",
-          "dark:bg-slate-800",
+          "flex flex-col gap-2 rounded-xl border-2 border-(--regular-border)",
+          "bg-(--sfx-card-bg) p-2 shadow-sm",
           classNames?.main,
         )}
       >
         <h2
           className={cn(
-            "flex items-center justify-center border-b border-(color:--regular-border)",
-            "pb-2 text-center text-2xl font-semibold text-(color:--accent-800)",
-            "dark:text-(color:--accent-200)",
+            "flex items-center justify-center border-b border-(--regular-border)",
+            "pb-2 text-center text-2xl font-semibold text-(--sfx-header-text)",
           )}
         >
-          {labels?.main ?? "Edit SFX"}{" "}
+          {labels?.main ?? `Edit ${sfx.text}`}{" "}
           {!noLang && (
             <SFXLangSelect
               removeValues={removeLangs}
@@ -462,36 +485,22 @@ export const SFXEdit = ({
 
         {/** Edit fields */}
         <div
-          className={cn(
-            "flex w-full flex-col gap-2",
-            "text-base font-medium text-(color:--accent-700) dark:text-(color:--accent-300)",
-          )}
+          className={cn("flex w-full flex-col gap-2", "text-base font-medium")}
         >
           <div className={cn("flex flex-row items-start gap-2")}>
             <label
               htmlFor="sfx"
               className={cn(
-                "mt-1 flex-1 font-medium whitespace-nowrap",
-                "text-(color:--accent-700) dark:text-(color:--accent-300)",
+                DEFAULT_SFX_LABEL_STYLES,
                 validation.hasFieldError("text") &&
-                  "text-(color:--error-600) dark:text-(color:--error-600)",
+                  "font-bold text-(color:--sfx-label-error-text) underline",
               )}
             >
               SFX
             </label>
             <div className={cn("ml-auto flex flex-3 flex-col gap-2")}>
               <input
-                className={cn(
-                  "rounded border bg-white px-2 py-1",
-                  "focus:ring-1 focus:outline-none dark:bg-slate-700 dark:text-white",
-                  "dark:placeholder-gray-400",
-                  "ocus:border-(color:--accent-500) border-(color:--input-border)",
-                  "focus:ring-(color:--accent-500)",
-                  "dark:focus:border-(color:--accent-400) dark:focus:ring-(color:--accent-400)",
-                  validation.hasFieldError("text") &&
-                    "border-(color:--error-500) focus:border-(color:--error-500) focus:ring-(color:--error-500)" +
-                      "dark:border-(color:--error-400) dark:focus:border-(color:--error-400) dark:focus:ring-(color:--error-400)",
-                )}
+                className={cn(DEFAULT_SFX_INPUT_STYLES(validation, "text"))}
                 placeholder="SFX"
                 type="text"
                 value={sfx.text}
@@ -513,28 +522,16 @@ export const SFXEdit = ({
             <label
               htmlFor="def"
               className={cn(
-                "mt-1 flex-1 font-medium whitespace-nowrap",
-                "text-(color:--accent-700) dark:text-(color:--accent-300)",
+                DEFAULT_SFX_LABEL_STYLES,
                 validation.hasFieldError("def") &&
-                  "text-(color:--error-600) dark:text-(color:--error-700)",
+                  "font-bold text-(color:--sfx-label-error-text) underline",
               )}
             >
               Definition
             </label>
             <div className={cn("ml-auto flex flex-3 flex-col gap-2")}>
               <input
-                className={cn(
-                  "flex-3 rounded border bg-white px-2 py-1",
-                  "focus:ring-1 focus:outline-none dark:bg-slate-700 dark:text-white",
-                  "dark:placeholder-gray-400",
-                  "ocus:border-(color:--accent-500) border-(color:--input-border)",
-                  "focus:ring-(color:--accent-500)",
-                  "dark:focus:border-(color:--accent-200) dark:focus:ring-(color:--accent-200)",
-                  validation.hasFieldError("def") &&
-                    "border-(color:--error-600) focus:border-(color:--error-600)" +
-                      "focus:ring-(color:--error-600) dark:border-(color:--error-600)" +
-                      "dark:focus:border-(color:--error-600) dark:focus:ring-(color:--error-600)",
-                )}
+                className={cn(DEFAULT_SFX_INPUT_STYLES(validation, "def"))}
                 placeholder="Definition"
                 type="text"
                 value={sfx.def}
@@ -553,29 +550,12 @@ export const SFXEdit = ({
           </div>
 
           <div className={cn("flex flex-row items-center gap-2")}>
-            <label
-              htmlFor="extra"
-              className={cn(
-                "flex-1 font-medium whitespace-nowrap",
-                "text-(color:--accent-700) dark:text-(color:--accent-300)",
-              )}
-            >
+            <label htmlFor="extra" className={cn(DEFAULT_SFX_LABEL_STYLES)}>
               Extra
             </label>
             <div className={cn("ml-auto flex w-full flex-3 flex-col gap-2")}>
               <input
-                className={cn(
-                  "ml-auto w-full rounded border bg-white px-2 py-1",
-                  "focus:ring-1 focus:outline-none dark:bg-slate-700 dark:text-white",
-                  "dark:placeholder-gray-400",
-                  "ocus:border-(color:--accent-500) border-(color:--input-border)",
-                  "focus:ring-(color:--accent-500)",
-                  "dark:focus:border-(color:--accent-400) dark:focus:ring-(color:--accent-400)",
-                  validation.hasFieldError("extra") &&
-                    "border-(color:--error-500) focus:border-(color:--error-500)" +
-                      "focus:ring-(color:--error-500) dark:border-(color:--error-400)" +
-                      "dark:focus:border-(color:--error-400) dark:focus:ring-(color:--error-400)",
-                )}
+                className={cn(DEFAULT_SFX_INPUT_STYLES(validation, "extra"))}
                 placeholder="Extra"
                 type="text"
                 value={sfx.extra ?? ""}
@@ -596,23 +576,10 @@ export const SFXEdit = ({
 
           <div className={cn("flex flex-row items-center gap-2")}>
             <div className={cn("flex flex-1 items-center gap-2")}>
-              <label
-                htmlFor="read"
-                className={cn(
-                  "font-medium whitespace-nowrap",
-                  "text-(color:--accent-700) dark:text-(color:--accent-300)",
-                  validation.hasFieldError("read") &&
-                    "text-(color:--error-600) dark:text-(color:--error-400)",
-                )}
-              >
+              <label htmlFor="read" className={cn(DEFAULT_SFX_LABEL_STYLES)}>
                 Reading
               </label>
-              <label
-                className={cn(
-                  "flex items-center gap-1 text-sm",
-                  "text-(color:--accent-600) dark:text-(color:--accent-400)",
-                )}
-              >
+              <label className={cn("flex items-center gap-1")}>
                 <input
                   type="checkbox"
                   checked={typeof sfx.read === "string"}
@@ -622,28 +589,35 @@ export const SFXEdit = ({
                       read: e.currentTarget.checked ? tempRead : null,
                     }))
                   }
-                  className={cn(
-                    "-4 w-4 rounded border-(color:--input-border) text-(color:--accent-600)",
-                    "focus:ring-(color:--accent-500) dark:bg-slate-700",
-                    "dark:focus:ring-(color:--accent-400)",
-                  )}
+                  className="hidden"
                 />
+                <div
+                  tabIndex={0}
+                  aria-roledescription="Switch"
+                  onKeyDown={(e) => {
+                    if ([" ", "Enter"].includes(e.key)) {
+                      onChange?.((prev) => ({
+                        ...prev,
+                        read: sfx.read === null ? tempRead : null,
+                      }));
+                    }
+                  }}
+                  className={cn(
+                    "mr-auto h-4 w-4 rounded-full border-2 border-(--input-border)",
+                    "focus:ring-(--input-focus-border)",
+                    "cursor-pointer",
+                    typeof sfx.read === "string"
+                      ? "bg-(--button-checkbox-checked-bg)"
+                      : "border-(--button-disabled-bg) opacity-50",
+                  )}
+                ></div>
               </label>
             </div>
             <div className={cn("ml-auto flex flex-3 flex-col gap-2")}>
               <input
                 className={cn(
-                  "ml-auto w-full rounded border bg-white px-2 py-1",
-                  "focus:ring-1 focus:outline-none",
-                  "dark:bg-slate-700 dark:text-white dark:placeholder-gray-400",
+                  DEFAULT_SFX_INPUT_STYLES(validation, "read"),
                   "disabled:cursor-not-allowed disabled:opacity-50",
-                  "ocus:border-(color:--accent-500) border-(color:--input-border)",
-                  "focus:ring-(color:--accent-500)",
-                  "dark:focus:border-(color:--accent-400) dark:focus:ring-(color:--accent-400)",
-                  validation.hasFieldError("read") &&
-                    "border-(color:--error-500) focus:border-(color:--error-500)" +
-                      "focus:ring-(color:--error-500) dark:border-(color:--error-400)" +
-                      "dark:focus:border-(color:--error-400) dark:focus:ring-(color:--error-400)",
                 )}
                 placeholder="Reading"
                 type="text"
@@ -671,10 +645,10 @@ export const SFXEdit = ({
         <div className={cn("mt-2 flex flex-row gap-2")}>
           <button
             className={cn(
-              "rounded bg-(color:--button-submit-bg) px-4 py-2 text-white transition-colors",
-              "cursor-pointer hover:bg-(color:--button-submit-hover-bg)",
-              "focus:ring-2 focus:ring-(color:--accent-500) focus:ring-offset-2 focus:outline-none",
-              "dark:focus:ring-(color:--accent-400) dark:focus:ring-offset-slate-800",
+              "rounded bg-(--button-submit-bg) px-4 py-2 text-lg font-bold text-(--button-submit-text) transition-colors",
+              "grow cursor-pointer hover:bg-(--button-submit-hover-bg)",
+              "focus:ring-2 focus:ring-(--input-focus-border) focus:ring-offset-2",
+              "focus:ring-offset-(color:--main-bg) focus:outline-none",
             )}
             onClick={async () => {
               const validation = onValidate?.(sfx);
@@ -699,9 +673,8 @@ export const SFXEdit = ({
               <dialog
                 id={`tleditdialog_${sfx.id}`}
                 className={cn(
-                  "m-auto min-w-[50%] rounded-xl border border-(color:--regular-border) bg-white/95 p-6",
-                  "shadow-lg backdrop-blur-sm",
-                  "dark:bg-slate-800/95 dark:text-white",
+                  "m-auto min-w-[50%] rounded-xl border",
+                  "border-(--regular-border) bg-(--dialog-bg)/50 p-6 shadow-lg backdrop-blur-sm",
                 )}
                 ref={tlEditDialogRef}
                 popover="auto"
@@ -713,16 +686,14 @@ export const SFXEdit = ({
                   allowDeeperTLs={allowDeeperTLs}
                   sfx={sfx}
                   onChange={(tls) => {
-                    console.log("tls_sfx_change", sfx.text, tls);
-
                     onChange?.((prev) => ({ ...prev, tls }));
                   }}
                 />
               </dialog>
               <button
                 className={cn(
-                  "rounded bg-(color:--button-neutral-bg) px-2 py-1 text-xs",
-                  "hover:bg-(color:--button-neutral-hover-bg)",
+                  "cursor-pointer rounded bg-(--button-neutral-bg) px-4 py-2",
+                  "hover:bg -(--button-neutral-hover-bg) text-sm text-(--button-neutral-text)",
                 )}
                 onClick={() => {
                   tlEditDialogRef.current?.showPopover();
@@ -737,8 +708,7 @@ export const SFXEdit = ({
             className={cn(
               "rounded bg-gray-200 px-2 py-1 text-xs",
               "cursor-pointer",
-              "hover:bg-gray-300 dark:bg-slate-600 dark:text-white",
-              "dark:hover:bg-slate-500",
+              "bg-(--button-neutral-bg) hover:bg-(--button-neutral-hover-bg)",
               classNames?.btns?.cancel,
             )}
             onClick={() => onCancel?.()}

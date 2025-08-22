@@ -1,5 +1,6 @@
 "use client";
 
+import { type SearchOptions } from "@/utils";
 import { useRouter, useSearchParams } from "next/navigation";
 // darkmode hook, provider and context
 
@@ -12,11 +13,7 @@ import {
   type SetStateAction,
 } from "react";
 
-export type SearchQuery = {
-  value: string;
-  langs: string[];
-  stop: boolean;
-};
+export type SearchQuery = Exclude<SearchOptions, "list"> & { stop: boolean };
 
 const SearchContext = createContext<{
   search: SearchQuery;
@@ -30,10 +27,16 @@ export const useSearch = () => {
   return context;
 };
 
-export const isValidSearch = (search: SearchQuery) => {
-  return (
-    !search.stop && (search.value.length >= 3 || search.value.length === 0)
-  );
+export const isValidSearch = (
+  search: SearchQuery,
+  invalidStrings: string[] = [],
+) => {
+  const qLength = search.query?.length ?? 0;
+  const lLength = search.langs?.length ?? 0;
+  const id = search.id ?? 0;
+  if (invalidStrings.some((str) => !!search.query?.includes(str))) return false;
+  if (search.stop) return false;
+  return qLength >= 3 || qLength === 0 || lLength > 0 || id > 0;
 };
 
 export const SearchProvider = ({ children }: { children: React.ReactNode }) => {
@@ -41,14 +44,14 @@ export const SearchProvider = ({ children }: { children: React.ReactNode }) => {
 
   const router = useRouter();
 
-  const langs = queryParams
-    .get("l")
-    ?.split(",")
-    .filter((l) => !!l);
+  const langs = queryParams.get("l")?.split(",").filter(Boolean) ?? [];
+  const strId = queryParams.get("id") ?? "0";
+  const id = parseInt(strId) || 0;
 
   const [search, setSearch] = useState<SearchQuery>({
-    langs: langs ?? [],
-    value: queryParams.get("q") ?? "",
+    langs,
+    query: queryParams.get("q") ?? "",
+    id,
     stop: true,
   });
 
@@ -57,9 +60,25 @@ export const SearchProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     if (isValidSearch(search)) {
       setValidSearch(search);
-      router.replace(
-        `${location.pathname}/?q=${search.value}&l=${search.langs.join(",")}`,
+
+      const newurl = new URL(location.href);
+
+      const changeVal = (url: URL, k: string, b: string) => {
+        if (!!b) url.searchParams.set(k, b);
+        else url.searchParams.delete(k);
+      };
+
+      changeVal(newurl, "q", search.query ?? "");
+      changeVal(newurl, "l", search.langs?.join(",") ?? "");
+      changeVal(
+        newurl,
+        "id",
+        Number(search.id) > 0 ? `${Number(search.id)}` : "",
       );
+
+      console.log("newURL", newurl.toString());
+
+      router.replace(newurl.toString());
     }
   }, [router, search]);
 

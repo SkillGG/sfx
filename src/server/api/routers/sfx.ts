@@ -1,304 +1,38 @@
-import type z from "zod/v4";
-import { object, string, number, array, literal } from "zod/v4";
+import { object, string, number, array } from "zod/v4";
 
 import { createTRPCRouter, publicProcedure } from "@/server/api/trpc";
-import { CollapsedOnomatopoeia, CollapsedTL, type SFXData } from "@/utils";
+import { CollapsedOnomatopoeia, CollapsedTL, SearchOptions } from "@/utils";
 import { checkSession } from "./user";
-import type { PrismaClient } from "@prisma/client";
+import { searchDBForSFX } from "./_utils/search";
+import { sfxGetTLs } from "./_utils/sfx";
 
 const authShape = object({ token: string(), deviceName: string() });
 
-const BasicSearch = object({
-  limit: number().default(100).optional(),
-  skip: number().default(0).optional(),
-  query: string(),
-  langs: array(string()).optional(),
-});
-
-type BasicSearch = z.infer<typeof BasicSearch>;
-
-const SearchOptions = BasicSearch.or(
-  object({
-    order: literal("asc").or(literal("desc")).default("asc"),
-    limit: number().default(100).optional(),
-    skip: number().default(0).optional(),
-  }),
-).or(literal("list"));
-
-type SearchOptions = z.infer<typeof SearchOptions>;
-
-const sfxGetTLs = async (
-  db: PrismaClient,
-  sfxs: {
-    id: number;
-    text: string;
-    read: string | null;
-    def: string;
-    extra: string | null;
-    language: string;
-    show?: "both" | "reverse";
-    hideTLSFXs?: number[];
-  }[],
-  reverse?: boolean,
-) => {
-  const Collapsed: CollapsedOnomatopoeia[] = [];
-
-  const sfxsWithTL = await Promise.all(
-    sfxs.map(async (sfx) => {
-      return {
-        sfx,
-        tls: [
-          ...(await db.translation.findMany({
-            where: {
-              OR: [
-                {
-                  ogSFX: {
-                    id: sfx.show === "reverse" ? -1 : sfx.id,
-                  },
-                },
-                {
-                  tlSFX: {
-                    id: !sfx.show ? -1 : sfx.id,
-                  },
-                },
-              ],
-            },
-            include: {
-              tlSFX: true,
-              ogSFX: true,
-            },
-          })),
-        ],
-      };
-    }),
-  );
-
-  for (const sfxWithTL of sfxsWithTL) {
-    const collapsedTLs: CollapsedTL[] = [];
-
-    for (const tl of sfxWithTL.tls) {
-      const useOG = tl.ogSFX.id !== sfxWithTL.sfx.id;
-      const oppositeSFX = !useOG
-        ? tl.tlSFX
-        : sfxWithTL.sfx.show === "both"
-          ? tl.ogSFX
-          : null;
-
-      if (!oppositeSFX) continue;
-
-      if (sfxWithTL.sfx.hideTLSFXs?.includes(oppositeSFX.id)) continue;
-      if (oppositeSFX.id === sfxWithTL.sfx.id) continue;
-
-      collapsedTLs.push({
-        additionalInfo: (useOG ? "⏉" : "") + (tl.additionalInfo ?? ""),
-        id: tl.id,
-        sfx1Id: tl.sfx1Id,
-        sfx2Id: tl.sfx2Id,
-        sfx: {
-          ...oppositeSFX,
-          tls: [],
-        },
-      });
-    }
-
-    if (
-      collapsedTLs.length === 0 &&
-      Collapsed.some((q) => q.tls.some((x) => x.sfx.id === sfxWithTL.sfx.id))
-    )
-      continue;
-
-    Collapsed.push({ ...sfxWithTL.sfx, tls: collapsedTLs });
-  }
-
-  return reverse ? Collapsed.reverse() : Collapsed;
-};
-
-const sfxContains = (sfx: SFXData, search: string) => {
-  const rx = new RegExp(search, "i");
-  return (
-    rx.test(sfx.def) ||
-    rx.test(sfx.extra ?? "") ||
-    rx.test(sfx.read ?? "") ||
-    rx.test(sfx.text)
-  );
-};
-
-const searchDBForSFX = async (
-  db: PrismaClient,
-  search: Required<SearchOptions>,
-): Promise<CollapsedOnomatopoeia[]> => {
-  if (search === "list" || "order" in search) return [];
-
-  const sfxs = await db.onomatopoeia.findMany({
-    include: {
-      ogTranslations: {
-        include: {
-          tlSFX: true,
-        },
-      },
-      tlTranslations: {
-        include: {
-          ogSFX: true,
-        },
-      },
-    },
-
-    where: {
-      AND: [
-        search.langs && search.langs.length > 0
-          ? { language: { in: search.langs } }
-          : { id: { gt: -1 } },
-        {
-          OR: [
-            {
-              def: { contains: search.query },
-            },
-            {
-              extra: { contains: search.query },
-            },
-            {
-              text: { contains: search.query },
-            },
-            { read: { contains: search.query } },
-            {
-              ogTranslations: {
-                some: {
-                  tlSFX: {
-                    OR: [
-                      {
-                        def: { contains: search.query },
-                      },
-                      {
-                        extra: { contains: search.query },
-                      },
-                      {
-                        text: { contains: search.query },
-                      },
-                      { read: { contains: search.query } },
-                    ],
-                  },
-                },
-              },
-            },
-            {
-              tlTranslations: {
-                some: {
-                  ogSFX: {
-                    OR: [
-                      {
-                        def: { contains: search.query },
-                      },
-                      {
-                        extra: { contains: search.query },
-                      },
-                      {
-                        text: { contains: search.query },
-                      },
-                      { read: { contains: search.query } },
-                    ],
-                  },
-                },
-              },
-            },
-          ],
-        },
-      ],
-    },
-  });
-
-  const deduped = sfxs.reduce<
-    {
-      id: number;
-      text: string;
-      read: string | null;
-      def: string;
-      extra: string | null;
-      language: string;
-      ogtls: (typeof sfxs)[number]["ogTranslations"];
-      optls: (typeof sfxs)[number]["tlTranslations"];
-      show?: "both" | "reverse";
-      hideTLSFXs?: number[];
-    }[]
-  >((arr, sfx) => {
-    const sfxObj = {
-      createdAt: sfx.createdAt,
-      def: sfx.def,
-      extra: sfx.extra,
-      id: sfx.id,
-      language: sfx.language,
-      read: sfx.read,
-      text: sfx.text,
-      updatedAt: sfx.updatedAt,
-      ogtls: sfx.ogTranslations,
-      optls: sfx.tlTranslations,
-      show: "both" as "both" | "reverse",
-    };
-
-    // get all sfx that have this as opposite sfx
-    const prevSFX = arr.filter(
-      (v) =>
-        v.ogtls.some((tl) => tl.tlSFX.id === sfx.id) ||
-        v.optls.some((tl) => tl.ogSFX.id === sfx.id),
-    );
-
-    if (prevSFX.length) {
-      if (sfxContains(sfx, search.query)) {
-        const prevSFXToHide = prevSFX.filter((psfx) => {
-          return !sfxContains(psfx, search.query);
-        });
-        if (prevSFXToHide.length > 0) {
-          return [
-            ...arr.filter((q) => !prevSFXToHide.find((x) => x.id === q.id)),
-            {
-              ...sfxObj,
-            },
-          ];
-        }
-      }
-
-      // add reversed version
-      if (
-        prevSFX.some((q) => q.show) // if there is a reversed sfx
-      ) {
-        return [...arr, { ...sfxObj, show: "reverse" as const }];
-      }
-
-      // skip it
-      return arr;
-    }
-
-    return [...arr, sfxObj];
-  }, []);
-
-  return (await sfxGetTLs(db, deduped)).slice(
-    search.skip,
-    search.limit + search.skip,
-  );
-};
+const DEFAULT_LIMIT = 100;
+const DEFAULT_SKIP = 0;
 
 export const sfxRouter = createTRPCRouter({
   listSFX: publicProcedure
     .input(SearchOptions.optional())
     .query(async ({ ctx, input }): Promise<CollapsedOnomatopoeia[]> => {
-      const search = !input
-        ? undefined
-        : typeof input === "object" && "order" in input
-          ? input
-          : typeof input === "string"
-            ? input
-            : ({
-                langs: input.langs ?? [],
-                limit: input.limit ?? 100,
-                query: input.query,
-                skip: input.skip ?? 0,
-              } as Required<BasicSearch>);
+      const search = typeof input === "object" && input ? input : null;
 
       if (
-        typeof search === "object" &&
-        !("order" in search) &&
-        (search.query || search.langs.length > 0)
+        search &&
+        (!!search.query ||
+          (search.langs?.length ?? 0) > 0 ||
+          Number(search.id) > 0)
       )
-        return await searchDBForSFX(ctx.db, search);
+        return await searchDBForSFX(ctx.db, {
+          langs: search.langs ?? [],
+          limit: search.limit ?? DEFAULT_LIMIT,
+          skip: search.skip ?? DEFAULT_SKIP,
+          order: search.order ?? "asc",
+          query: search.query ?? "",
+          id: search.id ?? 0,
+        });
+
+      console.log("List searchh", search);
 
       const sfxs = await ctx.db.onomatopoeia.findMany({
         orderBy: { id: "asc" },
@@ -312,16 +46,14 @@ export const sfxRouter = createTRPCRouter({
         },
       });
 
-      if (search === "list") return sfxs.map((q) => ({ ...q, tls: [] }));
+      if (input === "list") return sfxs.map((q) => ({ ...q, tls: [] }));
 
-      const reverse = search && "order" in search && search.order === "desc";
+      const reverse = search?.order === "desc";
 
       const ret = await sfxGetTLs(ctx.db, sfxs, reverse);
 
-      console.log(search);
-
-      const limit = search?.limit ?? 100;
-      const skip = search?.skip ?? 0;
+      const limit = search?.limit ?? DEFAULT_LIMIT;
+      const skip = search?.skip ?? DEFAULT_SKIP;
 
       return typeof search === "object" ? ret.slice(skip, limit + skip) : ret;
     }),

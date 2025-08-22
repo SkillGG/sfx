@@ -201,7 +201,8 @@ export const EditableSelect = ({
           popoverTargetAction="show"
           className={cn(
             "cursor-pointer border-0 px-3 py-1 text-(--input-text)",
-            "hover:font-extrabold hover:text-(--input-hover-text) focus:ring-0 focus:outline-none",
+            "hover:font-extrabold hover:text-(--input-hover-text)",
+            "focus:ring-0 focus:outline-none",
             classNames?.button,
           )}
           type="button"

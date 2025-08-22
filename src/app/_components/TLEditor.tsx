@@ -4,15 +4,18 @@ import {
   type CollapsedTL,
   type Promisable,
 } from "@/utils";
-import { SFX, SFXEdit, type SaveState } from "./sfx";
+import { SFX, SFXEdit, type SaveState, type SFXClasses } from "./sfx";
 import { SFXLangSelect } from "./sfxLangSelect";
 import React, { useRef, useState, type RefObject } from "react";
 import { useSFXLangs } from "../hooks/langs";
 import { Validation } from "../hooks/validation";
 import { api } from "@/trpc/react";
+import type { ClassValue } from "clsx";
 
 export const TL = ({
   tl,
+
+  editable = true,
 
   removeLangs,
 
@@ -21,16 +24,22 @@ export const TL = ({
   noTLs,
   allowDeeperTLs,
 
+  classNames,
+
   onChange,
   onSave,
 }: {
   tl: CollapsedTL;
+
+  editable?: boolean;
 
   removeLangs?: string[];
   removeOnCancel?: boolean;
 
   noTLs?: boolean;
   allowDeeperTLs?: boolean;
+
+  classNames?: SFXClasses & { container?: ClassValue; tlNum?: ClassValue };
 
   onSave?: (tl: CollapsedTL | null) => Promisable<void>;
   onChange?: (tl: CollapsedTL) => Promisable<void>;
@@ -49,7 +58,7 @@ export const TL = ({
 
   const isReversed = tl.additionalInfo?.startsWith("⏉");
 
-  if (mode === "edit" && !isReversed) {
+  if (mode === "edit" && !isReversed && editable) {
     return (
       <>
         <SFXEdit
@@ -128,8 +137,13 @@ export const TL = ({
   }
 
   return (
-    <div className={cn("relative")}>
-      <div className={cn("absolute right-2 bottom-11 dark:text-yellow-300")}>
+    <div className={cn("relative", classNames?.container)}>
+      <div
+        className={cn(
+          "absolute right-2 bottom-11 dark:text-yellow-300",
+          classNames?.tlNum,
+        )}
+      >
         {tl.id}
       </div>
       <SFX
@@ -138,12 +152,16 @@ export const TL = ({
         editable={false}
         tlExtra={tl.additionalInfo ?? ""}
         classNames={{
+          ...classNames,
           default: {
+            ...classNames?.default,
             container: cn(
+              classNames?.default?.container,
               tl.forDeletion &&
                 "border-(color:--error-400) dark:border-(color:--error-400)",
             ),
             topinfo: {
+              ...classNames?.default?.topinfo,
               text:
                 tl.forDeletion &&
                 "text-(color:--error-400) dark:text-(color:--error-400)",
@@ -151,35 +169,37 @@ export const TL = ({
           },
         }}
       />
-      <div className={cn("flex flex-row gap-2")}>
-        <button
-          className={cn(
-            "inline-block flex-1 cursor-pointer rounded bg-(color:--accent-500) px-4 py-2 text-white",
-            "hover:bg-(color:--accent-600)",
-            "dark:bg-(color:--accent-600) dark:hover:bg-(color:--accent-700)",
-            "disabled:cursor-not-allowed disabled:bg-gray-400",
-            "disabled:hover:bg-gray-400",
-          )}
-          onClick={() => {
-            if (!tl.forDeletion) setMode("edit");
-          }}
-          disabled={tl.forDeletion}
-        >
-          Edit
-        </button>
-        <button
-          className={cn(
-            "inline-block flex-1 cursor-pointer rounded bg-(color:--error-500) px-4 py-2 text-white",
-            "hover:bg-(color:--error-600)",
-            "dark:bg-(color:--error-600) dark:hover:bg-(color:--error-700)",
-          )}
-          onClick={async () => {
-            await onSave?.(null);
-          }}
-        >
-          Remove
-        </button>
-      </div>
+      {editable && (
+        <div className={cn("flex flex-row gap-2")}>
+          <button
+            className={cn(
+              "inline-block flex-1 cursor-pointer rounded bg-(color:--accent-500) px-4 py-2 text-white",
+              "hover:bg-(color:--accent-600)",
+              "dark:bg-(color:--accent-600) dark:hover:bg-(color:--accent-700)",
+              "disabled:cursor-not-allowed disabled:bg-gray-400",
+              "disabled:hover:bg-gray-400",
+            )}
+            onClick={() => {
+              if (!tl.forDeletion) setMode("edit");
+            }}
+            disabled={tl.forDeletion}
+          >
+            Edit
+          </button>
+          <button
+            className={cn(
+              "inline-block flex-1 cursor-pointer rounded bg-(color:--error-500) px-4 py-2 text-white",
+              "hover:bg-(color:--error-600)",
+              "dark:bg-(color:--error-600) dark:hover:bg-(color:--error-700)",
+            )}
+            onClick={async () => {
+              await onSave?.(null);
+            }}
+          >
+            Remove
+          </button>
+        </div>
+      )}
     </div>
   );
 };
