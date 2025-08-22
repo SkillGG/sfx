@@ -13,6 +13,7 @@ export async function generateMetadata({
   searchParams,
 }: Props): Promise<Metadata> {
   const basicMetadata: Metadata = {
+    metadataBase: new URL("https://sfxvault.org/"),
     title: "SFX Vault",
     description: "An app for SFX Translations",
     openGraph: {

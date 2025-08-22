@@ -6,6 +6,21 @@ import { TRPCReactProvider } from "@/trpc/react";
 import { SFXLangProvider } from "./hooks/langs";
 import { ThemeProvider } from "./hooks/theme";
 import { cn } from "@/utils";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "SFX Vault",
+  description: "An app for SFX Translations",
+  metadataBase: new URL("https://sfxvault.org/"),
+  openGraph: {
+    type: "website",
+    description: "An app for SFX Translations",
+    determiner: "the",
+    emails: ["contact@sfxvault.org"],
+    siteName: "SFX Vault",
+    url: "https://sfxvault.org",
+  },
+};
 
 const geist = Geist({
   subsets: ["latin"],

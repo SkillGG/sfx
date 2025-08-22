@@ -786,6 +786,7 @@ export const SFX = ({
               classNames?.editable?.edit?.main,
             )}
           >
+            {/** FINISHED HERE */}
             <button
               className={cn(
                 "flex-1 cursor-pointer rounded bg-(color:--accent-600) px-4 py-2 text-white transition-colors",
