@@ -4,7 +4,14 @@ import {
   type CollapsedTL,
   type Promisable,
 } from "@/utils";
-import { SFX, SFXEdit, type SaveState, type SFXClasses } from "./sfx";
+import {
+  DEFAULT_SFX_INPUT_STYLES,
+  DEFAULT_SFX_LABEL_STYLES,
+  SFX,
+  SFXEdit,
+  type SaveState,
+  type SFXClasses,
+} from "./sfx";
 import { SFXLangSelect } from "./sfxLangSelect";
 import React, { useRef, useState, type RefObject } from "react";
 import { useSFXLangs } from "../hooks/langs";
@@ -70,7 +77,8 @@ export const TL = ({
               cancel:
                 removeOnCancel &&
                 !onceSaved &&
-                "bg-(color:--danger-400) text-white dark:bg-(color:--danger-500)",
+                `bg-(--sfx-button-remove-bg) text-(--sfx-button-remove-text)
+                hover:bg-(--sfx-button-remove-hover-bg)`,
             },
           }}
           labels={{
@@ -103,24 +111,11 @@ export const TL = ({
           }}
           tlAddInfoElem={
             <div className={cn("flex flex-row items-center gap-2")}>
-              <div
-                className={cn(
-                  "flex-1 text-(color:--accent-700) dark:text-(color:--accent-300)",
-                )}
-              >
-                TL info
-              </div>
+              <div className={cn(DEFAULT_SFX_LABEL_STYLES)}>TL info</div>
               <div className={cn("ml-auto flex flex-3 flex-col gap-2")}>
                 <input
                   id={`tl-additional-info-${tl.id}`}
-                  className={cn(
-                    "ml-auto w-full rounded border bg-white px-2 py-1",
-                    "focus:ring-1 focus:outline-none dark:bg-slate-700 dark:text-white",
-                    "dark:placeholder-gray-400",
-                    "ocus:border-(color:--accent-500) border-(color:--input-border)",
-                    "focus:ring-(color:--accent-500)",
-                    "dark:focus:border-(color:--accent-400) dark:focus:ring-(color:--accent-400)",
-                  )}
+                  className={cn(DEFAULT_SFX_INPUT_STYLES())}
                   type="text"
                   value={tl.additionalInfo ?? ""}
                   onChange={({ currentTarget: { value: additionalInfo } }) =>
@@ -140,7 +135,7 @@ export const TL = ({
     <div className={cn("relative", classNames?.container)}>
       <div
         className={cn(
-          "absolute right-2 bottom-11 dark:text-yellow-300",
+          "absolute right-2 bottom-11 dark:text-white",
           classNames?.tlNum,
         )}
       >
@@ -157,14 +152,11 @@ export const TL = ({
             ...classNames?.default,
             container: cn(
               classNames?.default?.container,
-              tl.forDeletion &&
-                "border-(color:--error-400) dark:border-(color:--error-400)",
+              tl.forDeletion && "border-(--sfx-tlfordeletion-border)",
             ),
             topinfo: {
               ...classNames?.default?.topinfo,
-              text:
-                tl.forDeletion &&
-                "text-(color:--error-400) dark:text-(color:--error-400)",
+              text: tl.forDeletion && "text-(--sfx-tlfordeletion-text)",
             },
           },
         }}
@@ -173,11 +165,12 @@ export const TL = ({
         <div className={cn("flex flex-row gap-2")}>
           <button
             className={cn(
-              "inline-block flex-1 cursor-pointer rounded bg-(color:--accent-500) px-4 py-2 text-white",
-              "hover:bg-(color:--accent-600)",
-              "dark:bg-(color:--accent-600) dark:hover:bg-(color:--accent-700)",
-              "disabled:cursor-not-allowed disabled:bg-gray-400",
-              "disabled:hover:bg-gray-400",
+              "flex-1 cursor-pointer rounded bg-(--button-submit-bg) px-4 py-2 text-(--button-submit-text)",
+              "transition-colors",
+              "hover:bg-(--button-submit-hover-bg)",
+              "focus:ring-2 focus:ring-(--input-focus-border) focus:ring-offset-2",
+              "focus:ring-offset-(color:--main-bg) focus:outline-none",
+              "disabled:bg-(--button-submit-disabled-bg) disabled:text-(--button-submit-disabled-text)",
             )}
             onClick={() => {
               if (!tl.forDeletion) setMode("edit");
@@ -188,9 +181,12 @@ export const TL = ({
           </button>
           <button
             className={cn(
-              "inline-block flex-1 cursor-pointer rounded bg-(color:--error-500) px-4 py-2 text-white",
-              "hover:bg-(color:--error-600)",
-              "dark:bg-(color:--error-600) dark:hover:bg-(color:--error-700)",
+              "flex-1 cursor-pointer rounded bg-(--sfx-button-remove-bg) px-4 py-2 text-(--sfx-button-remove-text)",
+              "transition-colors",
+              "hover:bg-(--sfx-button-remove-hover-bg)",
+              "focus:ring-2 focus:ring-(--input-focus-border) focus:ring-offset-2",
+              "focus:ring-offset-(color:--main-bg) focus:outline-none",
+              "disabled:bg-(--sfx-button-remove-disabled-bg) disabled:text-(--sfx-button-remove-disabled-text)",
             )}
             onClick={async () => {
               await onSave?.(null);

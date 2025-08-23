@@ -6,5 +6,8 @@
     "classNames",
     "ngClass",
     "class:list"
-  ]
+  ],
+  "files.associations": {
+    "*.css": "tailwindcss"
+  }
 }

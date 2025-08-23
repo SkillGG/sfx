@@ -43,6 +43,7 @@ export const sfxRouter = createTRPCRouter({
           language: true,
           read: true,
           text: true,
+          updatedAt: true,
         },
       });
 

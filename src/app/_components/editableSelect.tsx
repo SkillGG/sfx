@@ -83,7 +83,7 @@ export const EditableSelect = ({
         <dialog
           id={dialogID}
           className={cn(
-            "m-auto rounded-xl border border-(--regular-border)",
+            "m-auto cursor-auto rounded-xl border border-(--regular-border)",
             "bg-(--dialog-bg)/25 p-6",
             "shadow-lg backdrop-blur-sm",
             classNames?.dialog,
@@ -93,7 +93,9 @@ export const EditableSelect = ({
           style={styles?.dialog}
         >
           <div className={cn("flex flex-col gap-2")}>
-            <h2 className={cn("text-2xl font-bold", "text-(--text-light)")}>
+            <h2
+              className={cn("text-2xl font-bold", "text-(--sfx-header-text)")}
+            >
               {addTitle ?? "New"}
             </h2>
             <form

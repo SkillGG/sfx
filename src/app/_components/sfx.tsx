@@ -376,13 +376,17 @@ type SFXEditClassNames = {
   };
 };
 
-const DEFAULT_SFX_INPUT_STYLES = (validation: Validation, field: string) =>
+export const DEFAULT_SFX_INPUT_STYLES = (
+  validation?: Validation,
+  field?: string,
+) =>
   cn(
-    "rounded border px-2 py-1 text-(--input-text)",
-    "bg-(--input-bg) placeholder-(--input-placeholder-text) focus:ring-1 focus:outline-none",
-    "border-(--input-border) focus:border-(--input-focus-border)",
+    "rounded border px-2 py-1 text-(--sfx-input-text)",
+    "bg-(--sfx-input-bg) placeholder-(--sfx-input-placeholder-text) focus:ring-1 focus:outline-none",
+    "border-(--sfx-input-border) focus:border-(--input-focus-border)",
     "focus:ring-(--input-focus-border)",
-    validation.hasFieldError(field) &&
+    validation &&
+      validation.hasFieldError(field ?? "") &&
       "border-2 border-(--sfx-input-error-border)" +
         " " +
         "placeholder-(--sfx-input-error-text)" +
@@ -392,7 +396,7 @@ const DEFAULT_SFX_INPUT_STYLES = (validation: Validation, field: string) =>
         "focus:ring-(--sfx-input-error-border)",
   );
 
-const DEFAULT_SFX_LABEL_STYLES = cn(
+export const DEFAULT_SFX_LABEL_STYLES = cn(
   "mt-1 flex-1 font-medium whitespace-nowrap",
   "text-(color:--sfx-label-text)",
 );
@@ -692,8 +696,12 @@ export const SFXEdit = ({
               </dialog>
               <button
                 className={cn(
-                  "cursor-pointer rounded bg-(--button-neutral-bg) px-4 py-2",
-                  "hover:bg -(--button-neutral-hover-bg) text-sm text-(--button-neutral-text)",
+                  "flex-1 cursor-pointer rounded bg-(--button-neutral-bg) px-4 py-2 text-(--button-neutral-text)",
+                  "transition-colors",
+                  "hover:bg-(--button-neutral-hover-bg)",
+                  "focus:ring-2 focus:ring-(--input-focus-border) focus:ring-offset-2",
+                  "focus:ring-offset-(color:--main-bg) focus:outline-none",
+                  "disabled:bg-(--button-neutral-disabled-bg) disabled:text-(--button-neutral-disabled-text)",
                 )}
                 onClick={() => {
                   tlEditDialogRef.current?.showPopover();
@@ -706,9 +714,12 @@ export const SFXEdit = ({
 
           <button
             className={cn(
-              "rounded bg-gray-200 px-2 py-1 text-xs",
-              "cursor-pointer",
-              "bg-(--button-neutral-bg) hover:bg-(--button-neutral-hover-bg)",
+              "flex-1 cursor-pointer rounded bg-(--sfx-button-cancel-bg) px-4 py-2 text-(--sfx-button-cancel-text)",
+              "transition-colors",
+              "hover:bg-(--sfx-button-cancel-hover-bg)",
+              "focus:ring-2 focus:ring-(--input-focus-border) focus:ring-offset-2",
+              "focus:ring-offset-(color:--main-bg) focus:outline-none",
+              "disabled:bg-(--sfx-button-cancel-disabled-bg) disabled:text-(--sfx-button-cancel-disabled-text)",
               classNames?.btns?.cancel,
             )}
             onClick={() => onCancel?.()}
@@ -786,14 +797,14 @@ export const SFX = ({
               classNames?.editable?.edit?.main,
             )}
           >
-            {/** FINISHED HERE */}
             <button
               className={cn(
-                "flex-1 cursor-pointer rounded bg-(color:--accent-600) px-4 py-2 text-white transition-colors",
-                "hover:bg-(color:--accent-700) focus:ring-2 focus:ring-(color:--accent-500) focus:ring-offset-2",
-                "focus:outline-none dark:bg-(color:--accent-700) dark:hover:bg-(color:--accent-600)",
-                "dark:focus:ring-(color:--accent-400) dark:focus:ring-offset-slate-800",
-                "disabled:bg-slate-200 disabled:text-black dark:disabled:bg-slate-700 dark:disabled:text-white",
+                "flex-1 cursor-pointer rounded bg-(--button-submit-bg) px-4 py-2 text-(--button-submit-text)",
+                "transition-colors",
+                "hover:bg-(--button-submit-hover-bg)",
+                "focus:ring-2 focus:ring-(--input-focus-border) focus:ring-offset-2",
+                "focus:ring-offset-(color:--main-bg) focus:outline-none",
+                "disabled:bg-(--button-submit-disabled-bg) disabled:text-(--button-submit-disabled-text)",
                 classNames?.editable?.edit?.buttonEdit,
               )}
               onClick={() => (setMode("edit"), setSaveState("default"))}
@@ -804,11 +815,12 @@ export const SFX = ({
 
             <button
               className={cn(
-                "flex-1 cursor-pointer rounded bg-(color:--error-600) px-4 py-2 text-white transition-colors",
-                "hover:bg-(color:--error-700) focus:ring-2 focus:ring-(color:--error-500) focus:ring-offset-2",
-                "focus:outline-none dark:bg-(color:--error-700) dark:hover:bg-(color:--error-600)",
-                "dark:focus:ring-(color:--error-400) dark:focus:ring-offset-slate-800",
-                "disabled:bg-slate-200 disabled:text-black dark:disabled:bg-slate-700 dark:disabled:text-white",
+                "flex-1 cursor-pointer rounded bg-(--sfx-button-remove-bg) px-4 py-2 text-(--sfx-button-remove-text)",
+                "transition-colors",
+                "hover:bg-(--sfx-button-remove-hover-bg)",
+                "focus:ring-2 focus:ring-(--input-focus-border) focus:ring-offset-2",
+                "focus:ring-offset-(color:--main-bg) focus:outline-none",
+                "disabled:bg-(--sfx-button-remove-disabled-bg) disabled:text-(--sfx-button-remove-disabled-text)",
                 classNames?.editable?.edit?.buttonRemove,
               )}
               onClick={async () => {
