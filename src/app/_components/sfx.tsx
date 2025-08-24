@@ -16,13 +16,14 @@ import { useSFXLangs } from "../hooks/langs";
 import { SFXLangSelect } from "./sfxLangSelect";
 import { env } from "@/env";
 import { Validation } from "../hooks/validation";
-import { TL, TLEditorDirect } from "./TLEditor";
+import { TLEditorDirect } from "./TLEditor";
 import type { ClassValue } from "clsx";
 import Image from "next/image";
 import { api } from "@/trpc/react";
 import { Spinner } from "./spinner";
 import { AsyncImage } from "./asyncImage";
 import { SFXEditPanel } from "./sfxEditPanel";
+import { TLCard } from "./tlCard";
 
 export type SaveState = "default" | "done" | "waiting";
 
@@ -341,7 +342,7 @@ const SFXCard = ({
             {usedSFX.tls.map((tl) => {
               const isReversed = tl.additionalInfo?.startsWith("⏉");
               return (
-                <TL
+                <TLCard
                   key={tl.sfx1Id + "." + tl.sfx2Id}
                   tl={tl}
                   classNames={{

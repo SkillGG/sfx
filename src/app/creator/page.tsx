@@ -9,7 +9,7 @@ import { UserSessionProvider } from "../hooks/userlogin";
 import { useTheme } from "../hooks/theme";
 import { Spinner } from "../_components/spinner";
 
-const LoadPageSpinner = () => {
+export const LoadPageSpinner = () => {
   const { mode } = useTheme();
   return (
     <div

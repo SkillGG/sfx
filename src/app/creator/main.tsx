@@ -14,6 +14,7 @@ import type { SFXLang } from "../hooks/langs";
 import { useUser, type UserSessionData } from "../hooks/userlogin";
 import { SFXListPanel } from "../_components/sfxList.";
 import { Spinner } from "../_components/spinner";
+import { LoadPageSpinner } from "./page";
 
 // SFX creator page
 const CreatorPage = () => {
@@ -44,8 +45,8 @@ const CreatorPage = () => {
   // Initialize validation hook
   const validation = useValidation();
 
-  // persist
   useEffect(() => {
+    // parse create data from LocalStorage to not lose it on refresh
     const memoryStr = localStorage.getItem("creatememory");
     if (memoryStr) {
       const memory: unknown = JSON.parse(memoryStr);
@@ -82,16 +83,19 @@ const CreatorPage = () => {
     }
     setFirstRun(true);
   }, []);
+
   useEffect(() => {
+    // save to localStorage
     if (!firstRun) return;
     const memory = { sfx, def, extra, lang, read, tls };
     localStorage.setItem("creatememory", JSON.stringify(memory));
   }, [sfx, def, extra, lang, read, tls, firstRun]);
 
   if (!auth)
+    // loading and checking whether user is logged in
     return (
       <>
-        <Spinner />
+        <LoadPageSpinner key={"lps"} />
       </>
     );
 
@@ -162,24 +166,19 @@ const CreatorPage = () => {
     <div
       className={cn(
         "flex h-[100vh] w-full basis-1/2 flex-row",
-        "gap-8 bg-(color:--accent-50) p-4 dark:bg-slate-900",
+        "gap-8 bg-(--main-bg) p-4",
         mode,
       )}
       data-accent={accent}
     >
       {/* Main creator form */}
       <div className={cn("flex flex-1 flex-col gap-4")}>
-        <h1
-          className={cn(
-            "text-4xl font-bold text-(color:--accent-900) dark:text-(color:--accent-100)",
-          )}
-        >
+        <h1 className={cn("text-4xl font-bold text-(--header-text)")}>
           <div className={cn("flex w-full items-center justify-between")}>
             <button
               className={cn(
-                "mr-4 cursor-pointer rounded bg-(color:--accent-100) px-3 py-1",
-                "text-(color:--accent-700) transition hover:bg-(color:--accent-200)",
-                "dark:bg-slate-700 dark:text-(color:--accent-200) dark:hover:bg-slate-600",
+                "mr-4 cursor-pointer rounded-lg bg-(--back-bg) px-2 pb-1",
+                "text-(--back-text) transition-colors hover:bg-(--back-hover-bg)",
               )}
               title="Back"
               onClick={() => {

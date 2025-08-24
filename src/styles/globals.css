@@ -22,6 +22,10 @@
 
   --spinner-color: var(--accent-400);
 
+  --back-bg: var(--accent-100);
+  --back-text: var(--accent-700);
+  --back-hover-bg: var(--accent-200);
+
   .dark {
     --main-bg: var(--color-slate-800);
     --deeper-bg: var(--color-slate-900);
@@ -34,6 +38,10 @@
     --regular-border: var(--accent-700);
 
     --spinner-color: var(--accent-900);
+
+    --back-bg: var(--color-slate-700);
+    --back-text: var(--accent-200);
+    --back-hover-bg: var(--color-slate-600);
   }
 
   --select-text: var(--accent-700);
@@ -54,7 +62,7 @@
   --input-text: var(--accent-600);
   --input-hover-text: var(--accent-700);
 
-  --input-placeholder-text: var(--color-black);
+  --input-placeholder-text: var(--accent-400);
 
   .dark {
     --input-bg: var(--color-slate-700);
@@ -64,6 +72,7 @@
     --input-label-text: var(--accent-400);
     --input-text: var(--accent-300);
     --input-hover-text: var(--accent-100);
+    --input-placeholder-text: var(--accent-300);
   }
 
   --input-error-border: var(--error-800);
