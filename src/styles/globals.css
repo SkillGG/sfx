@@ -11,8 +11,8 @@
 
 :root {
   --main-bg: var(--color-white);
+  --deeper-bg: var(--color-white);
   --dialog-bg: var(--color-gray-100);
-  --sfx-card-bg: var(--accent-50);
 
   --label-text: var(--accent-800);
   --header-text: var(--complement-700);
@@ -24,8 +24,8 @@
 
   .dark {
     --main-bg: var(--color-slate-800);
+    --deeper-bg: var(--color-slate-900);
     --dialog-bg: var(--main-bg);
-    --sfx-card-bg: var(--color-slate-800);
 
     --header-text: var(--complement-300);
     --label-text: var(--accent-100);
@@ -54,7 +54,7 @@
   --input-text: var(--accent-600);
   --input-hover-text: var(--accent-700);
 
-  --input-placeholder-text: var(--color-black, #f00);
+  --input-placeholder-text: var(--color-black);
 
   .dark {
     --input-bg: var(--color-slate-700);
@@ -64,6 +64,14 @@
     --input-label-text: var(--accent-400);
     --input-text: var(--accent-300);
     --input-hover-text: var(--accent-100);
+  }
+
+  --input-error-border: var(--error-800);
+  --input-warn-border: var(--error-700);
+
+  .dark {
+    --input-error-border: var(--error-400);
+    --input-warn-border: var(--error-400);
   }
 }
 
@@ -104,10 +112,12 @@
   --button-submit-bg: var(--accent-600);
   --button-submit-hover-bg: var(--accent-400);
   --button-submit-text: var(--color-white);
+  --button-submit-nobg-text: var(--accent-500);
   .dark {
     --button-submit-bg: var(--accent-700);
     --button-submit-hover-bg: var(--accent-600);
     --button-submit-text: var(--color-white);
+    --button-submit-nobg-text: var(--accent-300);
   }
   --button-checkbox-checked-bg: var(--complement-500);
   --button-disabled-bg: var(--muted-400);
@@ -129,6 +139,7 @@
   --sfx-tlextra-underline: var(--error-300);
   --sfx-def-text: var(--accent-700);
   --sfx-extra-text: var(--accent-400);
+  --sfx-card-bg: var(--accent-50);
   .dark {
     --sfx-text-text: var(--complement-100);
     --sfx-read-text: var(--accent-400);
@@ -137,6 +148,7 @@
     --sfx-tlextra-text: var(--accent-300);
     --sfx-def-text: var(--accent-300);
     --sfx-extra-text: var(--accent-500);
+    --sfx-card-bg: var(--color-slate-800);
   }
 
   --sfx-header-text: var(--header-text);
@@ -152,7 +164,7 @@
   --sfx-input-border: var(--input-border);
   --sfx-input-focus-border: var(--input-focus-border);
   --sfx-input-label-text: var(--input-label-text);
-  --sfx-input-placeholder-text: var(--input-placeholder-text, #f00);
+  --sfx-input-placeholder-text: var(--input-placeholder-text);
   --sfx-input-hover-text: var(--input-hover-text);
   --sfx-input-text: var(--input-text);
   --sfx-input-focus-border: var(--input-focus-border);
@@ -186,6 +198,16 @@
   --sfx-reversed-border: var(--error-400);
   --sfx-tlfordeletion-border: var(--danger-400);
   --sfx-tlfordeletion-text: var(--danger-400);
+}
+
+:root {
+  --validationerror-light-bg: var(--error-200);
+  --validationerror-text: var(--error-700);
+
+  .dark {
+    --validationerror-light-bg: var(--error-200);
+    --validationerror-text: var(--error-400);
+  }
 }
 
 :root {
@@ -837,7 +859,7 @@
   --complement-900: var(--accent-violet-900);
 }
 
-[data-accent="orange"] {
+:root[data-accent="orange"] {
   --accent-50: var(--accent-orange-50);
   --accent-100: var(--accent-orange-100);
   --accent-200: var(--accent-orange-200);

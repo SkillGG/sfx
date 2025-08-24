@@ -13,7 +13,7 @@ import {
   type SFXEditClassNames,
 } from "./sfx";
 import { SFXLangSelect, type SFXLangSelectClassNames } from "./sfxLangSelect";
-import React, { useRef, useState, type RefObject } from "react";
+import React, { useEffect, useRef, useState, type RefObject } from "react";
 import { useSFXLangs } from "../hooks/langs";
 import { Validation } from "../hooks/validation";
 import { api } from "@/trpc/react";
@@ -60,7 +60,7 @@ export const TL = ({
   const { langs } = useSFXLangs();
 
   const [mode, setMode] = useState<"view" | "edit">(
-    !tl.sfx.text ? "edit" : "view",
+    !tl.sfx.text || !tl.sfx.def ? "edit" : "view",
   );
 
   const [onceSaved, setOnceSaved] = useState(!!tl.sfx.text);
@@ -413,7 +413,7 @@ export const TLEditorDirect = ({
     <div
       className={cn(
         "flex flex-col gap-2 rounded-xl border-2",
-        "border-(--regular-border) bg-(color:--dialog-bg) p-2 shadow-sm",
+        "border-(--regular-border) p-2 shadow-sm",
         "h-full max-h-[100dvh] min-h-0",
         classNames?.container,
       )}

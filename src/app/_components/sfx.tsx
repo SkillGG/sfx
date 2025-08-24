@@ -16,13 +16,13 @@ import { useSFXLangs } from "../hooks/langs";
 import { SFXLangSelect } from "./sfxLangSelect";
 import { env } from "@/env";
 import { Validation } from "../hooks/validation";
-import { ValidationErrorDisplay } from "./validationError";
 import { TL, TLEditorDirect } from "./TLEditor";
 import type { ClassValue } from "clsx";
 import Image from "next/image";
 import { api } from "@/trpc/react";
 import { Spinner } from "./spinner";
 import { AsyncImage } from "./asyncImage";
+import { SFXEditPanel } from "./sfxEditPanel";
 
 export type SaveState = "default" | "done" | "waiting";
 
@@ -451,11 +451,11 @@ export const SFXEdit = ({
   onCancel: () => void;
   onValidate?: (sfx: CollapsedOnomatopoeia) => ValidationResult;
 }) => {
-  const [tempRead, setTempRead] = useState(sfx.read ?? "");
-
   const tlEditDialogRef = useRef<HTMLDialogElement>(null);
 
   const [validation, setValidation] = useState<Validation>(new Validation());
+
+  const [tempRead, setTempRead] = useState("");
 
   return (
     <>
@@ -489,161 +489,35 @@ export const SFXEdit = ({
         </h2>
 
         {/** Edit fields */}
-        <div
-          className={cn("flex w-full flex-col gap-2", "text-base font-medium")}
-        >
-          <div className={cn("flex flex-row items-start gap-2")}>
-            <label
-              htmlFor="sfx"
-              className={cn(
-                DEFAULT_SFX_LABEL_STYLES,
-                validation.hasFieldError("text") &&
-                  "font-bold text-(color:--sfx-label-error-text) underline",
-              )}
-            >
-              SFX
-            </label>
-            <div className={cn("ml-auto flex flex-3 flex-col gap-2")}>
-              <input
-                className={cn(DEFAULT_SFX_INPUT_STYLES(validation, "text"))}
-                placeholder="SFX"
-                type="text"
-                value={sfx.text}
-                onChange={(e) => {
-                  onChange?.((s) => ({ ...s, text: e.currentTarget.value }));
-                  setValidation(new Validation(validation.clearError("text")));
-                }}
-              />
-              <ValidationErrorDisplay
-                className="self-end"
-                errors={validation.errors}
-                field="text"
-                compact
-              />
-            </div>
-          </div>
-
-          <div className={cn("items-top flex flex-row gap-2")}>
-            <label
-              htmlFor="def"
-              className={cn(
-                DEFAULT_SFX_LABEL_STYLES,
-                validation.hasFieldError("def") &&
-                  "font-bold text-(color:--sfx-label-error-text) underline",
-              )}
-            >
-              Definition
-            </label>
-            <div className={cn("ml-auto flex flex-3 flex-col gap-2")}>
-              <input
-                className={cn(DEFAULT_SFX_INPUT_STYLES(validation, "def"))}
-                placeholder="Definition"
-                type="text"
-                value={sfx.def}
-                onChange={(e) => {
-                  onChange?.((p) => ({ ...p, def: e.currentTarget.value }));
-                  setValidation(new Validation(validation.clearError("def")));
-                }}
-              />
-              <ValidationErrorDisplay
-                className="self-end"
-                errors={validation.errors}
-                field="def"
-                compact
-              />
-            </div>
-          </div>
-
-          <div className={cn("flex flex-row items-center gap-2")}>
-            <label htmlFor="extra" className={cn(DEFAULT_SFX_LABEL_STYLES)}>
-              Extra
-            </label>
-            <div className={cn("ml-auto flex w-full flex-3 flex-col gap-2")}>
-              <input
-                className={cn(DEFAULT_SFX_INPUT_STYLES(validation, "extra"))}
-                placeholder="Extra"
-                type="text"
-                value={sfx.extra ?? ""}
-                onChange={(e) =>
-                  onChange?.((p) => ({
-                    ...p,
-                    extra: e.currentTarget.value || null,
-                  }))
+        <SFXEditPanel
+          validation={validation}
+          value={{
+            text: { label: "SFX", value: sfx.text },
+            def: { label: "Definition", value: sfx.def },
+            extra: { label: "Extra", value: sfx.extra ?? "" },
+            read: {
+              label: "Reading",
+              value: sfx.read,
+              type: "toggle",
+              temp: tempRead,
+            },
+          }}
+          onChange={(newD) => {
+            onChange?.((prev) => {
+              const newC = Object.entries(newD).reduce<
+                Partial<CollapsedOnomatopoeia>
+              >((p, [k, v]) => {
+                if ("type" in v && k === "read") {
+                  setTempRead(v.temp);
                 }
-              />
-              <ValidationErrorDisplay
-                errors={validation.errors}
-                field="extra"
-                compact
-              />
-            </div>
-          </div>
+                return { ...p, [k]: v.value };
+              }, {});
 
-          <div className={cn("flex flex-row items-center gap-2")}>
-            <div className={cn("flex flex-1 items-center gap-2")}>
-              <label htmlFor="read" className={cn(DEFAULT_SFX_LABEL_STYLES)}>
-                Reading
-              </label>
-              <label className={cn("flex items-center gap-1")}>
-                <input
-                  type="checkbox"
-                  checked={typeof sfx.read === "string"}
-                  onChange={(e) =>
-                    onChange?.((prev) => ({
-                      ...prev,
-                      read: e.currentTarget.checked ? tempRead : null,
-                    }))
-                  }
-                  className="hidden"
-                />
-                <div
-                  tabIndex={0}
-                  aria-roledescription="Switch"
-                  onKeyDown={(e) => {
-                    if ([" ", "Enter"].includes(e.key)) {
-                      onChange?.((prev) => ({
-                        ...prev,
-                        read: sfx.read === null ? tempRead : null,
-                      }));
-                    }
-                  }}
-                  className={cn(
-                    "mr-auto h-4 w-4 rounded-full border-2 border-(--input-border)",
-                    "focus:ring-(--input-focus-border)",
-                    "cursor-pointer",
-                    typeof sfx.read === "string"
-                      ? "bg-(--button-checkbox-checked-bg)"
-                      : "border-(--button-disabled-bg) opacity-50",
-                  )}
-                ></div>
-              </label>
-            </div>
-            <div className={cn("ml-auto flex flex-3 flex-col gap-2")}>
-              <input
-                className={cn(
-                  DEFAULT_SFX_INPUT_STYLES(validation, "read"),
-                  "disabled:cursor-not-allowed disabled:opacity-50",
-                )}
-                placeholder="Reading"
-                type="text"
-                value={sfx.read ?? tempRead}
-                onChange={(e) => {
-                  onChange?.((prev) => ({
-                    ...prev,
-                    read: e.currentTarget.value,
-                  }));
-                  setTempRead(e.currentTarget.value);
-                }}
-                disabled={sfx.read === null}
-              />
-              <ValidationErrorDisplay
-                errors={validation.errors}
-                field="read"
-                compact
-              />
-            </div>
-          </div>
-        </div>
+              const newOnom = { ...prev, ...newC };
+              return newOnom;
+            });
+          }}
+        />
 
         {tlAddInfoElem}
 

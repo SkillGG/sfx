@@ -5,7 +5,14 @@ export const DarkModeSwitch = ({ className }: { className?: string }) => {
   const { mode, setMode } = useTheme();
   return (
     <button
-      className={cn("cursor-pointer", className)}
+      className={cn(
+        "inline-flex items-center justify-center",
+        "h-5 w-5 rounded-full",
+        "cursor-pointer transition-colors",
+        // "hover:border-(color:--accent-900)",
+        "focus:ring-2 focus:ring-(color:--accent-400) focus:ring-offset-2 focus:outline-none",
+        className,
+      )}
       onClick={() => setMode(mode === "light" ? "dark" : "light")}
       type={"button"}
     >
@@ -21,11 +28,10 @@ const AccentSwitch = ({ className }: { className?: string }) => {
       type="button"
       className={cn(
         "inline-flex items-center justify-center",
-        "h-5 w-5 rounded-full border-2 border-(color:--neutral-300)",
+        "h-5 w-5 rounded-full border-2 border-(--complement-500)",
         "cursor-pointer transition-colors",
-        "bg-(color:--accent-500)",
-        "hover:border-(color:--accent-900)",
-        "focus:ring-1 focus:ring-(color:--accent-400) focus:outline-none",
+        "bg-(--accent-500)",
+        "focus:ring-2 focus:ring-(color:--input-focus-border) focus:ring-offset-2 focus:outline-none",
         className,
       )}
       aria-label="Switch accent color"

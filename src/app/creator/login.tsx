@@ -21,8 +21,7 @@ const LoginPage = () => {
   return (
     <div
       className={cn(
-        "flex min-h-screen items-center justify-center bg-slate-100",
-        "dark:bg-slate-900",
+        "flex min-h-screen items-center justify-center bg-(--deeper-bg)",
         mode,
       )}
     >
@@ -43,7 +42,7 @@ const LoginPage = () => {
           }
         }}
       >
-        <label className={cn("flex flex-col gap-2")}>
+        <label className={cn("flex flex-col gap-2")} htmlFor="pass">
           <div
             className={cn(
               "mb-0 flex items-center gap-2",
@@ -56,22 +55,20 @@ const LoginPage = () => {
             <AccentSwitch className={cn("ml-auto h-4 w-4")} />
             <DarkModeSwitch />
           </div>
-          <div>
-            <div className={cn("text-(color:--notice-500)")}>
-              {capslock && "CAPS!"}
-            </div>
+          <div
+            className={cn(
+              "rounded-md ring-(color:--input-focus-border) focus-within:ring-2",
+              capslock && "ring-(color:--input-warn-border)",
+            )}
+          >
             <input
               type={show ? "text" : "password"}
               className={cn(
-                "rounded-md border border-slate-300 bg-slate-50 px-3 py-2",
-                "focus:ring-2 focus:ring-blue-500 focus:outline-none",
-                "dark:border-slate-600 dark:bg-slate-700",
-                err && "border-(color:--error-800)",
-                err && "dark:border-(color:--error-400)",
-                capslock && "border-(color:--notice-700)",
-                capslock && "dark:border-(color:--notice-400)",
-                !show && "text-(color:--accent-600)",
-                !show && "dark:text-(color:--accent-200)",
+                "rounded-md rounded-r-none border border-r-0",
+                "border-(--input-border) bg-(--input-bg) px-3 py-2",
+                "focus:ring-0 focus:outline-none",
+                err && "border-(--input-error-border)",
+                !show && "text-(--input-text)",
               )}
               onChange={(e) => {
                 setError("");
@@ -80,18 +77,28 @@ const LoginPage = () => {
               onKeyDown={(k) => {
                 setCapslock(k.getModifierState("CapsLock"));
               }}
+              id="pass"
               value={pass}
               autoFocus
             />
             <button
               type="button"
-              onClick={() => setShow((p) => !p)}
+              onClick={(e) => {
+                (
+                  e.currentTarget.previousElementSibling as HTMLElement | null
+                )?.focus({ preventScroll: true });
+                setShow((p) => !p);
+              }}
               className={cn(
-                "ml-4 min-w-[3rem]",
-                "dark:text-(color:--accent-400)",
+                "border border-l-0 border-(--input-border) bg-(--input-bg)",
+                "rounded-md rounded-l-none px-4 py-2 font-semibold hover:bg-(--button-submit-bg)",
+                "cursor-pointer text-(--label-text) hover:text-(--button-submit-text)",
+                "focus:bg-(--button-submit-bg) focus:outline-0",
+                "disabled:cursor-not-allowed disabled:opacity-50",
+                capslock && "text-(--notice-700)",
               )}
             >
-              {show ? "Hide" : "Show"}
+              {capslock ? "CAPS!" : show ? "Hide" : "Show"}
             </button>
           </div>
         </label>
@@ -105,9 +112,10 @@ const LoginPage = () => {
         <button
           type="submit"
           className={cn(
-            "mt-3 rounded-md bg-(color:--accent-600) px-4 py-2 font-semibold text-white",
-            "hover:bg-(color:--accent-700)",
-            "focus:ring-2 focus:ring-(color:--accent-500) focus:outline-none",
+            "mt-3 rounded-md bg-(--button-submit-bg) px-4 py-2 font-semibold",
+            "cursor-pointer text-(--button-submit-text)",
+            "hover:bg-(--button-submit-hover-bg)",
+            "focus:ring-2 focus:ring-(color:--input-focus-border) focus:outline-none",
             "disabled:cursor-not-allowed disabled:opacity-50",
           )}
           disabled={login.isPending}

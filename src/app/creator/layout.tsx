@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 export const metadata: Metadata = {
   title: "SFX Vault Creator",
   description: "An editor for all on-site SFXs",
+  keywords: ["sfx", "editor", "japanese", "creation"],
   openGraph: {
     type: "website",
     description: "An editor for all on-site SFXs",

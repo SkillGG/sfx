@@ -32,7 +32,7 @@ export const ValidationErrorDisplay = ({
             key={`${error.field}-${index}`}
             className={cn(
               "flex items-center gap-1 text-xs",
-              "text-(color:--error-600) dark:text-(color:--error-400)",
+              "text-(--validationerror-text)",
             )}
           >
             <svg
@@ -62,7 +62,7 @@ export const ValidationErrorDisplay = ({
           key={`${error.field}-${index}`}
           className={cn(
             "flex items-start gap-2 rounded-md bg-(color:--error-50) p-2",
-            "text-sm text-(color:--error-700) dark:bg-(color:--error-900)/20 dark:text-(color:--error-400)",
+            "text-sm text-(--validationerror-text) dark:bg-(--validationerror-light-bg)/20",
           )}
         >
           <svg

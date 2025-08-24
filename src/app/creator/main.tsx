@@ -414,7 +414,6 @@ const CreatorPage = () => {
           tls={tls}
           allowDeeperTLs
           onChange={(tls) => {
-            console.log("tls_creator_change", tls);
             setTLs(tls);
           }}
           removeOnCancel
