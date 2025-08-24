@@ -86,6 +86,8 @@ export const sfxRouter = createTRPCRouter({
           sfx: { text, def, extra, read, language, tls },
         },
       }) => {
+        // TODO: Fix ConnectSFX updates
+
         const flattenTLs: (t: CollapsedTL[]) => CollapsedTL[] = (tls) => {
           return tls
             .map<CollapsedTL[]>((tl) => {

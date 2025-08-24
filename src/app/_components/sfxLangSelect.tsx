@@ -4,6 +4,10 @@ import { EditableSelect } from "./editableSelect";
 import { useSFXLangs } from "../hooks/langs";
 import { useEffect, useState } from "react";
 
+export type SFXLangSelectClassNames = React.ComponentProps<
+  typeof EditableSelect
+>["classNames"];
+
 export const SFXLangSelect = ({
   hideValues,
   removeValues,
@@ -15,7 +19,7 @@ export const SFXLangSelect = ({
   removeValues?: string[];
   value: string;
   onChange: (lang: string) => void;
-  classNames?: React.ComponentProps<typeof EditableSelect>["classNames"];
+  classNames?: SFXLangSelectClassNames;
 }) => {
   const { langs, setLangs } = useSFXLangs();
 

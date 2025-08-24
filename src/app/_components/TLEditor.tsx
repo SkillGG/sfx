@@ -9,15 +9,21 @@ import {
   DEFAULT_SFX_LABEL_STYLES,
   SFX,
   SFXEdit,
-  type SaveState,
   type SFXClasses,
+  type SFXEditClassNames,
 } from "./sfx";
-import { SFXLangSelect } from "./sfxLangSelect";
+import { SFXLangSelect, type SFXLangSelectClassNames } from "./sfxLangSelect";
 import React, { useRef, useState, type RefObject } from "react";
 import { useSFXLangs } from "../hooks/langs";
 import { Validation } from "../hooks/validation";
 import { api } from "@/trpc/react";
 import type { ClassValue } from "clsx";
+
+type TLClassNames = SFXClasses & {
+  container?: ClassValue;
+  tlNum?: ClassValue;
+  sfxedit?: SFXEditClassNames;
+};
 
 export const TL = ({
   tl,
@@ -46,7 +52,7 @@ export const TL = ({
   noTLs?: boolean;
   allowDeeperTLs?: boolean;
 
-  classNames?: SFXClasses & { container?: ClassValue; tlNum?: ClassValue };
+  classNames?: TLClassNames;
 
   onSave?: (tl: CollapsedTL | null) => Promisable<void>;
   onChange?: (tl: CollapsedTL) => Promisable<void>;
@@ -73,12 +79,16 @@ export const TL = ({
           allowDeeperTLs={allowDeeperTLs}
           removeLangs={removeLangs}
           classNames={{
+            ...classNames?.sfxedit,
             btns: {
-              cancel:
+              ...classNames?.sfxedit?.btns,
+              cancel: cn(
+                classNames?.sfxedit?.btns?.cancel,
                 removeOnCancel &&
-                !onceSaved &&
-                `bg-(--sfx-button-remove-bg) text-(--sfx-button-remove-text)
+                  !onceSaved &&
+                  `bg-(--sfx-button-remove-bg) text-(--sfx-button-remove-text)
                 hover:bg-(--sfx-button-remove-hover-bg)`,
+              ),
             },
           }}
           labels={{
@@ -145,7 +155,7 @@ export const TL = ({
         sfx={tl.sfx}
         key={`tl_${tl.id}:${tl.sfx.id}_${tl.forDeletion}`}
         editable={false}
-        tlExtra={tl.additionalInfo ?? ""}
+        tlExtra={tl.additionalInfo?.replace("⏉", "") ?? ""}
         classNames={{
           ...classNames,
           default: {
@@ -226,16 +236,16 @@ const ConnectSFXDialog = ({
       id={SFXDialogID}
       ref={ref}
       className={cn(
-        "m-auto min-w-[50%] rounded-xl border border-(color:--regular-border) bg-white/95 p-6",
-        "shadow-lg backdrop-blur-sm",
-        "dark:bg-slate-800/95 dark:text-white",
+        "m-auto min-w-[50%] rounded-xl border border-(--regular-border)",
+        "bg-(--dialog-bg)/50 p-6 shadow-lg backdrop-blur-sm",
       )}
     >
       <button
         className={cn(
-          "absolute top-4 right-4 z-10 rounded-full bg-gray-200 p-2",
-          "text-(color:--accent-700) hover:bg-gray-300",
-          "dark:bg-slate-700 dark:text-(color:--accent-100) dark:hover:bg-slate-600",
+          "absolute top-5 right-4 z-10 rounded-full bg-(--button-neutral-bg) px-2",
+          "cursor-pointer text-(--button-neutral-text) hover:inset-ring-1",
+          "block hover:bg-(--button-neutral-hover-bg)",
+          "hover:inset-ring-(color:--button-neutral-inset-ring)",
         )}
         type="button"
         popoverTarget={SFXDialogID}
@@ -245,25 +255,26 @@ const ConnectSFXDialog = ({
         ×
       </button>
       {sfxs.isFetching && (
-        <div
-          className={cn(
-            "py-4 text-center text-(color:--accent-700) dark:text-(color:--accent-200)",
-          )}
-        >
+        <div className={cn("py-4 text-center text-(color:--label-text)")}>
           Loading...
         </div>
       )}
-      {sfxs.isFetched && (
-        <div>
+      {!sfxs.isFetching && sfxs.isFetched && (
+        <div tabIndex={-1}>
           <div
             className={cn(
-              "mb-4 text-lg font-semibold text-(color:--accent-900) dark:text-(color:--accent-100)",
+              "mb-4 text-2xl font-semibold text-(color:--header-text)",
             )}
           >
             Connect to another SFX:
           </div>
-          <div className={cn("max-h-96 overflow-y-auto")}>
-            <ul className={cn("flex flex-col gap-4")}>
+          <div
+            className={cn(
+              "max-h-[400px] overflow-y-auto rounded-xl",
+              "border-(--regular-border) focus:border-1 focus:outline-0",
+            )}
+          >
+            <ul className={cn("flex flex-col gap-4 p-4")}>
               {sfxs.data
                 ?.filter((s) => !illegible.includes(s.id))
                 .map((connSFX) => {
@@ -271,38 +282,66 @@ const ConnectSFXDialog = ({
                     <li
                       key={connSFX.id}
                       className={cn(
-                        "flex flex-row items-center gap-4 rounded-lg border border-(color:--regular-border)",
-                        "bg-(color:--accent-50) p-3 shadow-sm dark:bg-slate-700",
+                        "flex flex-row rounded-lg",
+                        "mr-2 border-0",
+                        "group/conn hover:cursor-pointer",
+                        "outline-0 focus:ring-0",
                       )}
+                      tabIndex={0}
+                      onClick={async () => {
+                        console.log("Adding translation!");
+                        await onChange?.((prev) => [
+                          ...prev,
+                          {
+                            id: -prev.length - 1,
+                            sfx1Id: sfx.id,
+                            sfx2Id: connSFX.id,
+                            sfx: connSFX,
+                            additionalInfo: "",
+                          },
+                        ]);
+                      }}
                     >
                       <div className={cn("flex-1")}>
-                        <SFX sfx={connSFX} />
-                      </div>
-                      <button
-                        className={cn(
-                          "cursor-pointer rounded bg-(color:--accent-600) px-3 py-1 text-sm text-white",
-                          "transition-colors hover:bg-(color:--accent-700)",
-                          "focus:ring-2 focus:ring-(color:--accent-500) focus:outline-none",
-                          "dark:bg-(color:--accent-700) dark:hover:bg-(color:--accent-600) dark:focus:ring-(color:--accent-400)",
-                        )}
-                        popoverTargetAction="hide"
-                        popoverTarget={SFXDialogID}
-                        onClick={async () => {
-                          console.log("Adding translation!");
-                          await onChange?.((prev) => [
-                            ...prev,
-                            {
-                              id: Infinity,
-                              sfx1Id: sfx.id,
-                              sfx2Id: connSFX.id,
-                              sfx: connSFX,
-                              additionalInfo: "",
+                        <SFX
+                          sfx={connSFX}
+                          classNames={{
+                            default: {
+                              container: cn(
+                                "rounded-r-none shadow-none ",
+                                "ring-r-0 group-hover/conn:ring-dashed",
+                                "group-hover/conn:ring-2",
+                                "group-hover/conn:border-transparent",
+                                "group-hover/conn:ring-r-0",
+                                "group-hover/conn:ring-(--complement-600)",
+                                "group-focus/conn:ring-2",
+                                "group-focus/conn:border-transparent",
+                                "group-focus/conn:ring-r-0",
+                                "group-focus/conn:ring-(--complement-600)",
+                              ),
                             },
-                          ]);
-                        }}
-                      >
-                        Connect
-                      </button>
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <button
+                          tabIndex={-1}
+                          className={cn(
+                            "h-full cursor-pointer rounded rounded-l-none",
+                            "bg-(color:--button-submit-bg) px-3 py-1 text-sm text-white",
+                            "transition-colors group-hover/conn:bg-(color:--button-submit-hover-bg)",
+                            "group-hover/conn:ring-2",
+                            "group-hover/conn:ring-l-0",
+                            "group-focus/conn:ring-2",
+                            "group-focus/conn:ring-l-0",
+                            "ring-(--complement-600)",
+                          )}
+                          popoverTargetAction="hide"
+                          popoverTarget={SFXDialogID}
+                        >
+                          Connect
+                        </button>
+                      </div>
                     </li>
                   );
                 })}
@@ -314,6 +353,21 @@ const ConnectSFXDialog = ({
   );
 };
 
+type TLEditorClassNames = {
+  container?: ClassValue;
+  header?: ClassValue;
+  tls?: {
+    container?: ClassValue;
+    tl?: TLClassNames;
+  };
+  add?: {
+    container?: ClassValue;
+    langSelect?: SFXLangSelectClassNames;
+    addTL?: ClassValue;
+    connTL?: ClassValue;
+  };
+};
+
 export const TLEditorDirect = ({
   tls,
 
@@ -323,6 +377,8 @@ export const TLEditorDirect = ({
   noTLs,
   allowDeeperTLs,
 
+  classNames,
+
   onChange,
 }: {
   tls: CollapsedTL[];
@@ -330,6 +386,7 @@ export const TLEditorDirect = ({
   removeOnCancel?: boolean;
   noTLs?: boolean;
   allowDeeperTLs?: boolean;
+  classNames?: TLEditorClassNames;
   onChange: (tls: CollapsedTL[]) => Promisable<void>;
 }) => {
   const [newTL, setNewTL] = useState<CollapsedTL>({
@@ -356,11 +413,10 @@ export const TLEditorDirect = ({
     <div
       className={cn(
         "flex flex-col gap-2 rounded-xl border-2",
-        "border-(color:--regular-border) bg-(color:--accent-50) p-2 shadow-sm",
-        "dark:bg-slate-800",
+        "border-(--regular-border) bg-(color:--dialog-bg) p-2 shadow-sm",
         "h-full max-h-[100dvh] min-h-0",
+        classNames?.container,
       )}
-      style={{ height: "100%", minHeight: 0, maxHeight: "100dvh" }}
     >
       <div
         className={cn(
@@ -368,13 +424,17 @@ export const TLEditorDirect = ({
           "dark:text-(color:--accent-100)",
           "text-center text-xl font-bold",
           "text-(color:--accent-900)",
+          classNames?.header,
         )}
       >
         Translations
       </div>
       <div
-        className={cn("flex min-h-0 flex-col", "overflow-y-auto")}
-        style={{ minHeight: 0 }}
+        className={cn(
+          "flex min-h-0 flex-col",
+          "overflow-y-auto",
+          classNames?.tls?.container,
+        )}
       >
         {tls.map((tl) => (
           <TL
@@ -382,6 +442,7 @@ export const TLEditorDirect = ({
             removeLangs={[sfx?.language ?? ""]}
             key={tl.id}
             noTLs={noTLs}
+            classNames={classNames?.tls?.tl}
             allowDeeperTLs={allowDeeperTLs}
             removeOnCancel={freshTLs.includes(tl.id) ? true : removeOnCancel}
             onChange={async (tl) => {
@@ -410,7 +471,7 @@ export const TLEditorDirect = ({
           />
         ))}
       </div>
-      <div className={cn("flex flex-row gap-2")}>
+      <div className={cn("flex flex-row gap-2", classNames?.add?.container)}>
         <SFXLangSelect
           hideValues={[newTL.sfx.language]}
           removeValues={[...(sfx?.language ? [sfx.language] : [])]}
@@ -418,14 +479,18 @@ export const TLEditorDirect = ({
           onChange={(lang) =>
             setNewTL((p) => ({ ...p, sfx: { ...p.sfx, language: lang } }))
           }
+          classNames={classNames?.add?.langSelect}
         />
         <button
           className={cn(
-            "inline-block flex-1 cursor-pointer rounded bg-(color:--accent-500) px-4 py-2",
-            "text-white",
-            "hover:bg-(color:--accent-600)",
-            "dark:bg-(color:--accent-600)",
-            "dark:hover:bg-(color:--accent-700)",
+            "flex-1 cursor-pointer rounded bg-(--button-submit-bg) px-4 py-2 text-(--button-submit-text)",
+            "transition-colors",
+            "hover:bg-(--button-submit-hover-bg)",
+            "focus:ring-2 focus:ring-(--input-focus-border) focus:ring-offset-2",
+            "focus:ring-offset-(color:--main-bg) focus:outline-none",
+            "disabled:bg-(--button-disabled-bg) disabled:text-(--button-disabled-text)",
+
+            classNames?.add?.addTL,
           )}
           onClick={async () => {
             const newTLs = [...tls, newTL];
@@ -451,11 +516,13 @@ export const TLEditorDirect = ({
         )}
         <button
           className={cn(
-            "inline-block flex-1 cursor-pointer rounded bg-(color:--accent-500) px-4 py-2",
-            "text-white",
-            "hover:bg-(color:--accent-600)",
-            "dark:bg-(color:--accent-600)",
-            "dark:hover:bg-(color:--accent-700)",
+            "flex-1 cursor-pointer rounded bg-(--button-submit-bg) px-4 py-2 text-(--button-submit-text)",
+            "transition-colors",
+            "hover:bg-(--button-submit-hover-bg)",
+            "focus:ring-2 focus:ring-(--input-focus-border) focus:ring-offset-2",
+            "focus:ring-offset-(color:--main-bg) focus:outline-none",
+            "disabled:bg-(--button-disabled-bg) disabled:text-(--button-disabled-text)",
+            classNames?.add?.connTL,
           )}
           onClick={() => {
             connSFXDialog.current?.showPopover();
@@ -465,84 +532,5 @@ export const TLEditorDirect = ({
         </button>
       </div>
     </div>
-  );
-};
-
-export const TLEditorSaveable = ({
-  sfx,
-
-  saveState,
-  onSave,
-}: {
-  sfx: CollapsedOnomatopoeia;
-
-  saveState?: SaveState;
-  onSave?: (tls: CollapsedTL[]) => Promisable<void>;
-}) => {
-  const [newTL, setNewTL] = useState<CollapsedTL>({
-    additionalInfo: "",
-    sfx1Id: sfx.id,
-    sfx2Id: Infinity,
-    id: sfx.tls.length + 1,
-    sfx: {
-      def: "",
-      extra: null,
-      id: Infinity,
-      language: "",
-      read: null,
-      text: "",
-      tls: [],
-    },
-  });
-
-  const [tls, setTLs] = useState([...sfx.tls]);
-
-  return (
-    <>
-      {tls.map((tl) => (
-        <TL tl={tl} key={tl.id} />
-      ))}
-      <div>
-        <div className={cn("mt-2 flex flex-row gap-2")}>
-          <SFXLangSelect
-            hideValues={[newTL.sfx.language]}
-            value={newTL.sfx.language}
-            onChange={(lang) =>
-              setNewTL((p) => ({ ...p, sfx: { ...p.sfx, language: lang } }))
-            }
-          />
-          <button
-            className={cn(
-              "inline-block flex-1 rounded bg-(color:--accent-500) px-4 py-2 text-white",
-              "hover:bg-(color:--accent-600)",
-              "dark:bg-(color:--accent-600)",
-              "dark:hover:bg-(color:--accent-700)",
-            )}
-            onClick={() => {
-              setTLs((prev) => [...prev, newTL]);
-              setNewTL((prev) => ({ ...prev, id: prev.id + 1 }));
-            }}
-          >
-            Add Translation
-          </button>
-          <button
-            onClick={async () => await onSave?.(tls)}
-            className={cn(
-              "inline-block flex-1 rounded bg-(color:--success-500) px-4 py-2 text-white",
-              "hover:bg-(color:--success-600)",
-              "dark:bg-(color:--success-600)",
-              "dark:hover:bg-(color:--success-700)",
-            )}
-            disabled={saveState === "waiting"}
-          >
-            {saveState === "waiting"
-              ? "Saving..."
-              : saveState === "done"
-                ? "Saved!"
-                : "Save"}
-          </button>
-        </div>
-      </div>
-    </>
   );
 };

@@ -110,6 +110,7 @@ const GetLocalImg = ({
           "before:absolute before:hidden before:h-full",
           "before:w-full before:justify-center before:content-['show']",
           "hover:cursor-pointer hover:before:flex hover:before:opacity-75",
+          "text-center hover:before:wrap-anywhere hover:before:break-all",
         )}
         onClick={() => {
           popupRef.current?.showPopover();
@@ -211,7 +212,7 @@ const parseSFXText = (str?: string | null): ReactNode => {
             </React.Fragment>
           );
         })}
-      <div className={cn("flex justify-around")}>
+      <div className={cn("flex justify-around gap-2")}>
         {fields
           .filter((q) => q.type === "img")
           .map((q, i) => {
@@ -369,7 +370,7 @@ const SFXCard = ({
   );
 };
 
-type SFXEditClassNames = {
+export type SFXEditClassNames = {
   main?: ClassValue;
   btns?: {
     cancel?: ClassValue;
@@ -382,7 +383,7 @@ export const DEFAULT_SFX_INPUT_STYLES = (
 ) =>
   cn(
     "rounded border px-2 py-1 text-(--sfx-input-text)",
-    "bg-(--sfx-input-bg) placeholder-(--sfx-input-placeholder-text) focus:ring-1 focus:outline-none",
+    "bg-(--sfx-input-bg) placeholder-(color:--sfx-input-placeholder-text) focus:ring-1 focus:outline-none",
     "border-(--sfx-input-border) focus:border-(--input-focus-border)",
     "focus:ring-(--input-focus-border)",
     validation &&
@@ -691,6 +692,20 @@ export const SFXEdit = ({
                   sfx={sfx}
                   onChange={(tls) => {
                     onChange?.((prev) => ({ ...prev, tls }));
+                  }}
+                  classNames={{
+                    container: cn("bg-(--dialog-bg)/25"),
+                    tls: {
+                      container: "bg-(--dialog-bg)/10",
+                      tl: {
+                        sfxedit: {
+                          main: "bg-(--dialog-bg)/10",
+                        },
+                        default: {
+                          container: "bg-(--dialog-bg)/10",
+                        },
+                      },
+                    },
                   }}
                 />
               </dialog>

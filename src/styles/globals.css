@@ -14,7 +14,8 @@
   --dialog-bg: var(--color-gray-100);
   --sfx-card-bg: var(--accent-50);
 
-  --text-light: var(--accent-800);
+  --label-text: var(--accent-800);
+  --header-text: var(--complement-700);
   --error-text: var(--error-300);
 
   --regular-border: var(--accent-700);
@@ -26,7 +27,8 @@
     --dialog-bg: var(--main-bg);
     --sfx-card-bg: var(--color-slate-800);
 
-    --text-light: var(--accent-100);
+    --header-text: var(--complement-300);
+    --label-text: var(--accent-100);
     --error-text: var(--error-900);
 
     --regular-border: var(--accent-700);
@@ -48,9 +50,11 @@
   --input-border: var(--accent-300);
   --input-focus-border: var(--accent-600);
   --input-label-text: var(--accent-600);
-  --input-placeholder-text: var(--color-gray-600);
+
   --input-text: var(--accent-600);
   --input-hover-text: var(--accent-700);
+
+  --input-placeholder-text: var(--color-black, #f00);
 
   .dark {
     --input-bg: var(--color-slate-700);
@@ -58,7 +62,6 @@
     --input-border: var(--accent-200);
     --input-focus-border: var(--accent-400);
     --input-label-text: var(--accent-400);
-    --input-placeholder-text: var(--color-gray-400);
     --input-text: var(--accent-300);
     --input-hover-text: var(--accent-100);
   }
@@ -83,10 +86,12 @@
   --button-neutral-bg: var(--accent-300);
   --button-neutral-hover-bg: var(--accent-400);
   --button-neutral-text: var(--color-black);
+  --button-neutral-inset-ring: var(--accent-400);
   .dark {
     --button-neutral-bg: var(--accent-300);
     --button-neutral-hover-bg: var(--accent-200);
     --button-neutral-text: var(--color-black);
+    --button-neutral-inset-ring: var(--accent-200);
   }
   --button-muted-bg: var(--muted-300);
   --button-muted-hover-bg: var(--muted-400);
@@ -106,9 +111,11 @@
   }
   --button-checkbox-checked-bg: var(--complement-500);
   --button-disabled-bg: var(--muted-400);
+  --button-disabled-text: var(--color-gray-500);
   .dark {
     --button-checkbox-checked-bg: var(--complement-500);
     --button-disabled-bg: var(--muted-400);
+    --button-disabled-text: var(--color-gray-500);
   }
 }
 
@@ -128,91 +135,57 @@
     --sfx-lang-text: var(--accent-400);
     --sfx-lang-new-text: var(--notice-200);
     --sfx-tlextra-text: var(--accent-300);
-    --sfx-tlextra-underline: var(--error-300);
     --sfx-def-text: var(--accent-300);
     --sfx-extra-text: var(--accent-500);
   }
 
-  --sfx-header-text: var(--complement-700);
+  --sfx-header-text: var(--header-text);
+  .dark {
+    --sfx-header-text: var(--accent-500);
+  }
   --sfx-label-text: var(--complement-500);
   --sfx-label-error-text: var(--error-400);
   .dark {
-    --sfx-header-text: var(--complement-300);
     --sfx-label-text: var(--input-label-text);
-    --sfx-label-error-text: var(--error-400);
   }
 
   --sfx-input-border: var(--input-border);
   --sfx-input-focus-border: var(--input-focus-border);
   --sfx-input-label-text: var(--input-label-text);
-  --sfx-input-placeholder-text: var(--input-placeholder-text);
+  --sfx-input-placeholder-text: var(--input-placeholder-text, #f00);
   --sfx-input-hover-text: var(--input-hover-text);
   --sfx-input-text: var(--input-text);
   --sfx-input-focus-border: var(--input-focus-border);
-  --sfx-input-bg: var(--color-slate-700);
+  --sfx-input-bg: var(--input-bg);
   --sfx-input-hover-bg: var(--color-slate-700);
   --sfx-input-error-border: var(--error-500);
   --sfx-input-error-text: var(--error-400);
   .dark {
-    --sfx-input-border: var(--input-border);
-    --sfx-input-focus-border: var(--input-focus-border);
-    --sfx-input-label-text: var(--input-label-text);
-    --sfx-input-placeholder-text: var(--input-placeholder-text);
-    --sfx-input-hover-text: var(--input-hover-text);
-    --sfx-input-text: var(--input-text);
-    --sfx-input-bg: var(--color-slate-700);
-    --sfx-input-hover-bg: var(--color-slate-700);
-    --sfx-input-error-border: var(--error-500);
-    --sfx-input-error-text: var(--error-400);
+    --sfx-input-bg: var(--input-bg);
+    --sfx-input-placeholder-text: var(--color-gray-400);
   }
 
   --sfx-button-edit-bg: var(--button-submit-bg);
   --sfx-button-edit-hover-bg: var(--button-submit-hover-bg);
   --sfx-button-edit-text: var(--button-submit-text);
   --sfx-button-edit-disabled-bg: var(--button-neutral-bg);
-  --sfx-button-edit-disabled-text: var(--color-gray-500);
-  .dark {
-    --sfx-button-edit-bg: var(--button-submit-bg);
-    --sfx-button-edit-hover-bg: var(--button-submit-hover-bg);
-    --sfx-button-edit-text: var(--button-submit-text);
-    --sfx-button-edit-disabled-bg: var(--button-neutral-bg);
-    --sfx-button-edit-disabled-text: var(--color-gray-500);
-  }
+  --sfx-button-edit-disabled-text: var(--button-disabled-text);
 
   --sfx-button-remove-bg: var(--button-remove-bg);
   --sfx-button-remove-hover-bg: var(--button-remove-hover-bg);
   --sfx-button-remove-text: var(--button-remove-text);
   --sfx-button-remove-disabled-bg: var(--button-neutral-bg);
-  --sfx-button-remove-disabled-text: var(--color-gray-500);
-  .dark {
-    --sfx-button-remove-bg: var(--button-remove-bg);
-    --sfx-button-remove-hover-bg: var(--button-remove-hover-bg);
-    --sfx-button-remove-text: var(--button-remove-text);
-    --sfx-button-remove-disabled-bg: var(--button-neutral-bg);
-    --sfx-button-remove-disabled-text: var(--color-gray-500);
-  }
+  --sfx-button-remove-disabled-text: var(--button-disabled-text);
 
   --sfx-button-cancel-bg: var(--button-muted-bg);
   --sfx-button-cancel-hover-bg: var(--button-muted-hover-bg);
   --sfx-button-cancel-text: var(--button-muted-text);
   --sfx-button-cancel-disabled-bg: var(--button-neutral-bg);
-  --sfx-button-cancel-disabled-text: var(--color-gray-500);
-  .dark {
-    --sfx-button-cancel-bg: var(--button-muted-bg);
-    --sfx-button-cancel-hover-bg: var(--button-muted-hover-bg);
-    --sfx-button-cancel-text: var(--button-muted-text);
-    --sfx-button-cancel-disabled-bg: var(--button-neutral-bg);
-    --sfx-button-cancel-disabled-text: var(--color-gray-500);
-  }
+  --sfx-button-cancel-disabled-text: var(--button-disabled-text);
 
   --sfx-reversed-border: var(--error-400);
   --sfx-tlfordeletion-border: var(--danger-400);
   --sfx-tlfordeletion-text: var(--danger-400);
-  .dark {
-    --sfx-reversed-border: var(--error-400);
-    --sfx-tlfordeletion-border: var(--error-400);
-    --sfx-tlfordeletion-text: var(--danger-400);
-  }
 }
 
 :root {
