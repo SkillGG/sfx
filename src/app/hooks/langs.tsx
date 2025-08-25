@@ -4,6 +4,18 @@ import { createContext, useContext, useEffect, useState } from "react";
 
 export type SFXLang = { name: string; code: string };
 
+const DEFAULT_LANGUAGES = [
+  { name: "English", code: "en" },
+  { name: "Polish", code: "pl" },
+  { name: "Chinese", code: "zh" },
+  { name: "Japanese", code: "ja" },
+  { name: "Korean", code: "ko" },
+  { name: "French", code: "fr" },
+  { name: "German", code: "de" },
+  { name: "Spanish", code: "es" },
+  { name: "Italian", code: "it" },
+];
+
 const SFXLangs = createContext<{
   langs: SFXLang[];
   setLangs: (langs: SFXLang[] | ((prev: SFXLang[]) => SFXLang[])) => void;
@@ -23,17 +35,7 @@ export const SFXLangProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
-  const [langs, setLangs] = useState<SFXLang[]>([
-    { name: "English", code: "en" },
-    { name: "Polish", code: "pl" },
-    { name: "Chinese", code: "zh" },
-    { name: "Japanese", code: "ja" },
-    { name: "Korean", code: "ko" },
-    { name: "French", code: "fr" },
-    { name: "German", code: "de" },
-    { name: "Spanish", code: "es" },
-    { name: "Italian", code: "it" },
-  ]);
+  const [langs, setLangs] = useState<SFXLang[]>(DEFAULT_LANGUAGES);
 
   useEffect(() => {
     const lsLangs = localStorage.getItem("langs");

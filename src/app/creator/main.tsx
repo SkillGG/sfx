@@ -6,15 +6,19 @@ import { useTheme } from "../hooks/theme";
 import DarkModeSwitch, { AccentSwitch } from "../_components/darkModeSwitch";
 import { SFXLangSelect } from "../_components/sfxLangSelect";
 import { useRouter } from "next/navigation";
-import { cn, type CollapsedOnomatopoeia, type CollapsedTL } from "@/utils";
-import { useValidation } from "../hooks/validation";
-import { ValidationErrorDisplay } from "../_components/validationError";
+import {
+  cn,
+  parseMemoryData,
+  type CollapsedOnomatopoeia,
+  type CollapsedTL,
+} from "@/utils";
 import { TLEditorDirect } from "../_components/TLEditor";
 import type { SFXLang } from "../hooks/langs";
 import { useUser, type UserSessionData } from "../hooks/userlogin";
 import { SFXListPanel } from "../_components/sfxList.";
-import { Spinner } from "../_components/spinner";
-import { LoadPageSpinner } from "./page";
+import { LoadPageSpinner } from "../_components/loadPage";
+import { SFXEditPanel } from "../_components/sfxEditPanel";
+import { useValidation, type Validation } from "../hooks/validation";
 
 // SFX creator page
 const CreatorPage = () => {
@@ -32,7 +36,7 @@ const CreatorPage = () => {
   const [read, setRead] = useState<string | null>("");
   const [lang, setLang] = useState<SFXLang["code"]>("");
 
-  const [lastReadState, setLastReadState] = useState(false);
+  const [tempRead, setTempRead] = useState<string>("");
 
   const [tls, setTLs] = useState<CollapsedTL[]>([]);
 
@@ -43,43 +47,19 @@ const CreatorPage = () => {
   const [firstRun, setFirstRun] = useState(false);
 
   // Initialize validation hook
-  const validation = useValidation();
+  const validation: Validation = useValidation();
 
   useEffect(() => {
     // parse create data from LocalStorage to not lose it on refresh
-    const memoryStr = localStorage.getItem("creatememory");
-    if (memoryStr) {
-      const memory: unknown = JSON.parse(memoryStr);
-      if (typeof memory !== "object" || !memory) return;
-      if ("sfx" in memory && typeof memory.sfx === "string") setSFX(memory.sfx);
-      if ("def" in memory && typeof memory.def === "string") setDef(memory.def);
-      if ("read" in memory && typeof memory.read === "string")
-        setRead(memory.read);
-      if ("lang" in memory && typeof memory.lang === "string")
-        setLang(memory.lang);
-      if ("extra" in memory && typeof memory.extra === "string")
-        setExtra(memory.extra);
-      if ("tls" in memory && Array.isArray(memory.tls)) {
-        const denullifyIds = (tl: CollapsedTL): CollapsedTL => {
-          return {
-            ...tl,
-            id: tl.id ?? Infinity,
-            sfx1Id: tl.sfx1Id ?? Infinity,
-            sfx2Id: tl.sfx2Id ?? Infinity,
-            sfx: {
-              ...tl.sfx,
-              id: tl.sfx.id ?? Infinity,
-              tls: tl.sfx.tls?.map((q) => denullifyIds(q)) ?? [],
-            } as CollapsedOnomatopoeia,
-          };
-        };
-
-        const denullified = memory.tls.map((tl: CollapsedTL) => {
-          return denullifyIds(tl);
-        });
-
-        setTLs(denullified);
-      }
+    const memoryData = parseMemoryData(localStorage.getItem("memory"));
+    if (memoryData) {
+      setSFX(memoryData.text ?? "");
+      setDef(memoryData.def ?? "");
+      setExtra(memoryData.extra ?? "");
+      setLang(memoryData.lang ?? "en");
+      setRead(memoryData.read ?? null);
+      setTempRead(memoryData.tempRead ?? "");
+      setTLs(memoryData.tls ?? []);
     }
     setFirstRun(true);
   }, []);
@@ -87,9 +67,9 @@ const CreatorPage = () => {
   useEffect(() => {
     // save to localStorage
     if (!firstRun) return;
-    const memory = { sfx, def, extra, lang, read, tls };
-    localStorage.setItem("creatememory", JSON.stringify(memory));
-  }, [sfx, def, extra, lang, read, tls, firstRun]);
+    const memory = { text: sfx, def, extra, lang, read, tls, tempRead };
+    localStorage.setItem("memory", JSON.stringify(memory));
+  }, [sfx, def, extra, lang, read, tls, firstRun, tempRead]);
 
   if (!auth)
     // loading and checking whether user is logged in
@@ -109,9 +89,10 @@ const CreatorPage = () => {
       tls: tls ?? {},
     };
 
-    setLastReadState(read !== null);
+    setTempRead(read ?? "");
 
     const validationResult = validation.validateSFXData(sfxData);
+
     if (validationResult.isValid) {
       const validSFX = {
         text: sfx,
@@ -130,36 +111,11 @@ const CreatorPage = () => {
 
       // reset form
       setSFX("");
-      setRead(lastReadState ? "" : null);
+      setRead(!!read ? "" : null);
       setDef("");
       setExtra("");
       setTLs([]);
     }
-  };
-
-  // Simple change handlers
-  const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSFX(e.target.value);
-    validation.clearError("text");
-  };
-
-  const handleDefChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setDef(e.target.value);
-    validation.clearError("def");
-  };
-
-  const handleExtraChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setExtra(e.target.value);
-    validation.clearError("extra");
-  };
-
-  const handleReadChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setRead(e.target.value);
-    validation.clearError("read");
-  };
-
-  const handleLanguageChange = (lang: string) => {
-    setLang(lang);
   };
 
   return (
@@ -190,7 +146,7 @@ const CreatorPage = () => {
             <span
               className={cn(
                 "flex-1 text-center text-4xl font-bold",
-                "text-(color:--accent-900) dark:text-(color:--accent-100)",
+                "text-(color:--header-text)",
               )}
             >
               Creator
@@ -224,189 +180,58 @@ const CreatorPage = () => {
               }}
               hideValues={[lang]}
               value={lang}
-              onChange={handleLanguageChange}
+              onChange={setLang}
             />
           </h2>
 
-          <div className={cn("flex flex-row items-start gap-2")}>
-            <label
-              htmlFor="sfx"
-              className={cn(
-                "mt-1 flex-1 font-medium whitespace-nowrap",
-                "text-(color:--accent-700) dark:text-(color:--accent-300)",
-                validation.hasFieldError("text") &&
-                  "text-(color:--error-600) dark:text-(color:--error-600)",
-              )}
-              data-err={validation.hasFieldError("text")}
-            >
-              SFX
-            </label>
-            <div className={cn("ml-auto flex flex-3 flex-col gap-2")}>
-              <input
-                className={cn(
-                  "rounded border bg-white px-2 py-1",
-                  "focus:ring-1 focus:outline-none dark:bg-slate-700 dark:text-white",
-                  "dark:placeholder-gray-400",
-                  "ocus:border-(color:--accent-500) border-(color:--input-border)",
-                  "focus:ring-(color:--accent-500)",
-                  "dark:focus:border-(color:--accent-400) dark:focus:ring-(color:--accent-400)",
-                  validation.hasFieldError("text") &&
-                    "border-(color:--error--500) focus:border-(color:--error--500)" +
-                      "focus:ring-(color:--error--500) dark:border-(color:--error--400)" +
-                      "dark:focus:border-(color:--error--400) dark:focus:ring-(color:--error--400)",
-                )}
-                placeholder="SFX"
-                type="text"
-                value={sfx}
-                onChange={handleTextChange}
-              />
-              <ValidationErrorDisplay
-                className="self-end"
-                errors={validation.errors}
-                field="text"
-                compact
-              />
-            </div>
-          </div>
-
-          <div className={cn("items-top flex flex-row gap-2")}>
-            <label
-              htmlFor="def"
-              className={cn(
-                "mt-1 flex-1 font-medium whitespace-nowrap",
-                "text-(color:--accent-700) dark:text-(color:--accent-300)",
-                validation.hasFieldError("def") &&
-                  "text-(color:--error-600) dark:text-(color:--error-600)",
-              )}
-            >
-              Definition
-            </label>
-            <div className={cn("ml-auto flex flex-3 flex-col gap-2")}>
-              <input
-                className={cn(
-                  "flex-3 rounded border bg-white px-2 py-1",
-                  "focus:ring-1 focus:outline-none dark:bg-slate-700 dark:text-white",
-                  "dark:placeholder-gray-400",
-                  "ocus:border-(color:--accent-500) border-(color:--input-border)",
-                  "focus:ring-(color:--accent-500)",
-                  "dark:focus:border-(color:--accent-400) dark:focus:ring-(color:--accent-400)",
-                  validation.hasFieldError("def") &&
-                    "border-(color:--error-500) focus:border-(color:--error-500)" +
-                      "focus:ring-(color:--error-500) dark:border-(color:--error-400)" +
-                      "dark:focus:border-(color:--error-400) dark:focus:ring-(color:--error-400)",
-                )}
-                placeholder="Definition"
-                type="text"
-                value={def}
-                onChange={handleDefChange}
-              />
-              <ValidationErrorDisplay
-                className="self-end"
-                errors={validation.errors}
-                field="def"
-                compact
-              />
-            </div>
-          </div>
-
-          <div className={cn("flex flex-row items-center gap-2")}>
-            <label
-              htmlFor="extra"
-              className={cn(
-                "flex-1 font-medium whitespace-nowrap",
-                "text-(color:--accent-700) dark:text-(color:--accent-300)",
-                validation.hasFieldError("extra") &&
-                  "text-(color:--error-600) dark:text-(color:--error-400)",
-              )}
-            >
-              Extra
-            </label>
-            <div className={cn("ml-auto flex w-full flex-3 flex-col gap-2")}>
-              <input
-                className={cn(
-                  "ml-auto w-full rounded border bg-white px-2 py-1",
-                  "focus:ring-1 focus:outline-none dark:bg-slate-700 dark:text-white",
-                  "dark:placeholder-gray-400",
-                  "ocus:border-(color:--accent-500) border-(color:--input-border)",
-                  "focus:ring-(color:--accent-500)",
-                  "dark:focus:border-(color:--accent-400) dark:focus:ring-(color:--accent-400)",
-
-                  validation.hasFieldError("extra") &&
-                    "border-(color:--error-500) focus:border-(color:--error-500)" +
-                      "focus:ring-(color:--error-500) dark:border-(color:--error-400)" +
-                      "dark:focus:border-(color:--error-400) dark:focus:ring-(color:--error-400)",
-                )}
-                placeholder="Extra"
-                type="text"
-                value={extra}
-                onChange={handleExtraChange}
-              />
-            </div>
-          </div>
-          <ValidationErrorDisplay
-            errors={validation.errors}
-            field="extra"
-            compact
-          />
-
-          <div className={cn("flex flex-row items-center gap-2")}>
-            <div className={cn("flex flex-1 items-center gap-2")}>
-              <label
-                htmlFor="read"
-                className={cn(
-                  "font-medium whitespace-nowrap",
-                  "text-(color:--accent-700) dark:text-(color:--accent-300)",
-                  validation.hasFieldError("read") &&
-                    "text-(color:--error-600) dark:text-(color:--error-400)",
-                )}
-              >
-                Reading
-              </label>
-              <label
-                className={cn(
-                  "flex items-center gap-1 text-sm",
-                  "text-(color:--accent-600) dark:text-(color:--accent-400)",
-                )}
-              >
-                <input
-                  type="checkbox"
-                  checked={read !== null}
-                  onChange={() => setRead(read === null ? "" : null)}
-                  className={cn(
-                    "-4 w-4 rounded border-(color:--input-border) text-(color:--accent-600)",
-                    "focus:ring-(color:--accent-500) dark:border-(color:--accent-600) dark:bg-slate-700",
-                    "dark:focus:ring-(color:--accent-400)",
-                  )}
-                />
-              </label>
-            </div>
-            <div className={cn("ml-auto flex flex-3 flex-col gap-2")}>
-              <input
-                className={cn(
-                  "ml-auto w-full rounded border bg-white px-2 py-1",
-                  "focus:ring-1 focus:outline-none dark:bg-slate-700 dark:text-white",
-                  "dark:placeholder-gray-400",
-                  "disabled:cursor-not-allowed disabled:opacity-50",
-                  "border-(color:--input-border) focus:border-(color:--accent-500)",
-                  "focus:ring-(color:--accent-500)",
-                  "dark:focus:border-(color:--accent-400) dark:focus:ring-(color:--accent-400)",
-                  validation.hasFieldError("read") &&
-                    "border-(color:--error-500) focus:border-(color:--error-500)" +
-                      "focus:ring-(color:--error-500) dark:border-(color:--error-400)" +
-                      "dark:focus:border-(color:--error-400) dark:focus:ring-(color:--error-400)",
-                )}
-                placeholder="Reading"
-                type="text"
-                value={read ?? ""}
-                onChange={handleReadChange}
-                disabled={read === null}
-              />
-            </div>
-          </div>
-          <ValidationErrorDisplay
-            errors={validation.errors}
-            field="read"
-            compact
+          <SFXEditPanel
+            validation={validation}
+            onChange={({
+              def: ndef,
+              extra: nextra,
+              read: nread,
+              text: ntext,
+            }) => {
+              setRead(nread.value);
+              setTempRead(nread.temp);
+              setDef(ndef.value);
+              setSFX(ntext.value);
+              setExtra(nextra.value);
+            }}
+            value={{
+              text: {
+                label: "SFX",
+                type: "normal",
+                value: sfx,
+                placeholder: "SFX",
+                key: "newtext",
+              },
+              def: {
+                label: "Definition",
+                type: "normal",
+                value: def,
+                placeholder: "Definition",
+                key: "newdef",
+                long: true,
+              },
+              read: {
+                label: "Reading",
+                type: "toggle",
+                temp: tempRead,
+                value: read,
+                placeholder: "Reading",
+                key: "newread",
+                long: true,
+              },
+              extra: {
+                label: "Extra",
+                type: "normal",
+                value: extra,
+                placeholder: "Extra",
+                key: "newextra",
+                long: true,
+              },
+            }}
           />
         </div>
         <TLEditorDirect

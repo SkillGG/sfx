@@ -1,12 +1,5 @@
 import type { ClassValue } from "clsx";
-import {
-  DEFAULT_SFX_INPUT_STYLES,
-  DEFAULT_SFX_LABEL_STYLES,
-  SFX,
-  SFXEdit,
-  type SFXClasses,
-  type SFXEditClassNames,
-} from "./sfx";
+import { SFX, SFXEdit, type SFXClasses, type SFXEditClassNames } from "./sfx";
 import {
   cn,
   type CollapsedOnomatopoeia,
@@ -15,7 +8,7 @@ import {
 } from "@/utils";
 import { useSFXLangs } from "../hooks/langs";
 import { useState } from "react";
-import { Validation } from "../hooks/validation";
+import { ToggleableEditField } from "./sfxEditPanel/toggleableEditField";
 
 export type TLClassNames = SFXClasses & {
   container?: ClassValue;
@@ -90,13 +83,10 @@ export const TLCard = ({
             },
           }}
           labels={{
-            main: `New ${langs.find((l) => l.code === tl.sfx.language)?.name ?? "unknown"} TL (${tl.id})`,
+            main: `New ${langs.find((l) => l.code === tl.sfx.language)?.name ?? "unknown"} TL (${Math.abs(tl.id)})`,
             btns: {
               cancel: removeOnCancel && !onceSaved ? "Remove" : "Cancel",
             },
-          }}
-          onValidate={(sfx) => {
-            return new Validation().validateSFXData(sfx);
           }}
           sfx={tl.sfx}
           onCancel={async () => {
@@ -118,21 +108,21 @@ export const TLCard = ({
             setMode("view");
           }}
           tlAddInfoElem={
-            <div className={cn("flex flex-row items-center gap-2")}>
-              <div className={cn(DEFAULT_SFX_LABEL_STYLES)}>TL info</div>
-              <div className={cn("ml-auto flex flex-3 flex-col gap-2")}>
-                <input
-                  id={`tl-additional-info-${tl.id}`}
-                  className={cn(DEFAULT_SFX_INPUT_STYLES())}
-                  type="text"
-                  value={tl.additionalInfo ?? ""}
-                  onChange={({ currentTarget: { value: additionalInfo } }) =>
-                    onChange?.({ ...tl, additionalInfo })
-                  }
-                  placeholder="TL info"
-                />
-              </div>
-            </div>
+            <ToggleableEditField
+              onChange={(additionalInfo) =>
+                onChange?.({ ...tl, additionalInfo })
+              }
+              field={{
+                field: "addInfo",
+                label: "TL Extra",
+                value: tl.additionalInfo,
+                placeholder: "Additional Info",
+                temp: "",
+                type: "toggle",
+                key: `tlToggle_${tl.id}`,
+                long: true,
+              }}
+            />
           }
         />
       </>

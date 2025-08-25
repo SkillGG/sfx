@@ -14,8 +14,8 @@
   --deeper-bg: var(--color-white);
   --dialog-bg: var(--color-gray-100);
 
+  --header-text: var(--accent-700);
   --label-text: var(--accent-800);
-  --header-text: var(--complement-700);
   --error-text: var(--error-300);
 
   --regular-border: var(--accent-700);
@@ -31,7 +31,7 @@
     --deeper-bg: var(--color-slate-900);
     --dialog-bg: var(--main-bg);
 
-    --header-text: var(--complement-300);
+    --header-text: var(--accent-200);
     --label-text: var(--accent-100);
     --error-text: var(--error-900);
 
@@ -58,11 +58,9 @@
   --input-border: var(--accent-300);
   --input-focus-border: var(--accent-600);
   --input-label-text: var(--accent-600);
-
   --input-text: var(--accent-600);
   --input-hover-text: var(--accent-700);
-
-  --input-placeholder-text: var(--accent-400);
+  --input-placeholder-text: var(--input-text);
 
   .dark {
     --input-bg: var(--color-slate-700);
@@ -72,7 +70,7 @@
     --input-label-text: var(--accent-400);
     --input-text: var(--accent-300);
     --input-hover-text: var(--accent-100);
-    --input-placeholder-text: var(--accent-300);
+    --input-placeholder-text: var(--input-text);
   }
 
   --input-error-border: var(--error-800);
@@ -92,6 +90,7 @@
   .dark {
     --button-remove-bg: var(--danger-600);
     --button-remove-hover-bg: var(--danger-500);
+    --button-remove-text: var(--color-white);
   }
   --button-cancel-bg: var(--notice-700);
   --button-cancel-hover-bg: var(--notice-800);
@@ -99,6 +98,7 @@
   .dark {
     --button-cancel-bg: var(--notice-600);
     --button-cancel-hover-bg: var(--notice-500);
+    --button-cancel-text: var(--color-white);
   }
   --button-neutral-bg: var(--accent-300);
   --button-neutral-hover-bg: var(--accent-400);
@@ -155,19 +155,19 @@
     --sfx-lang-text: var(--accent-400);
     --sfx-lang-new-text: var(--notice-200);
     --sfx-tlextra-text: var(--accent-300);
+    --sfx-tlextra-underline: var(--error-300);
     --sfx-def-text: var(--accent-300);
     --sfx-extra-text: var(--accent-500);
     --sfx-card-bg: var(--color-slate-800);
   }
 
   --sfx-header-text: var(--header-text);
-  .dark {
-    --sfx-header-text: var(--accent-500);
-  }
-  --sfx-label-text: var(--complement-500);
+  --sfx-label-text: var(--input-label-text);
   --sfx-label-error-text: var(--error-400);
   .dark {
+    --sfx-header-text: var(--header-text);
     --sfx-label-text: var(--input-label-text);
+    --sfx-label-error-text: var(--error-400);
   }
 
   --sfx-input-border: var(--input-border);
@@ -182,8 +182,17 @@
   --sfx-input-error-border: var(--error-500);
   --sfx-input-error-text: var(--error-400);
   .dark {
+    --sfx-input-border: var(--input-border);
+    --sfx-input-focus-border: var(--input-focus-border);
+    --sfx-input-label-text: var(--input-label-text);
+    --sfx-input-placeholder-text: var(--input-placeholder-text);
+    --sfx-input-hover-text: var(--input-hover-text);
+    --sfx-input-text: var(--input-text);
+    --sfx-input-focus-border: var(--input-focus-border);
     --sfx-input-bg: var(--input-bg);
-    --sfx-input-placeholder-text: var(--color-gray-400);
+    --sfx-input-hover-bg: var(--color-slate-700);
+    --sfx-input-error-border: var(--error-500);
+    --sfx-input-error-text: var(--error-400);
   }
 
   --sfx-button-edit-bg: var(--button-submit-bg);
@@ -204,9 +213,34 @@
   --sfx-button-cancel-disabled-bg: var(--button-neutral-bg);
   --sfx-button-cancel-disabled-text: var(--button-disabled-text);
 
+  .dark {
+    --sfx-button-edit-bg: var(--button-submit-bg);
+    --sfx-button-edit-hover-bg: var(--button-submit-hover-bg);
+    --sfx-button-edit-text: var(--button-submit-text);
+    --sfx-button-edit-disabled-bg: var(--button-neutral-bg);
+    --sfx-button-edit-disabled-text: var(--button-disabled-text);
+
+    --sfx-button-remove-bg: var(--button-remove-bg);
+    --sfx-button-remove-hover-bg: var(--button-remove-hover-bg);
+    --sfx-button-remove-text: var(--button-remove-text);
+    --sfx-button-remove-disabled-bg: var(--button-neutral-bg);
+    --sfx-button-remove-disabled-text: var(--button-disabled-text);
+
+    --sfx-button-cancel-bg: var(--button-muted-bg);
+    --sfx-button-cancel-hover-bg: var(--button-muted-hover-bg);
+    --sfx-button-cancel-text: var(--button-muted-text);
+    --sfx-button-cancel-disabled-bg: var(--button-neutral-bg);
+    --sfx-button-cancel-disabled-text: var(--button-disabled-text);
+  }
+
   --sfx-reversed-border: var(--error-400);
   --sfx-tlfordeletion-border: var(--danger-400);
   --sfx-tlfordeletion-text: var(--danger-400);
+  .dark {
+    --sfx-reversed-border: var(--error-400);
+    --sfx-tlfordeletion-border: var(--danger-400);
+    --sfx-tlfordeletion-text: var(--danger-400);
+  }
 }
 
 :root {

@@ -1,9 +1,4 @@
-import {
-  cn,
-  type CollapsedOnomatopoeia,
-  type Promisable,
-  type ValidationResult,
-} from "@/utils";
+import { cn, type CollapsedOnomatopoeia, type Promisable } from "@/utils";
 import React, {
   Suspense,
   useEffect,
@@ -15,7 +10,7 @@ import React, {
 import { useSFXLangs } from "../hooks/langs";
 import { SFXLangSelect } from "./sfxLangSelect";
 import { env } from "@/env";
-import { Validation } from "../hooks/validation";
+import { useValidation, type Validation } from "../hooks/validation";
 import { TLEditorDirect } from "./TLEditor";
 import type { ClassValue } from "clsx";
 import Image from "next/image";
@@ -384,14 +379,14 @@ export const DEFAULT_SFX_INPUT_STYLES = (
 ) =>
   cn(
     "rounded border px-2 py-1 text-(--sfx-input-text)",
-    "bg-(--sfx-input-bg) placeholder-(color:--sfx-input-placeholder-text) focus:ring-1 focus:outline-none",
+    "bg-(--sfx-input-bg) placeholder-(--sfx-input-placeholder-text)/50 focus:ring-1 focus:outline-none",
     "border-(--sfx-input-border) focus:border-(--input-focus-border)",
     "focus:ring-(--input-focus-border)",
     validation &&
       validation.hasFieldError(field ?? "") &&
       "border-2 border-(--sfx-input-error-border)" +
         " " +
-        "placeholder-(--sfx-input-error-text)" +
+        "placeholder-(--sfx-input-error-text)/50" +
         " " +
         "focus:border-(--sfx-input-error-border)" +
         " " +
@@ -418,7 +413,6 @@ export const SFXEdit = ({
   saveBtnState = "default",
   onSaveClicked,
 
-  onValidate,
   onChange,
   onCancel,
 }: SFXTLDiscriminator & {
@@ -450,11 +444,10 @@ export const SFXEdit = ({
     action: (prev: CollapsedOnomatopoeia) => CollapsedOnomatopoeia,
   ) => void;
   onCancel: () => void;
-  onValidate?: (sfx: CollapsedOnomatopoeia) => ValidationResult;
 }) => {
   const tlEditDialogRef = useRef<HTMLDialogElement>(null);
 
-  const [validation, setValidation] = useState<Validation>(new Validation());
+  const validation = useValidation();
 
   const [tempRead, setTempRead] = useState("");
 
@@ -493,14 +486,26 @@ export const SFXEdit = ({
         <SFXEditPanel
           validation={validation}
           value={{
-            text: { label: "SFX", value: sfx.text },
-            def: { label: "Definition", value: sfx.def },
-            extra: { label: "Extra", value: sfx.extra ?? "" },
+            text: { label: "SFX", value: sfx.text, key: `sfxtext_${sfx.id}` },
+            def: {
+              label: "Definition",
+              value: sfx.def,
+              key: `sfxdef_${sfx.id}`,
+              long: true,
+            },
+            extra: {
+              label: "Extra",
+              value: sfx.extra ?? "",
+              key: `sfxextra_${sfx.id}`,
+              long: true,
+            },
             read: {
               label: "Reading",
               value: sfx.read,
               type: "toggle",
               temp: tempRead,
+              key: `sfxread_${sfx.id}`,
+              long: true,
             },
           }}
           onChange={(newD) => {
@@ -531,12 +536,11 @@ export const SFXEdit = ({
               "focus:ring-offset-(color:--main-bg) focus:outline-none",
             )}
             onClick={async () => {
-              const validation = onValidate?.(sfx);
-              if (!validation || validation?.isValid) {
+              const res = validation.validateSFXData(sfx);
+              if (!res || res?.isValid) {
                 await onSaveClicked?.();
                 return;
               }
-              setValidation(new Validation(validation));
             }}
             type="button"
             disabled={saveBtnState === "waiting"}

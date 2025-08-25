@@ -111,6 +111,24 @@ export const validateRequired = (
   return { isValid: true, errors: [] };
 };
 
+export const validateLongs = (
+  value: string,
+  fieldName: string,
+): ValidationResult => {
+  if (value.endsWith(";")) {
+    return {
+      isValid: false,
+      errors: [
+        {
+          field: fieldName,
+          message: `Cannot end on an empty line!`,
+        },
+      ],
+    };
+  }
+  return { errors: [], isValid: true };
+};
+
 export const validateMaxLength = (
   value: string,
   maxLength: number,
@@ -122,7 +140,7 @@ export const validateMaxLength = (
       errors: [
         {
           field: fieldName,
-          message: `${fieldName} cannot exceed ${maxLength} characters`,
+          message: `Max length: ${maxLength}`,
         },
       ],
     };
@@ -134,9 +152,7 @@ export const validateLanguage = (language: string): ValidationResult => {
   if (!language) {
     return {
       isValid: false,
-      errors: [
-        { field: "language", message: "Please select a valid language" },
-      ],
+      errors: [{ field: "language", message: "Invalid language" }],
     };
   }
   return { isValid: true, errors: [] };
@@ -153,17 +169,20 @@ export const validateSFX = (sfxData: Partial<SFXData>): ValidationResult => {
   const defValidation = validateRequired(sfxData.def ?? "", "def");
   if (!defValidation.isValid) errors.push(...defValidation.errors);
 
+  const defLongValidation = validateLongs(sfxData.def ?? "", "def");
+  if (!defLongValidation.isValid) errors.push(...defLongValidation.errors);
+
   const languageValidation = validateLanguage(sfxData.language ?? "");
   if (!languageValidation.isValid) errors.push(...languageValidation.errors);
 
   // Validate optional fields with length limits
   if (sfxData.read) {
-    const readValidation = validateMaxLength(sfxData.read, 200, "read");
+    const readValidation = validateLongs(sfxData.read, "read");
     if (!readValidation.isValid) errors.push(...readValidation.errors);
   }
 
   if (sfxData.extra) {
-    const extraValidation = validateMaxLength(sfxData.extra, 1000, "extra");
+    const extraValidation = validateLongs(sfxData.extra, "extra");
     if (!extraValidation.isValid) errors.push(...extraValidation.errors);
   }
 
@@ -206,4 +225,66 @@ export const validateTranslation = (
 
 export const cn = (...inputs: ClassValue[]) => {
   return twMerge(clsx(inputs));
+};
+
+export const parseMemoryData = (
+  q: string | null,
+): Partial<{
+  text: string | null;
+  def: string | null;
+  read: string | null;
+  lang: string;
+  extra: string | null;
+  tempRead: string | null;
+  tls: CollapsedTL[];
+}> | null => {
+  if (!q) {
+    console.log("No memory string");
+    return null;
+  }
+  try {
+    const memory: unknown = JSON.parse(q);
+    const ret: ReturnType<typeof parseMemoryData> = {};
+    if (!memory || !(typeof memory === "object")) {
+      console.log("No memory data!");
+      return null;
+    }
+    if ("text" in memory && typeof memory.text === "string")
+      ret.text = memory.text;
+    if ("def" in memory && typeof memory.def === "string") ret.def = memory.def;
+    if ("read" in memory && typeof memory.read === "string")
+      ret.read = memory.read;
+    if ("extra" in memory && typeof memory.extra === "string")
+      ret.extra = memory.extra;
+    if ("lang" in memory && typeof memory.lang === "string")
+      ret.lang = memory.lang;
+    if ("tempRead" in memory && typeof memory.tempRead === "string")
+      ret.tempRead = memory.tempRead;
+    if ("tls" in memory && Array.isArray(memory.tls)) {
+      const denullifyIds = (tl: CollapsedTL): CollapsedTL => {
+        return {
+          ...tl,
+          id: tl.id ?? Infinity,
+          sfx1Id: tl.sfx1Id ?? Infinity,
+          sfx2Id: tl.sfx2Id ?? Infinity,
+          sfx: {
+            ...tl.sfx,
+            id: tl.sfx.id ?? Infinity,
+            tls: tl.sfx.tls?.map((q) => denullifyIds(q)) ?? [],
+          } as CollapsedOnomatopoeia,
+        };
+      };
+
+      const denullified = memory.tls.map((tl: CollapsedTL) => {
+        return denullifyIds(tl);
+      });
+
+      ret.tls = denullified;
+    }
+
+    return ret;
+  } catch (err) {
+    console.warn("Error parsing memory string", err);
+    return null;
+  }
 };

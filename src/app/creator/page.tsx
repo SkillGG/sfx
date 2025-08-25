@@ -8,28 +8,8 @@ import LoginPage from "./login";
 import { UserSessionProvider } from "../hooks/userlogin";
 import { useTheme } from "../hooks/theme";
 import { Spinner } from "../_components/spinner";
+import { LoadPageSpinner } from "../_components/loadPage";
 
-export const LoadPageSpinner = () => {
-  const { mode } = useTheme();
-  return (
-    <div
-      className={cn(
-        "flex h-screen w-full items-center justify-center bg-(color:--accent-50)",
-        "dark:bg-slate-900",
-        mode,
-      )}
-    >
-      <div
-        className={cn(
-          "flex flex-col items-center gap-4 rounded-xl bg-white px-8 py-8 shadow-lg",
-          "dark:bg-slate-800",
-        )}
-      >
-        <Spinner />
-      </div>
-    </div>
-  );
-};
 
 const CheckCreatorLoginPage = () => {
   const [userToken, setUserToken] = useState<string | null>(null);

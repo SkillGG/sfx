@@ -50,11 +50,11 @@ export const TLEditorDirect = ({
     additionalInfo: "",
     sfx1Id: sfx?.id ?? Infinity,
     sfx2Id: Infinity,
-    id: tls.length + 1,
+    id: -(tls.length + 1),
     sfx: {
       def: "",
       extra: null,
-      id: Infinity,
+      id: -(tls.length + 1),
       language: "",
       read: null,
       text: "",
@@ -72,6 +72,7 @@ export const TLEditorDirect = ({
         "flex flex-col gap-2 rounded-xl border-2",
         "border-(--regular-border) p-2 shadow-sm",
         "h-full max-h-[100dvh] min-h-0",
+        "select-none",
         classNames?.container,
       )}
     >
@@ -155,7 +156,8 @@ export const TLEditorDirect = ({
             setFreshTLs((prev) => [...prev, newTL.id]);
             setNewTL((p) => ({
               ...p,
-              id: p.id + 1,
+              id: p.id - 1,
+              sfx: { ...p.sfx, id: p.id - 1 },
             }));
           }}
         >
