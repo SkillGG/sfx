@@ -146,7 +146,7 @@ const CreatorPage = () => {
             <span
               className={cn(
                 "flex-1 text-center text-4xl font-bold",
-                "text-(color:--header-text)",
+                "text-(--header-text)",
               )}
             >
               Creator
@@ -161,16 +161,14 @@ const CreatorPage = () => {
         </h1>
         <div
           className={cn(
-            "flex flex-col gap-2 rounded-xl border-2 border-(color:--regular-border)",
-            "bg-(color:--accent-50) p-2 shadow-sm",
-            "dark:bg-slate-800",
+            "flex flex-col gap-2 rounded-xl border-2 border-(--regular-border)",
+            "bg-(--sfx-card-bg)/50 p-2 shadow-sm",
           )}
         >
           <h2
             className={cn(
-              "flex items-center justify-center border-b border-(color:--regular-border)",
-              "pb-2 text-center text-2xl font-semibold text-(color:--accent-800)",
-              "dark:text-(color:--accent-200)",
+              "flex items-center justify-center border-b border-(--regular-border)",
+              "pb-2 text-center text-2xl font-semibold text-(--header-text)",
             )}
           >
             New SFX
@@ -240,6 +238,9 @@ const CreatorPage = () => {
           onChange={(tls) => {
             setTLs(tls);
           }}
+          classNames={{
+            container: "bg-(--sfx-card-bg)/50",
+          }}
           removeOnCancel
           sfx={{
             def,
@@ -253,14 +254,14 @@ const CreatorPage = () => {
         />
         <button
           className={cn(
-            "cursor-pointer rounded bg-(color:--accent-600) px-4 py-2 text-white",
-            "transition-colors hover:bg-(color:--accent-700) focus:ring-2 focus:ring-(color:--accent-500)",
-            "focus:ring-offset-2 focus:outline-none dark:bg-(color:--accent-700) dark:hover:bg-(color:--accent-600)",
-            "dark:focus:ring-(color:--accent-400) dark:focus:ring-offset-slate-800",
+            "cursor-pointer rounded bg-(--button-submit-bg) px-4 py-2",
+            "text-(--button-submit-text) transition-colors",
+            "hover:bg-(--button-submit-hover-bg)",
+            "focus:ring-2 focus:ring-(--input-focus-border) focus:ring-offset-2 focus:outline-none",
             "disabled:cursor-not-allowed disabled:opacity-50",
           )}
           onClick={handleCreate}
-          disabled={!validation.isValid}
+          disabled={!validation.isValid || createSFX.isPending}
         >
           {createSFX.isPending ? "Creating..." : "Create"}
         </button>
@@ -270,17 +271,17 @@ const CreatorPage = () => {
       <div className={cn("flex flex-1 flex-col gap-4")}>
         <h2
           className={cn(
-            "py-2 text-center text-2xl font-bold text-(color:--accent-900) dark:text-(color:--accent-100)",
+            "py-2 text-center text-2xl font-bold",
+            "text-(--header-text)",
           )}
         >
           Past Created SFX
         </h2>
         <div
           className={cn(
-            "flex flex-col gap-2 rounded-xl border-2 border-(color:--regular-border)",
-            "bg-(color:--accent-50) p-2 shadow-sm",
+            "flex flex-col gap-2 rounded-xl border-2 border-(--regular-border)",
+            "bg-(--sfx-card-bg)/50 p-2 shadow-sm",
             "h-full overflow-auto",
-            "dark:bg-slate-800",
           )}
         >
           <SFXListPanel
@@ -313,13 +314,13 @@ const CreatorPage = () => {
             }}
           />
         </div>
-        <div className={cn("flex justify-around gap-3")}>
+        <div className={cn("flex justify-center gap-3")}>
           <button
             className={cn(
-              "flex-1 cursor-pointer rounded bg-(color:--accent-600) px-4 py-2 text-white",
-              "transition-colors hover:bg-(color:--accent-700) focus:ring-2 focus:ring-(color:--accent-500)",
-              "focus:ring-offset-2 focus:outline-none dark:bg-(color:--accent-700) dark:hover:bg-(color:--accent-600)",
-              "dark:focus:ring-(color:--accent-400) dark:focus:ring-offset-slate-800",
+              "basis-[45%] cursor-pointer rounded bg-(--button-submit-bg) px-4 py-2",
+              "text-(--button-submit-text) transition-colors",
+              "hover:bg-(--button-submit-hover-bg)",
+              "focus:ring-2 focus:ring-(--input-focus-border) focus:ring-offset-2 focus:outline-none",
               "disabled:cursor-not-allowed disabled:opacity-50",
             )}
             onClick={handleCreate}
@@ -329,10 +330,10 @@ const CreatorPage = () => {
           </button>
           <button
             className={cn(
-              "flex-1 cursor-pointer rounded bg-(color:--accent-600) px-4 py-2 text-white",
-              "transition-colors hover:bg-(color:--accent-700) focus:ring-2 focus:ring-(color:--accent-500)",
-              "focus:ring-offset-2 focus:outline-none dark:bg-(color:--accent-700) dark:hover:bg-(color:--accent-600)",
-              "dark:focus:ring-(color:--accent-400) dark:focus:ring-offset-slate-800",
+              "basis-[45%] cursor-pointer rounded bg-(--button-submit-bg) px-4 py-2",
+              "text-(--button-submit-text) transition-colors",
+              "hover:bg-(--button-submit-hover-bg)",
+              "focus:ring-2 focus:ring-(--input-focus-border) focus:ring-offset-2 focus:outline-none",
               "disabled:cursor-not-allowed disabled:opacity-50",
             )}
             onClick={handleCreate}

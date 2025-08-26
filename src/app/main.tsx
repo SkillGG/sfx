@@ -2,6 +2,7 @@
 
 import { api } from "@/trpc/react";
 import DarkModeSwitch, { AccentSwitch } from "./_components/darkModeSwitch";
+import AboutDialog from "./_components/aboutDialog";
 import { useTheme } from "./hooks/theme";
 import { cn } from "@/utils";
 import Link from "next/link";
@@ -10,6 +11,8 @@ import { Suspense } from "react";
 import { SFXListPanel } from "./_components/sfxList.";
 import { isValidSearch, SearchProvider, useSearch } from "./hooks/search";
 import { Spinner } from "./_components/spinner";
+import { CookieBanner } from "./_components/cookieBanner";
+import { QuestionMarkSVG } from "./_components/questionMark";
 
 const PageLoad = () => {
   const { mode } = useTheme();
@@ -39,18 +42,8 @@ const List = () => {
     search.query?.startsWith("#dash")
   ) {
     return (
-      <div
-        className={cn(
-          "py-12 text-center text-lg",
-          "text-(color:--accent-500) dark:text-(color:--accent-300)",
-        )}
-      >
-        <Link
-          href="/creator"
-          className={cn(
-            "text-(color:--accent-700) dark:text-(color:--accent-500)",
-          )}
-        >
+      <div className={cn("py-12 text-center text-lg")}>
+        <Link href="/creator" className={cn("text-(--regular-text)")}>
           Dashboard
         </Link>
       </div>
@@ -61,10 +54,7 @@ const List = () => {
     <>
       {!sfxs || sfxs.length === 0 ? (
         <div
-          className={cn(
-            "py-12 text-center text-lg",
-            "text-(color:--accent-500) dark:text-(color:--accent-300)",
-          )}
+          className={cn("py-12 text-center text-lg", "text-(--regular-text)")}
         >
           No SFX found.
           <br />
@@ -72,10 +62,7 @@ const List = () => {
           <br />
           <Link
             href="mailto:request@sfxvault.org"
-            className={cn(
-              "text-(color:--accent-700)",
-              "dark:text-(color:--accent-500)",
-            )}
+            className={cn("text-(--header-text)")}
           >
             request@sfxvault.org
           </Link>
@@ -86,7 +73,8 @@ const List = () => {
         <SFXListPanel
           sfxList={sfxs}
           classNames={{
-            container: "max-h-[70dvh] overflow-auto px-2 flex flex-col gap-2",
+            container:
+              "max-h-[70dvh] overflow-auto px-2 py-1 flex flex-col gap-2",
             sfxs: {
               default: {
                 tls: {
@@ -107,44 +95,66 @@ const List = () => {
 
 export const SearchPage = () => {
   const { mode, accent } = useTheme();
+
   return (
     <div
       className={cn(
-        "flex h-screen w-full items-center justify-center",
+        "flex h-screen w-full items-center justify-center bg-(--deeper-bg)",
         mode,
-        "dark:bg-slate-900",
       )}
       data-accent={accent}
     >
       <div
         className={cn(
-          "z-10 mx-auto flex w-full max-w-2xl flex-col gap-8 rounded-xl",
-          "border border-(color:--regular-border) bg-white/80 p-8 shadow-lg",
-          "dark:bg-slate-800/80 dark:text-(color:--accent-100)",
+          "relative z-10 mx-auto flex w-full max-w-2xl flex-col gap-8 rounded-xl",
+          "border border-(--regular-border) bg-(--main-bg)/80 p-8 shadow-lg",
         )}
       >
         <Suspense fallback={<PageLoad key={"load"} />}>
           <SearchProvider>
-            <div className={cn("mb-2 flex items-center justify-between")}>
+            <AboutDialog
+              id="aboutDialog"
+              classNames={{ container: "max-w-sm" }}
+            />
+
+            <div className={cn("flex items-center justify-between")}>
               <h1
                 className={cn(
-                  "m-0 text-4xl font-extrabold tracking-tight",
-                  "text-(color:--accent-900) dark:text-(color:--accent-100)",
+                  "text-center text-4xl font-extrabold tracking-tight",
+                  "w-fit text-(--header-text)",
                 )}
               >
-                SFX Vault*
+                SFX&nbsp;Vault
+                <small
+                  className={cn(
+                    "block max-w-44 px-2 text-sm font-normal text-balance",
+                    "text-(--label-text)",
+                  )}
+                >
+                  SFX translations for use in manga!
+                </small>
               </h1>
               <SearchBar />
               <div className={cn("flex items-center gap-2")}>
                 <AccentSwitch />
                 <DarkModeSwitch />
+                <button
+                  type="button"
+                  aria-label="Open About dialog"
+                  popoverTarget="aboutDialog"
+                  popoverTargetAction="show"
+                  className={cn(
+                    "block h-full w-full rounded-full",
+                    "absolute top-2 right-2 h-6 w-6 cursor-pointer p-[3px]",
+                    "focus:ring-2 focus:ring-(color:--input-focus-border) focus:outline-none",
+                  )}
+                >
+                  <QuestionMarkSVG />
+                </button>
               </div>
             </div>
-            <hr
-              className={cn(
-                "mb-4 border-(color:--accent-200) dark:border-(color:--accent-700)",
-              )}
-            />
+            <hr className={cn("border-(--separator)")} />
+            <CookieBanner />
             <List />
           </SearchProvider>
         </Suspense>

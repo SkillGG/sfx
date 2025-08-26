@@ -100,7 +100,7 @@ const GetLocalImg = ({
     <>
       <div
         className={cn(
-          "relative z-0 h-fit w-fit font-bold",
+          "relative z-0 h-fit max-h-[100px] w-fit font-bold",
           "before:items-center before:bg-(--accent-600)",
           "before:text-black before:opacity-0",
           "before:absolute before:hidden before:h-full",

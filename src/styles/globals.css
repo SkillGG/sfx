@@ -14,6 +14,7 @@
   --deeper-bg: var(--color-white);
   --dialog-bg: var(--color-gray-100);
 
+  --regular-text: var(--accent-500);
   --header-text: var(--accent-700);
   --label-text: var(--accent-800);
   --error-text: var(--error-300);
@@ -22,15 +23,19 @@
 
   --spinner-color: var(--accent-400);
 
+  /* back button */
   --back-bg: var(--accent-100);
   --back-text: var(--accent-700);
   --back-hover-bg: var(--accent-200);
+
+  --separator: var(--accent-200);
 
   .dark {
     --main-bg: var(--color-slate-800);
     --deeper-bg: var(--color-slate-900);
     --dialog-bg: var(--main-bg);
 
+    --regular-text: var(--accent-400);
     --header-text: var(--accent-200);
     --label-text: var(--accent-100);
     --error-text: var(--error-900);
@@ -42,12 +47,15 @@
     --back-bg: var(--color-slate-700);
     --back-text: var(--accent-200);
     --back-hover-bg: var(--color-slate-600);
+    --separator: var(--accent-700);
   }
 
   --select-text: var(--accent-700);
+  --select-bg: var(--input-bg);
 
   .dark {
     --select-text: var(--accent-400);
+    --select-bg: var(--color-slate-700);
   }
 }
 
@@ -64,6 +72,9 @@
 
   .dark {
     --input-bg: var(--color-slate-700);
+    @supports (color: color-mix(in lab, red, red)) {
+      --input-bg: color-mix(in oklab, var(--color-slate-600) 50%, transparent);
+    }
     --input-hover-bg: var(--color-slate-700);
     --input-border: var(--accent-200);
     --input-focus-border: var(--accent-400);
@@ -102,13 +113,12 @@
   }
   --button-neutral-bg: var(--accent-300);
   --button-neutral-hover-bg: var(--accent-400);
-  --button-neutral-text: var(--color-black);
+  --button-neutral-text: var(--accent-800);
   --button-neutral-inset-ring: var(--accent-400);
   .dark {
-    --button-neutral-bg: var(--accent-300);
-    --button-neutral-hover-bg: var(--accent-200);
-    --button-neutral-text: var(--color-black);
-    --button-neutral-inset-ring: var(--accent-200);
+    --button-neutral-bg: var(--accent-100);
+    --button-neutral-hover-bg: var(--accent-50);
+    --button-neutral-text: var(--accent-700);
   }
   --button-muted-bg: var(--muted-300);
   --button-muted-hover-bg: var(--muted-400);
@@ -138,6 +148,23 @@
   }
 }
 
+/* Banner */
+:root {
+  --banner-bg: var(--main-bg);
+  --banner-border: var(--regular-border);
+  --banner-text: var(--regular-text);
+  --banner-shadow:
+    0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+
+  .dark {
+    --banner-bg: var(--deeper-bg);
+    --banner-border: var(--regular-border);
+    --banner-text: var(--regular-text);
+    --banner-shadow:
+      0 10px 15px -3px rgb(0 0 0 / 0.3), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+  }
+}
+
 /* SFX */
 :root {
   --sfx-text-text: var(--complement-700);
@@ -158,7 +185,7 @@
     --sfx-tlextra-underline: var(--error-300);
     --sfx-def-text: var(--accent-300);
     --sfx-extra-text: var(--accent-500);
-    --sfx-card-bg: var(--color-slate-800);
+    --sfx-card-bg: var(--color-slate-700);
   }
 
   --sfx-header-text: var(--header-text);

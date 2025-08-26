@@ -6,10 +6,7 @@ import { api } from "@/trpc/react";
 import { cn } from "@/utils";
 import LoginPage from "./login";
 import { UserSessionProvider } from "../hooks/userlogin";
-import { useTheme } from "../hooks/theme";
-import { Spinner } from "../_components/spinner";
 import { LoadPageSpinner } from "../_components/loadPage";
-
 
 const CheckCreatorLoginPage = () => {
   const [userToken, setUserToken] = useState<string | null>(null);
@@ -64,7 +61,7 @@ const CheckCreatorLoginPage = () => {
           <div
             className={cn(
               "absolute top-4 right-4 z-50 max-w-xs min-w-[220px] rounded-lg px-4 py-3",
-              "bg-red-600 text-white shadow-lg",
+              "bg-(--error-600) text-(--label-text) shadow-lg",
               "flex items-center justify-between gap-4",
             )}
             role="alert"

@@ -13,6 +13,11 @@ const config = {
     ],
     loader: "default",
   },
+  experimental: {
+    reactCompiler: {
+      compilationMode: "infer",
+    },
+  },
 };
 
 export default config;

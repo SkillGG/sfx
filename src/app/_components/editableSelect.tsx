@@ -75,7 +75,7 @@ export const EditableSelect = ({
       <div
         className={cn(
           "inline-flex w-fit cursor-pointer items-center overflow-hidden rounded",
-          "border border-(--input-border) bg-(--input-bg)",
+          "border border-(--input-border) bg-(--select-bg)",
           classNames?.main,
         )}
         style={styles?.main}
@@ -124,7 +124,7 @@ export const EditableSelect = ({
                   placeholder={placeholders?.label}
                   id="label"
                   className={cn(
-                    "rounded border bg-(--input-bg) px-2 py-1 text-(--input-text)",
+                    "rounded border bg-(--select-bg) px-2 py-1 text-(--input-text)",
                     "focus:border-(--input-focus-border) focus:ring-1 focus:outline-none",
                     "dark:placeholder-(--input-placeholder-text)",
                     "border-(--input-border)",
@@ -145,7 +145,7 @@ export const EditableSelect = ({
                   placeholder={placeholders?.value}
                   id="value"
                   className={cn(
-                    "rounded border bg-(--input-bg) px-2 py-1 text-(--input-text)",
+                    "rounded border bg-(--select-bg) px-2 py-1 text-(--input-text)",
                     "focus:border-(input-focus-border) focus:ring-1 focus:outline-none",
                     "dark:placeholder-(--input-placeholder-text)",
                     "border-(--input-border)",
@@ -175,7 +175,7 @@ export const EditableSelect = ({
             boxShadow: "none",
           }}
           className={cn(
-            "cursor-pointer border-0 bg-(--input-bg) px-2 py-1 text-(--input-text)",
+            "cursor-pointer border-0 bg-(--select-bg) px-2 py-1 text-(--input-text)",
             "focus:ring-0 focus:outline-none",
             classNames?.select,
           )}
