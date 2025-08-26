@@ -1,4 +1,4 @@
-import type { Onomatopoeia, Translation } from "@prisma/client";
+import type { Translation } from "@prisma/client";
 import { twMerge } from "tailwind-merge";
 import clsx, { type ClassValue } from "clsx";
 import type z from "zod/v4";
