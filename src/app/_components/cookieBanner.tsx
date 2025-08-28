@@ -11,7 +11,9 @@ export const CookieBanner = () => {
   if (!showCookieBanner) return null;
 
   return (
-    <div
+    <aside
+      role="complementary"
+      aria-label="Cookies notice"
       className={cn(
         "fixed right-0 bottom-0 left-0 z-50 border-t",
         "border-(--banner-border) bg-(--banner-bg)/70 p-4 bg-blend-saturation",
@@ -62,6 +64,6 @@ export const CookieBanner = () => {
           OK
         </button>
       </div>
-    </div>
+    </aside>
   );
 };

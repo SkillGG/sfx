@@ -17,9 +17,9 @@ import { QuestionMarkSVG } from "./_components/questionMark";
 const PageLoad = () => {
   const { mode } = useTheme();
   return (
-    <div className={cn(mode)}>
+    <section className={cn(mode)} aria-busy="true" aria-live="polite">
       <Spinner className={cn("m-auto")} />
-    </div>
+    </section>
   );
 };
 
@@ -42,16 +42,16 @@ const List = () => {
     search.query?.startsWith("#dash")
   ) {
     return (
-      <div className={cn("py-12 text-center text-lg")}>
+      <section className={cn("py-12 text-center text-lg")}>
         <Link href="/creator" className={cn("text-(--regular-text)")}>
           Dashboard
         </Link>
-      </div>
+      </section>
     );
   }
 
   return (
-    <>
+    <section aria-label="Search results">
       {!sfxs || sfxs.length === 0 ? (
         <div
           className={cn("py-12 text-center text-lg", "text-(--regular-text)")}
@@ -89,7 +89,7 @@ const List = () => {
           }}
         />
       )}
-    </>
+    </section>
   );
 };
 
@@ -97,18 +97,19 @@ export const SearchPage = () => {
   const { mode, accent } = useTheme();
 
   return (
-    <div
+    <main
       className={cn(
         "flex h-screen w-full items-center justify-center bg-(--deeper-bg)",
         mode,
       )}
       data-accent={accent}
     >
-      <div
+      <section
         className={cn(
           "relative z-10 mx-auto flex w-full max-w-2xl flex-col gap-8 rounded-xl",
           "border border-(--regular-border) bg-(--main-bg)/80 p-8 shadow-lg",
         )}
+        aria-label="Search layout"
       >
         <Suspense fallback={<PageLoad key={"load"} />}>
           <SearchProvider>
@@ -117,7 +118,7 @@ export const SearchPage = () => {
               classNames={{ container: "max-w-sm" }}
             />
 
-            <div className={cn("flex items-center justify-between")}>
+            <header className={cn("flex items-center justify-between")}>
               <h1
                 className={cn(
                   "text-center text-4xl font-extrabold tracking-tight",
@@ -135,7 +136,7 @@ export const SearchPage = () => {
                 </small>
               </h1>
               <SearchBar />
-              <div className={cn("flex items-center gap-2")}>
+              <nav className={cn("flex items-center gap-2")} aria-label="Theme">
                 <AccentSwitch />
                 <DarkModeSwitch />
                 <button
@@ -151,14 +152,15 @@ export const SearchPage = () => {
                 >
                   <QuestionMarkSVG />
                 </button>
-              </div>
-            </div>
+              </nav>
+            </header>
+
             <hr className={cn("border-(--separator)")} />
             <CookieBanner />
             <List />
           </SearchProvider>
         </Suspense>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 };

@@ -20,6 +20,46 @@ const SearchContext = createContext<{
   setSearch: Dispatch<SetStateAction<SearchQuery>>;
 } | null>(null);
 
+export const parseSearchQuery = (query: string, stop: boolean): SearchQuery => {
+  const langRegex = /lang:(?<langs>(?:[a-z]{2,4},?)+)/gi;
+
+  const langs: string[] = [];
+
+  for (
+    let match = langRegex.exec(query);
+    !!match;
+    match = langRegex.exec(query)
+  ) {
+    if (match.groups?.langs) {
+      langs.push(...match.groups.langs.split(","));
+    }
+  }
+
+  const idRegex = /id:(?<id>\d+)/gi;
+  const idMatch = idRegex.exec(query);
+
+  const id = Number(idMatch?.groups?.id) || 0;
+
+  const value = query.replace(langRegex, "").replace(idRegex, "").trim();
+
+  return { query: value, langs, stop, id: id > 0 ? id : 0 };
+};
+
+export const queryToString = (query: SearchQuery): string => {
+  const qStr = query.query ?? "";
+
+  const langs = query.langs?.join(",") ?? "";
+
+  const langQ = langs.length > 0 ? `lang:${langs}` : "";
+
+  const idStr = `${(query.id ?? 0) > 0 ? `id:${query.id}` : ""}`;
+
+  const space1 = !!qStr ? " " : "";
+  const space2 = !!qStr || !!langs.length ? " " : "";
+
+  return `${qStr}${!!langQ ? space1 + langQ : ""}${!!idStr ? space2 + idStr : ""}`;
+};
+
 export const useSearch = () => {
   const context = useContext(SearchContext);
   if (!context)
@@ -67,6 +107,8 @@ export const SearchProvider = ({ children }: { children: React.ReactNode }) => {
         if (!!b) url.searchParams.set(k, b);
         else url.searchParams.delete(k);
       };
+
+      console.log(search);
 
       changeVal(newurl, "q", search.query ?? "");
       changeVal(newurl, "l", search.langs?.join(",") ?? "");

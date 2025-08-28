@@ -49,23 +49,28 @@ export const SFXListPanel = ({
   }
 
   return (
-    <div className={cn(classNames?.container)}>
+    <ul
+      className={cn(classNames?.container)}
+      aria-label="SFX results"
+      role="list"
+    >
       {sfxs.map((sfx) => {
         return (
-          <SFX
-            sfx={sfx}
-            editable={editable}
-            classNames={classNames?.sfxs}
-            key={`sfx_${sfx.id}`}
-            onRemove={async () => {
-              await onRemove?.(sfx);
-            }}
-            onSave={async (fx) => {
-              await onSave?.(sfx, fx);
-            }}
-          />
+          <li key={`sfx_${sfx.id}`} className={cn("list-none")}>
+            <SFX
+              sfx={sfx}
+              editable={editable}
+              classNames={classNames?.sfxs}
+              onRemove={async () => {
+                await onRemove?.(sfx);
+              }}
+              onSave={async (fx) => {
+                await onSave?.(sfx, fx);
+              }}
+            />
+          </li>
         );
       })}
-    </div>
+    </ul>
   );
 };

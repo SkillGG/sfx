@@ -24,7 +24,6 @@ export async function generateMetadata({
       siteName: "SFX Vault",
       url: "https://sfxvault.org",
     },
-    icons: [{ rel: "icon", url: "/favicon.ico" }],
   };
 
   // read route params

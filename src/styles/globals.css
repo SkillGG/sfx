@@ -30,7 +30,12 @@
 
   --separator: var(--accent-200);
 
-  .dark {
+  /* blog */
+  --blog-paragraph-text: var(--regular-text);
+  --blog-tag-bg: var(--button-neutral-bg);
+  --blog-tag-text: var(--button-neutral-text);
+
+  &.dark {
     --main-bg: var(--color-slate-800);
     --deeper-bg: var(--color-slate-900);
     --dialog-bg: var(--main-bg);
@@ -48,12 +53,17 @@
     --back-text: var(--accent-200);
     --back-hover-bg: var(--color-slate-600);
     --separator: var(--accent-700);
+
+    /* blog */
+    --blog-paragraph-text: var(--regular-text);
+    --blog-tag-bg: var(--button-neutral-bg);
+    --blog-tag-text: var(--accent-200);
   }
 
   --select-text: var(--accent-700);
   --select-bg: var(--input-bg);
 
-  .dark {
+  &.dark {
     --select-text: var(--accent-400);
     --select-bg: var(--color-slate-700);
   }
@@ -70,7 +80,7 @@
   --input-hover-text: var(--accent-700);
   --input-placeholder-text: var(--input-text);
 
-  .dark {
+  &.dark {
     --input-bg: var(--color-slate-700);
     @supports (color: color-mix(in lab, red, red)) {
       --input-bg: color-mix(in oklab, var(--color-slate-600) 50%, transparent);
@@ -87,7 +97,7 @@
   --input-error-border: var(--error-800);
   --input-warn-border: var(--error-700);
 
-  .dark {
+  &.dark {
     --input-error-border: var(--error-400);
     --input-warn-border: var(--error-400);
   }
@@ -98,7 +108,7 @@
   --button-remove-bg: var(--danger-600);
   --button-remove-hover-bg: var(--danger-400);
   --button-remove-text: var(--color-white);
-  .dark {
+  &.dark {
     --button-remove-bg: var(--danger-600);
     --button-remove-hover-bg: var(--danger-500);
     --button-remove-text: var(--color-white);
@@ -106,7 +116,7 @@
   --button-cancel-bg: var(--notice-700);
   --button-cancel-hover-bg: var(--notice-800);
   --button-cancel-text: var(--color-white);
-  .dark {
+  &.dark {
     --button-cancel-bg: var(--notice-600);
     --button-cancel-hover-bg: var(--notice-500);
     --button-cancel-text: var(--color-white);
@@ -115,7 +125,7 @@
   --button-neutral-hover-bg: var(--accent-400);
   --button-neutral-text: var(--accent-800);
   --button-neutral-inset-ring: var(--accent-400);
-  .dark {
+  &.dark {
     --button-neutral-bg: var(--accent-100);
     --button-neutral-hover-bg: var(--accent-50);
     --button-neutral-text: var(--accent-700);
@@ -123,7 +133,7 @@
   --button-muted-bg: var(--muted-300);
   --button-muted-hover-bg: var(--muted-400);
   --button-muted-text: var(--color-black);
-  .dark {
+  &.dark {
     --button-muted-bg: var(--muted-600);
     --button-muted-hover-bg: var(--muted-500);
     --button-muted-text: var(--color-white);
@@ -132,7 +142,7 @@
   --button-submit-hover-bg: var(--accent-400);
   --button-submit-text: var(--color-white);
   --button-submit-nobg-text: var(--accent-500);
-  .dark {
+  &.dark {
     --button-submit-bg: var(--accent-700);
     --button-submit-hover-bg: var(--accent-600);
     --button-submit-text: var(--color-white);
@@ -141,7 +151,7 @@
   --button-checkbox-checked-bg: var(--complement-500);
   --button-disabled-bg: var(--muted-400);
   --button-disabled-text: var(--color-gray-500);
-  .dark {
+  &.dark {
     --button-checkbox-checked-bg: var(--complement-500);
     --button-disabled-bg: var(--muted-400);
     --button-disabled-text: var(--color-gray-500);
@@ -156,7 +166,7 @@
   --banner-shadow:
     0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
 
-  .dark {
+  &.dark {
     --banner-bg: var(--deeper-bg);
     --banner-border: var(--regular-border);
     --banner-text: var(--regular-text);
@@ -176,7 +186,7 @@
   --sfx-def-text: var(--accent-700);
   --sfx-extra-text: var(--accent-400);
   --sfx-card-bg: var(--accent-50);
-  .dark {
+  &.dark {
     --sfx-text-text: var(--complement-100);
     --sfx-read-text: var(--accent-400);
     --sfx-lang-text: var(--accent-400);
@@ -191,7 +201,7 @@
   --sfx-header-text: var(--header-text);
   --sfx-label-text: var(--input-label-text);
   --sfx-label-error-text: var(--error-400);
-  .dark {
+  &.dark {
     --sfx-header-text: var(--header-text);
     --sfx-label-text: var(--input-label-text);
     --sfx-label-error-text: var(--error-400);
@@ -208,7 +218,7 @@
   --sfx-input-hover-bg: var(--color-slate-700);
   --sfx-input-error-border: var(--error-500);
   --sfx-input-error-text: var(--error-400);
-  .dark {
+  &.dark {
     --sfx-input-border: var(--input-border);
     --sfx-input-focus-border: var(--input-focus-border);
     --sfx-input-label-text: var(--input-label-text);
@@ -240,7 +250,7 @@
   --sfx-button-cancel-disabled-bg: var(--button-neutral-bg);
   --sfx-button-cancel-disabled-text: var(--button-disabled-text);
 
-  .dark {
+  &.dark {
     --sfx-button-edit-bg: var(--button-submit-bg);
     --sfx-button-edit-hover-bg: var(--button-submit-hover-bg);
     --sfx-button-edit-text: var(--button-submit-text);
@@ -263,7 +273,7 @@
   --sfx-reversed-border: var(--error-400);
   --sfx-tlfordeletion-border: var(--danger-400);
   --sfx-tlfordeletion-text: var(--danger-400);
-  .dark {
+  &.dark {
     --sfx-reversed-border: var(--error-400);
     --sfx-tlfordeletion-border: var(--danger-400);
     --sfx-tlfordeletion-text: var(--danger-400);
@@ -274,7 +284,7 @@
   --validationerror-light-bg: var(--error-200);
   --validationerror-text: var(--error-700);
 
-  .dark {
+  &.dark {
     --validationerror-light-bg: var(--error-200);
     --validationerror-text: var(--error-400);
   }

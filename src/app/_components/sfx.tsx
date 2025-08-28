@@ -245,17 +245,20 @@ const SFXCard = ({
   const { langs } = useSFXLangs();
 
   const usedSFX = useMemo(() => ({ ...sfx }), [sfx]);
+  const titleId = `sfx_${usedSFX.id}_title`;
 
   return (
-    <div
+    <article
       className={cn(
         "flex flex-col gap-2 rounded-lg border",
         "border-dashed border-(--regular-border)",
         "min-w-44 bg-(--sfx-card-bg)/50 px-4 py-3 shadow-sm shadow-(color:--accent-900)",
         classNames?.container,
       )}
+      aria-labelledby={titleId}
+      aria-label="SFX entry"
     >
-      <div
+      <header
         className={cn(
           "flex-rowitems-baseline flex gap-2",
           classNames?.topinfo?.container,
@@ -267,6 +270,7 @@ const SFXCard = ({
             "text-(--sfx-text-text)",
             classNames?.topinfo?.text,
           )}
+          id={titleId}
         >
           {usedSFX.text}
         </div>
@@ -293,21 +297,27 @@ const SFXCard = ({
           {env.NEXT_PUBLIC_DEVENV === "development" &&
             `[${isFinite(sfx.id) ? sfx.id : "NEW"}]`}
         </div>
-      </div>
+      </header>
 
       {tlExtra && (
-        <div
+        <section
           className={cn(
             "flex w-fit border-2 border-x-0 border-t-0 border-dashed",
             "border-(--sfx-tlextra-underline) px-1",
             "text-base text-(--sfx-tlextra-text)",
           )}
+          aria-labelledby={titleId}
+          aria-label="SFX translation info"
         >
           <span>{tlExtra}</span>
-        </div>
+        </section>
       )}
 
-      <div className={cn(classNames?.bottominfo?.container)}>
+      <section
+        className={cn(classNames?.bottominfo?.container)}
+        aria-labelledby={titleId}
+        aria-label="SFX details"
+      >
         <div
           className={cn(
             "whitespace-pre-wrap text-(--sfx-def-text)",
@@ -324,15 +334,17 @@ const SFXCard = ({
         >
           {parseSFXText(usedSFX.extra)}
         </div>
-      </div>
+      </section>
 
       {usedSFX.tls.length > 0 && (
         <>
-          <div
+          <section
             className={cn(
               "flex flex-wrap justify-center gap-2",
               classNames?.tls?.container,
             )}
+            aria-labelledby={titleId}
+            aria-label="SFX translation list"
           >
             {usedSFX.tls.map((tl) => {
               const isReversed = tl.additionalInfo?.startsWith("⏉");
@@ -359,10 +371,10 @@ const SFXCard = ({
                 />
               );
             })}
-          </div>
+          </section>
         </>
       )}
-    </div>
+    </article>
   );
 };
 
