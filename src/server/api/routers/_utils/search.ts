@@ -18,6 +18,8 @@ export const searchDBForSFX = async (
 ): Promise<CollapsedOnomatopoeia[]> => {
   if (search === "list") return [];
 
+  const query = search.query;
+
   const sfxs = await db.onomatopoeia.findMany({
     include: {
       ogTranslations: {
@@ -41,30 +43,30 @@ export const searchDBForSFX = async (
         {
           OR: [
             {
-              def: { contains: search.query },
+              def: { contains: query },
             },
             {
-              extra: { contains: search.query },
+              extra: { contains: query },
             },
             {
-              text: { contains: search.query },
+              text: { contains: query },
             },
-            { read: { contains: search.query } },
+            { read: { contains: query } },
             {
               ogTranslations: {
                 some: {
                   tlSFX: {
                     OR: [
                       {
-                        def: { contains: search.query },
+                        def: { contains: query },
                       },
                       {
-                        extra: { contains: search.query },
+                        extra: { contains: query },
                       },
                       {
-                        text: { contains: search.query },
+                        text: { contains: query },
                       },
-                      { read: { contains: search.query } },
+                      { read: { contains: query } },
                     ],
                   },
                 },
@@ -76,15 +78,15 @@ export const searchDBForSFX = async (
                   ogSFX: {
                     OR: [
                       {
-                        def: { contains: search.query },
+                        def: { contains: query },
                       },
                       {
-                        extra: { contains: search.query },
+                        extra: { contains: query },
                       },
                       {
-                        text: { contains: search.query },
+                        text: { contains: query },
                       },
-                      { read: { contains: search.query } },
+                      { read: { contains: query } },
                     ],
                   },
                 },
@@ -132,9 +134,9 @@ export const searchDBForSFX = async (
     );
 
     if (prevSFX.length) {
-      if (sfxContains(sfx, search.query)) {
+      if (sfxContains(sfx, query)) {
         const prevSFXToHide = prevSFX.filter((psfx) => {
-          return !sfxContains(psfx, search.query);
+          return !sfxContains(psfx, query);
         });
         if (prevSFXToHide.length > 0) {
           return [
