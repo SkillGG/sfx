@@ -2,9 +2,9 @@
 
 import { api } from "@/trpc/react";
 import { cn, type CollapsedOnomatopoeia, type Promisable } from "@/utils";
-import { SFX, type SFXClasses } from "./sfx";
+import { SFX, type SFXClasses } from ".";
 import type { ClassValue } from "clsx";
-import { Spinner } from "./spinner";
+import { Spinner } from "../spinner";
 import { useState } from "react";
 
 export type SeparatedOnomatopoeia = CollapsedOnomatopoeia & { separated: true };

@@ -4,7 +4,10 @@ import {
   type CollapsedTL,
   type Promisable,
 } from "@/utils";
-import { SFXLangSelect, type SFXLangSelectClassNames } from "./sfxLangSelect";
+import {
+  SFXLangSelect,
+  type SFXLangSelectClassNames,
+} from "./sfx/sfxLangSelect";
 import React, { useRef, useState } from "react";
 import type { ClassValue } from "clsx";
 import { TLCard, type TLClassNames } from "./tlCard";

@@ -8,7 +8,7 @@ import { cn } from "@/utils";
 import Link from "next/link";
 import SearchBar from "./_components/searchBar";
 import { Suspense } from "react";
-import { SFXListPanel } from "./_components/sfxList.";
+import { SFXListPanel } from "./_components/sfx/sfxList.";
 import { isValidSearch, SearchProvider, useSearch } from "./hooks/search";
 import { Spinner } from "./_components/spinner";
 import { CookieBanner } from "./_components/cookieBanner";

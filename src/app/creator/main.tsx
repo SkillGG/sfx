@@ -4,7 +4,7 @@ import { api } from "@/trpc/react";
 import { useEffect, useState } from "react";
 import { useTheme } from "../hooks/theme";
 import DarkModeSwitch, { AccentSwitch } from "../_components/darkModeSwitch";
-import { SFXLangSelect } from "../_components/sfxLangSelect";
+import { SFXLangSelect } from "../_components/sfx/sfxLangSelect";
 import { useRouter } from "next/navigation";
 import {
   cn,
@@ -15,7 +15,7 @@ import {
 import { TLEditorDirect } from "../_components/TLEditor";
 import type { SFXLang } from "../hooks/langs";
 import { useUser, type UserSessionData } from "../hooks/userlogin";
-import { SFXListPanel } from "../_components/sfxList.";
+import { SFXListPanel } from "../_components/sfx/sfxList.";
 import { LoadPageSpinner } from "../_components/loadPage";
 import { SFXEditPanel } from "../_components/sfxEditPanel";
 import { useValidation, type Validation } from "../hooks/validation";

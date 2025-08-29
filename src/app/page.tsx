@@ -15,10 +15,13 @@ export async function generateMetadata({
   const basicMetadata: Metadata = {
     metadataBase: new URL("https://sfxvault.org/"),
     title: "SFX Vault",
-    description: "An app for SFX Translations",
+    description:
+      "A searchable collection of manga sound effects (onomatopoeia) with translations across multiple languages.",
     openGraph: {
       type: "website",
-      description: "An app for SFX Translations",
+      title: `SFX Vault - a searchhable collection of manga sound effects with translations!`,
+      description:
+        "A searchable collection of manga sound effects (onomatopoeia) with translations across multiple languages.",
       determiner: "the",
       emails: ["contact@sfxvault.org"],
       siteName: "SFX Vault",
