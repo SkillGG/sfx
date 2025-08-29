@@ -35,6 +35,7 @@ export const TLEditorDirect = ({
   allowDeeperTLs,
 
   separate,
+  separateLabel,
 
   classNames,
 
@@ -46,6 +47,7 @@ export const TLEditorDirect = ({
   noTLs?: boolean;
   allowDeeperTLs?: boolean;
   separate?: (sfx: CollapsedOnomatopoeia) => void;
+  separateLabel?: string;
   classNames?: TLEditorClassNames;
   onChange: (tls: CollapsedTL[]) => Promisable<void>;
 }) => {
@@ -102,6 +104,7 @@ export const TLEditorDirect = ({
             tl={tl}
             removeLangs={[sfx?.language ?? ""]}
             separate={separate}
+            separateLabel={separateLabel}
             key={tl.id}
             noTLs={noTLs}
             classNames={classNames?.tls?.tl}

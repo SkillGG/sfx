@@ -7,6 +7,8 @@ import type { ClassValue } from "clsx";
 import { Spinner } from "./spinner";
 import { useState } from "react";
 
+export type SeparatedOnomatopoeia = CollapsedOnomatopoeia & { separated: true };
+
 export const SFXListPanel = ({
   editable,
   sfxList,
@@ -38,22 +40,22 @@ export const SFXListPanel = ({
     old: CollapsedOnomatopoeia,
     prev: CollapsedOnomatopoeia,
   ) => Promisable<CollapsedOnomatopoeia | void>;
-  onRemove?: (sfx: CollapsedOnomatopoeia) => Promisable<void>;
+  onRemove?: (
+    sfx: CollapsedOnomatopoeia | SeparatedOnomatopoeia,
+  ) => Promisable<void>;
 }) => {
   const dbSFX = api.sfx.listSFX.useQuery(
     { order: "desc", limit: onPage, skip: onPage * page },
     { enabled: !sfxList },
   );
 
-  const [separated, setSeparated] = useState<CollapsedOnomatopoeia[]>([]);
+  const [separated, setSeparated] = useState<SeparatedOnomatopoeia[]>([]);
 
   const sfxs = [...separated, ...(sfxList ?? dbSFX.data ?? [])];
 
-  console.log(separated);
-
   const separateFn = (sfx: CollapsedOnomatopoeia) => {
     console.log(sfx);
-    setSeparated((prev) => [...prev, sfx]);
+    setSeparated((prev) => [...prev, { ...sfx, separated: true }]);
   };
 
   if (dbSFX.isLoading || !sfxs) {
@@ -74,7 +76,17 @@ export const SFXListPanel = ({
         return (
           <li key={`sfx_${sfx.id}`} className={cn("list-none")}>
             <SFX
-              separate={allowSeparate ? separateFn : undefined}
+              labels={
+                "separated" in sfx
+                  ? {
+                      removeDefault: "Hide",
+                      removing: "Hide",
+                    }
+                  : { separate: "Show as standalone" }
+              }
+              separate={
+                allowSeparate && !("separated" in sfx) ? separateFn : undefined
+              }
               sfx={sfx}
               editable={editable}
               classNames={classNames?.sfxs}

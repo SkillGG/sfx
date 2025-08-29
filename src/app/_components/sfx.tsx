@@ -241,7 +241,10 @@ const SFXCard = ({
   sfx,
   tlExtra,
   classNames,
-}: SFXTLDiscriminator & { classNames?: SFXCardClasses; tlExtra?: string }) => {
+}: SFXTLDiscriminator & {
+  classNames?: SFXCardClasses;
+  tlExtra?: string;
+}) => {
   const { langs } = useSFXLangs();
 
   const usedSFX = useMemo(() => ({ ...sfx }), [sfx]);
@@ -423,6 +426,7 @@ export const SFXEdit = ({
   allowDeeperTLs,
 
   separate,
+  separateLabel,
 
   saveBtnState = "default",
   onSaveClicked,
@@ -455,6 +459,7 @@ export const SFXEdit = ({
   onSaveClicked?: () => Promisable<void>;
 
   separate?: (sfx: CollapsedOnomatopoeia) => void;
+  separateLabel?: string;
 
   onChange?: (
     action: (prev: CollapsedOnomatopoeia) => CollapsedOnomatopoeia,
@@ -585,6 +590,7 @@ export const SFXEdit = ({
                   noTLs={allowDeeperTLs ? false : true}
                   allowDeeperTLs={allowDeeperTLs}
                   separate={separate}
+                  separateLabel={separateLabel}
                   sfx={sfx}
                   onChange={(tls) => {
                     onChange?.((prev) => ({ ...prev, tls }));
@@ -658,6 +664,14 @@ export type SFXClasses = {
   };
 };
 
+export type SFXLabels = {
+  edit?: string;
+  removeDefault?: string;
+  removeSure?: string;
+  removing?: string;
+  separate?: string;
+};
+
 export const SFX = ({
   sfx,
   editable,
@@ -669,6 +683,9 @@ export const SFX = ({
   onSave,
   onRemove,
   tlExtra,
+  labels,
+
+  allowDeeperTLs,
 }: SFXTLDiscriminator & {
   classNames?: SFXClasses;
 
@@ -680,6 +697,9 @@ export const SFX = ({
   separate?: (sfx: CollapsedOnomatopoeia) => void;
   editable?: boolean | undefined;
   tlExtra?: string;
+  labels?: SFXLabels;
+
+  allowDeeperTLs?: boolean;
 }) => {
   const [sfxCopy, setSFXCopy] = useState<CollapsedOnomatopoeia>({ ...sfx });
 
@@ -693,6 +713,12 @@ export const SFX = ({
   const [removeSure, setRemoveSure] = useState(false);
 
   const [saveState, setSaveState] = useState<SaveState>("default");
+
+  const removeLabel = removing
+    ? (labels?.removing ?? "Removing...")
+    : removeSure
+      ? (labels?.removeSure ?? "Are you sure?")
+      : (labels?.removeDefault ?? "Remove");
 
   if (editable) {
     if (mode === "view")
@@ -725,7 +751,7 @@ export const SFX = ({
               onClick={() => (setMode("edit"), setSaveState("default"))}
               type="button"
             >
-              Edit
+              {labels?.edit ?? "Edit"}
             </button>
             <button
               className={cn(
@@ -751,11 +777,7 @@ export const SFX = ({
                 setRemoveSure(false);
               }}
             >
-              {removing
-                ? "Removing..."
-                : removeSure
-                  ? "Are you sure?"
-                  : "Remove"}
+              {removeLabel}
             </button>
           </div>
         </div>
@@ -764,6 +786,7 @@ export const SFX = ({
     return (
       <SFXEdit
         sfx={sfxCopy}
+        allowDeeperTLs={allowDeeperTLs}
         classNames={classNames?.edit}
         onCancel={() => {
           setSFXCopy(sfx);
@@ -777,6 +800,7 @@ export const SFX = ({
               }
             : undefined
         }
+        separateLabel={labels?.separate}
         onSaveClicked={async () => {
           setSaveState("waiting");
           await onSave?.(sfxCopy);

@@ -26,6 +26,7 @@ export const TLCard = ({
   removeOnCancel,
 
   separate,
+  separateLabel,
 
   noTLs,
   allowDeeperTLs,
@@ -43,6 +44,7 @@ export const TLCard = ({
   removeOnCancel?: boolean;
 
   separate?: (sfx: CollapsedOnomatopoeia) => void;
+  separateLabel?: string;
 
   noTLs?: boolean;
   allowDeeperTLs?: boolean;
@@ -197,7 +199,7 @@ export const TLCard = ({
                 separate(tl.sfx);
               }}
             >
-              Separate
+              {separateLabel ?? "Separate"}
             </button>
           )}
           <button

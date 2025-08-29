@@ -302,6 +302,9 @@ const CreatorPage = () => {
             }}
             onRemove={async (sfx) => {
               if (auth) {
+                if ("separated" in sfx) {
+                  return;
+                }
                 await removeSFX.mutateAsync({ id: sfx.id, auth });
                 await utils.sfx.listSFX.invalidate();
               }
