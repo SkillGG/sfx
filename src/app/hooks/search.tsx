@@ -8,12 +8,16 @@ import {
   createContext,
   useContext,
   useEffect,
+  useMemo,
   useState,
   type Dispatch,
   type SetStateAction,
 } from "react";
 
-export type SearchQuery = Exclude<SearchOptions, "list"> & { stop: boolean };
+export type SearchQuery = Exclude<SearchOptions, "list"> & {
+  stop: boolean;
+  linked?: boolean;
+};
 
 const SearchContext = createContext<{
   search: SearchQuery;
@@ -108,7 +112,7 @@ export const SearchProvider = ({ children }: { children: React.ReactNode }) => {
         else url.searchParams.delete(k);
       };
 
-      console.log(search);
+      console.log("value of search changed", search);
 
       changeVal(newurl, "q", search.query ?? "");
       changeVal(newurl, "l", search.langs?.join(",") ?? "");
@@ -124,9 +128,11 @@ export const SearchProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [router, search]);
 
+  const data = useMemo(() => {
+    return { search: lastValidSearch, setSearch };
+  }, [lastValidSearch]);
+
   return (
-    <SearchContext.Provider value={{ search: lastValidSearch, setSearch }}>
-      {children}
-    </SearchContext.Provider>
+    <SearchContext.Provider value={data}>{children}</SearchContext.Provider>
   );
 };

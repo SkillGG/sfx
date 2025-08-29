@@ -186,9 +186,6 @@ export const parseExtraFieldData = (str: string): ExtraFieldData | null => {
     ...obj,
   };
 
-  if (Object.entries(obj).length > 0)
-    console.log("Extra data from", str, ":", extraData);
-
   return extraData;
 };
 

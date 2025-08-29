@@ -19,6 +19,7 @@ import { SFXListPanel } from "../_components/sfx/sfxList.";
 import { LoadPageSpinner } from "../_components/loadPage";
 import { SFXEditPanel } from "../_components/sfxEditPanel";
 import { useValidation, type Validation } from "../hooks/validation";
+import { SearchProvider } from "../hooks/search";
 
 // SFX creator page
 const CreatorPage = () => {
@@ -284,39 +285,41 @@ const CreatorPage = () => {
             "h-full overflow-auto",
           )}
         >
-          <SFXListPanel
-            allowSeparate
-            editable
-            classNames={{
-              sfxs: {
-                default: {
-                  tls: {
-                    sfx: {
-                      default: {
-                        container: `basis-[45%] grow`,
+          <SearchProvider>
+            <SFXListPanel
+              allowSeparate
+              editable
+              classNames={{
+                sfxs: {
+                  default: {
+                    tls: {
+                      sfx: {
+                        default: {
+                          container: `basis-[45%] grow`,
+                        },
                       },
                     },
                   },
                 },
-              },
-            }}
-            onRemove={async (sfx) => {
-              if (auth) {
-                if ("separated" in sfx) {
-                  return;
+              }}
+              onRemove={async (sfx) => {
+                if (auth) {
+                  if ("separated" in sfx) {
+                    return;
+                  }
+                  await removeSFX.mutateAsync({ id: sfx.id, auth });
+                  await utils.sfx.listSFX.invalidate();
                 }
-                await removeSFX.mutateAsync({ id: sfx.id, auth });
-                await utils.sfx.listSFX.invalidate();
-              }
-            }}
-            onSave={async (old, sfx) => {
-              if (auth) {
-                console.log("Updating SFX", sfx);
-                await updateSFX.mutateAsync({ id: old.id, sfx, auth });
-                await utils.sfx.listSFX.invalidate();
-              }
-            }}
-          />
+              }}
+              onSave={async (old, sfx) => {
+                if (auth) {
+                  console.log("Updating SFX", sfx);
+                  await updateSFX.mutateAsync({ id: old.id, sfx, auth });
+                  await utils.sfx.listSFX.invalidate();
+                }
+              }}
+            />
+          </SearchProvider>
         </div>
         <div className={cn("flex justify-center gap-3")}>
           <button

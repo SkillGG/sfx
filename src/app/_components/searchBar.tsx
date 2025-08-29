@@ -32,7 +32,12 @@ const SearchBar = () => {
   }, [globalSearch.search.stop, search]);
 
   useEffect(() => {
-    globalSearch.setSearch(debouncedSearch);
+    if (!globalSearch.search.linked) globalSearch.setSearch(debouncedSearch);
+    else
+      setTimeout(
+        () => globalSearch.setSearch((p) => ({ ...p, linked: false })),
+        500,
+      );
   }, [debouncedSearch, globalSearch]);
 
   return (
