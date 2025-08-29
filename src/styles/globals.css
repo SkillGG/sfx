@@ -142,11 +142,13 @@
   --button-submit-hover-bg: var(--accent-400);
   --button-submit-text: var(--color-white);
   --button-submit-nobg-text: var(--accent-500);
+  --button-submit-nobg-hover-text: var(--accent-600);
   &.dark {
     --button-submit-bg: var(--accent-700);
     --button-submit-hover-bg: var(--accent-600);
     --button-submit-text: var(--color-white);
     --button-submit-nobg-text: var(--accent-300);
+    --button-submit-nobg-hover-text: var(--accent-200);
   }
   --button-checkbox-checked-bg: var(--complement-500);
   --button-disabled-bg: var(--muted-400);
