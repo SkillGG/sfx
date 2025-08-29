@@ -422,6 +422,8 @@ export const SFXEdit = ({
   noTLs,
   allowDeeperTLs,
 
+  separate,
+
   saveBtnState = "default",
   onSaveClicked,
 
@@ -451,6 +453,8 @@ export const SFXEdit = ({
 
   saveBtnState?: SaveState;
   onSaveClicked?: () => Promisable<void>;
+
+  separate?: (sfx: CollapsedOnomatopoeia) => void;
 
   onChange?: (
     action: (prev: CollapsedOnomatopoeia) => CollapsedOnomatopoeia,
@@ -580,6 +584,7 @@ export const SFXEdit = ({
                   removeOnCancel={false}
                   noTLs={allowDeeperTLs ? false : true}
                   allowDeeperTLs={allowDeeperTLs}
+                  separate={separate}
                   sfx={sfx}
                   onChange={(tls) => {
                     onChange?.((prev) => ({ ...prev, tls }));
@@ -659,6 +664,8 @@ export const SFX = ({
 
   classNames,
 
+  separate,
+
   onSave,
   onRemove,
   tlExtra,
@@ -669,6 +676,8 @@ export const SFX = ({
     prev: CollapsedOnomatopoeia,
   ) => Promisable<CollapsedOnomatopoeia | void>;
   onRemove?: () => Promisable<void>;
+
+  separate?: (sfx: CollapsedOnomatopoeia) => void;
   editable?: boolean | undefined;
   tlExtra?: string;
 }) => {
@@ -718,7 +727,6 @@ export const SFX = ({
             >
               Edit
             </button>
-
             <button
               className={cn(
                 "flex-1 cursor-pointer rounded bg-(--sfx-button-remove-bg) px-4 py-2 text-(--sfx-button-remove-text)",
@@ -761,6 +769,14 @@ export const SFX = ({
           setSFXCopy(sfx);
           setMode("view");
         }}
+        separate={
+          separate
+            ? (sfx) => {
+                separate(sfx);
+                setMode("view");
+              }
+            : undefined
+        }
         onSaveClicked={async () => {
           setSaveState("waiting");
           await onSave?.(sfxCopy);

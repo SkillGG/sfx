@@ -285,6 +285,7 @@ const CreatorPage = () => {
           )}
         >
           <SFXListPanel
+            allowSeparate
             editable
             classNames={{
               sfxs: {

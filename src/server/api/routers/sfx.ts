@@ -11,6 +11,11 @@ const authShape = object({ token: string(), deviceName: string() });
 const DEFAULT_LIMIT = 100;
 const DEFAULT_SKIP = 0;
 
+const properID = (n: number | string) =>
+  ((n: number) => {
+    return isFinite(n) && n > 0;
+  })(Number(n));
+
 export const sfxRouter = createTRPCRouter({
   listSFX: publicProcedure
     .input(SearchOptions.optional())
@@ -104,13 +109,13 @@ export const sfxRouter = createTRPCRouter({
         if (loggedIn.ok) {
           const sfxUpdates = [
             { text, def, extra, read, language, id },
-            ...allTLs.filter((s) => isFinite(s.sfx.id)).map((q) => q.sfx),
+            ...allTLs.filter((s) => properID(s.sfx.id)).map((q) => q.sfx),
           ];
 
           // update every SFX
           await Promise.all(
             sfxUpdates.map(async (sfx) => {
-              if (isFinite(sfx.id))
+              if (properID(sfx.id))
                 return await ctx.db.onomatopoeia.update({
                   where: { id: sfx.id },
                   data: {
@@ -132,9 +137,9 @@ export const sfxRouter = createTRPCRouter({
               continue;
             }
 
-            if (!isFinite(tl.id) || !isFinite(tl.sfx2Id)) {
+            if (!properID(tl.id) || !properID(tl.sfx2Id)) {
               await ctx.db.onomatopoeia.upsert({
-                where: { id: isFinite(tl.sfx.id) ? tl.sfx.id : -1 },
+                where: { id: properID(tl.sfx.id) ? tl.sfx.id : -1 },
                 create: {
                   def: tl.sfx.def,
                   read: tl.sfx.read,
@@ -232,7 +237,7 @@ export const sfxRouter = createTRPCRouter({
                 additionalInfo: tl.additionalInfo,
                 tlSFX: {
                   connectOrCreate: {
-                    where: { id: isFinite(tl.sfx.id) ? tl.sfx.id : -1 },
+                    where: { id: properID(tl.sfx.id) ? tl.sfx.id : -1 },
                     create: createCreateObject(tl.sfx),
                   },
                 },

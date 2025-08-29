@@ -1,8 +1,11 @@
+"use client";
+
 import { api } from "@/trpc/react";
 import { cn, type CollapsedOnomatopoeia, type Promisable } from "@/utils";
 import { SFX, type SFXClasses } from "./sfx";
 import type { ClassValue } from "clsx";
 import { Spinner } from "./spinner";
+import { useState } from "react";
 
 export const SFXListPanel = ({
   editable,
@@ -12,6 +15,8 @@ export const SFXListPanel = ({
   page = 0,
   onPage = 10,
 
+  allowSeparate,
+
   onSave,
   onRemove,
 }: {
@@ -20,6 +25,8 @@ export const SFXListPanel = ({
 
   page?: number;
   onPage?: number;
+
+  allowSeparate?: boolean;
 
   classNames?: {
     container?: ClassValue;
@@ -38,7 +45,16 @@ export const SFXListPanel = ({
     { enabled: !sfxList },
   );
 
-  const sfxs = sfxList ?? dbSFX.data;
+  const [separated, setSeparated] = useState<CollapsedOnomatopoeia[]>([]);
+
+  const sfxs = [...separated, ...(sfxList ?? dbSFX.data ?? [])];
+
+  console.log(separated);
+
+  const separateFn = (sfx: CollapsedOnomatopoeia) => {
+    console.log(sfx);
+    setSeparated((prev) => [...prev, sfx]);
+  };
 
   if (dbSFX.isLoading || !sfxs) {
     return (
@@ -58,11 +74,13 @@ export const SFXListPanel = ({
         return (
           <li key={`sfx_${sfx.id}`} className={cn("list-none")}>
             <SFX
+              separate={allowSeparate ? separateFn : undefined}
               sfx={sfx}
               editable={editable}
               classNames={classNames?.sfxs}
               onRemove={async () => {
                 await onRemove?.(sfx);
+                setSeparated((prev) => prev.filter((q) => q.id !== sfx.id));
               }}
               onSave={async (fx) => {
                 await onSave?.(sfx, fx);

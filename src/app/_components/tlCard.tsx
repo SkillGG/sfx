@@ -25,6 +25,8 @@ export const TLCard = ({
 
   removeOnCancel,
 
+  separate,
+
   noTLs,
   allowDeeperTLs,
 
@@ -39,6 +41,8 @@ export const TLCard = ({
 
   removeLangs?: string[];
   removeOnCancel?: boolean;
+
+  separate?: (sfx: CollapsedOnomatopoeia) => void;
 
   noTLs?: boolean;
   allowDeeperTLs?: boolean;
@@ -68,6 +72,7 @@ export const TLCard = ({
         <SFXEdit
           noTLs={noTLs}
           allowDeeperTLs={allowDeeperTLs}
+          separate={separate}
           removeLangs={removeLangs}
           classNames={{
             ...classNames?.sfxedit,
@@ -177,6 +182,24 @@ export const TLCard = ({
           >
             Edit
           </button>
+          {separate && (
+            <button
+              className={cn(
+                "flex-1 cursor-pointer rounded bg-(--button-submit-bg) px-4 py-2 text-(--button-submit-text)",
+                "transition-colors",
+                "hover:bg-(--button-submit-hover-bg)",
+                "focus:ring-2 focus:ring-(--input-focus-border) focus:ring-offset-2",
+                "focus:ring-offset-(color:--main-bg) focus:outline-none",
+                "disabled:bg-(--button-submit-disabled-bg) disabled:text-(--button-submit-disabled-text)",
+              )}
+              onClick={() => {
+                console.log("Separating", tl.sfx);
+                separate(tl.sfx);
+              }}
+            >
+              Separate
+            </button>
+          )}
           <button
             className={cn(
               "flex-1 cursor-pointer rounded bg-(--sfx-button-remove-bg) px-4 py-2 text-(--sfx-button-remove-text)",
