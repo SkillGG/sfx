@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Article1 } from "./article1";
 
 export type Article = {
   slug: string;
@@ -12,20 +13,7 @@ export type Article = {
 
 // Temporary in-memory articles. Replace with CMS or MDX later.
 export const articles: Article[] = [
-  {
-    author: "Skillu",
-    slug: "devlog1",
-    title: "[Devlog #1] Welcome to SFX Vault",
-    description: "How it all started",
-    date: new Date().toISOString(),
-    tags: ["devlog", "site", "app"],
-    content: (
-      <>
-        <h3 className="text-center text-lg">So. I made an app</h3>
-        <p>Ehe</p>
-      </>
-    ),
-  },
+  Article1,
 ];
 
 export const getArticles = () => articles;
