@@ -9,7 +9,7 @@ export const Article1: Article = {
     tags: ["devlog", "site", "app"],
     content: (
       <>
-        <h3 class name="text-lg">
+        <h3 className="text-lg">
           So I've made an app
         </h3>
         <p>
