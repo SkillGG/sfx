@@ -1,4 +1,4 @@
-import { Article } from ".";
+import type { Article } from ".";
 
 export const Article1: Article = {
     author: "Skillu",
