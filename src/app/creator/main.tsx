@@ -4,8 +4,8 @@ import { api } from "@/trpc/react";
 import { useEffect, useState } from "react";
 import { useTheme } from "../hooks/theme";
 import DarkModeSwitch, { AccentSwitch } from "../_components/darkModeSwitch";
-import { SFXLangSelect } from "../_components/sfxLangSelect";
-import { useRouter } from "next/navigation";
+import { SFXLangSelect } from "../_components/sfx/sfxLangSelect";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   cn,
   parseMemoryData,
@@ -15,14 +15,25 @@ import {
 import { TLEditorDirect } from "../_components/TLEditor";
 import type { SFXLang } from "../hooks/langs";
 import { useUser, type UserSessionData } from "../hooks/userlogin";
-import { SFXListPanel } from "../_components/sfxList.";
+import { SFXListPanel } from "../_components/sfx/sfxList";
 import { LoadPageSpinner } from "../_components/loadPage";
 import { SFXEditPanel } from "../_components/sfxEditPanel";
 import { useValidation, type Validation } from "../hooks/validation";
+import { useSearch } from "../hooks/search";
+import SearchBar from "../_components/searchBar";
 
 // SFX creator page
 const CreatorPage = () => {
+  const params = useSearchParams();
   const auth = useUser();
+  const search = useSearch(
+    {
+      id: params.get("id") ?? "",
+      q: params.get("q") ?? "",
+      l: params.get("l") ?? "",
+    },
+    { history: "replace" },
+  );
 
   const createSFX = api.sfx.createSFX.useMutation();
   const removeSFX = api.sfx.removeSFX.useMutation();
@@ -121,14 +132,16 @@ const CreatorPage = () => {
   return (
     <div
       className={cn(
-        "flex h-[100vh] w-full basis-1/2 flex-row",
-        "gap-8 bg-(--main-bg) p-4",
+        "flex h-[100vh] w-full basis-1/2 lg:flex-row",
+        "flex-col bg-(--main-bg) p-4 lg:gap-8",
         mode,
       )}
       data-accent={accent}
     >
       {/* Main creator form */}
-      <div className={cn("flex flex-1 flex-col gap-4")}>
+      <div
+        className={cn("flex max-h-screen flex-1 flex-col gap-4 lg:max-h-none")}
+      >
         <h1 className={cn("text-4xl font-bold text-(--header-text)")}>
           <div className={cn("flex w-full items-center justify-between")}>
             <button
@@ -268,10 +281,15 @@ const CreatorPage = () => {
       </div>
 
       {/* Side panel with SFX list */}
-      <div className={cn("flex flex-1 flex-col gap-4")}>
+      <hr className="my-2 border-(--regular-border) lg:hidden" />
+      <div
+        className={cn(
+          "grid max-h-[50lvh] flex-1 gap-4 pb-2 lg:flex lg:max-h-none lg:flex-col lg:pb-0",
+        )}
+      >
         <h2
           className={cn(
-            "py-2 text-center text-2xl font-bold",
+            "pb-1 text-center text-4xl font-bold",
             "text-(--header-text)",
           )}
         >
@@ -285,6 +303,7 @@ const CreatorPage = () => {
           )}
         >
           <SFXListPanel
+            customQuery={search.query}
             allowSeparate
             editable
             classNames={{
@@ -318,33 +337,17 @@ const CreatorPage = () => {
             }}
           />
         </div>
-        <div className={cn("flex justify-center gap-3")}>
-          <button
-            className={cn(
-              "basis-[45%] cursor-pointer rounded bg-(--button-submit-bg) px-4 py-2",
-              "text-(--button-submit-text) transition-colors",
-              "hover:bg-(--button-submit-hover-bg)",
-              "focus:ring-2 focus:ring-(--input-focus-border) focus:ring-offset-2 focus:outline-none",
-              "disabled:cursor-not-allowed disabled:opacity-50",
-            )}
-            onClick={handleCreate}
-            disabled
-          >
-            Prev page
-          </button>
-          <button
-            className={cn(
-              "basis-[45%] cursor-pointer rounded bg-(--button-submit-bg) px-4 py-2",
-              "text-(--button-submit-text) transition-colors",
-              "hover:bg-(--button-submit-hover-bg)",
-              "focus:ring-2 focus:ring-(--input-focus-border) focus:ring-offset-2 focus:outline-none",
-              "disabled:cursor-not-allowed disabled:opacity-50",
-            )}
-            onClick={handleCreate}
-            disabled
-          >
-            Next page
-          </button>
+        <div className={cn("row-start-2 flex justify-center gap-3")}>
+          <SearchBar
+            setSearch={search.onChange}
+            value={search.curValue}
+            classNames={{
+              container: "mx-auto w-full gap-4",
+              input: "w-full",
+              label:
+                "not-sr-only text-nowrap flex justify-center items-center text-(--label-text)",
+            }}
+          />
         </div>
       </div>
     </div>

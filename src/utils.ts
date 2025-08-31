@@ -288,3 +288,7 @@ export const parseMemoryData = (
     return null;
   }
 };
+
+export type SearchParams = Promise<
+  Record<string, string | string[] | undefined>
+>;

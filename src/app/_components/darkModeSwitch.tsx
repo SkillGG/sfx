@@ -38,6 +38,7 @@ const AccentSwitch = ({ className }: { className?: string }) => {
         className,
       )}
       aria-label="Switch accent color"
+      title={`${accent}`}
       onClick={() => {
         const idx = ACCENTS.indexOf(accent);
         setAccent(ACCENTS[(idx + 1) % ACCENTS.length] ?? "blue");

@@ -1,8 +1,8 @@
 "use client";
 
-import { EditableSelect } from "./editableSelect";
-import { useSFXLangs } from "../hooks/langs";
+import { useSFXLangs } from "@/app/hooks/langs";
 import { useEffect, useState } from "react";
+import { EditableSelect } from "../editableSelect";
 
 export type SFXLangSelectClassNames = React.ComponentProps<
   typeof EditableSelect

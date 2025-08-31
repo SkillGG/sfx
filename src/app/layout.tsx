@@ -7,6 +7,7 @@ import { SFXLangProvider } from "./hooks/langs";
 import { ThemeProvider } from "./hooks/theme";
 import { cn } from "@/utils";
 import type { Metadata } from "next";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 
 export const metadata: Metadata = {
   title: "SFX Vault",
@@ -34,9 +35,11 @@ export default function RootLayout({
     <html lang="en" className={cn(geist.variable)}>
       <body className={cn("m-0 h-full w-full bg-(color:--main-bg) p-0")}>
         <TRPCReactProvider>
-          <SFXLangProvider>
-            <ThemeProvider>{children}</ThemeProvider>
-          </SFXLangProvider>
+          <NuqsAdapter>
+            <SFXLangProvider>
+              <ThemeProvider>{children}</ThemeProvider>
+            </SFXLangProvider>
+          </NuqsAdapter>
         </TRPCReactProvider>
       </body>
     </html>

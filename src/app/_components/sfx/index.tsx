@@ -1,24 +1,20 @@
 import { cn, type CollapsedOnomatopoeia, type Promisable } from "@/utils";
 import React, {
-  Suspense,
+  useCallback,
   useEffect,
   useMemo,
   useRef,
   useState,
-  type ReactNode,
 } from "react";
-import { useSFXLangs } from "../hooks/langs";
+import { useSFXLangs } from "../../hooks/langs";
 import { SFXLangSelect } from "./sfxLangSelect";
 import { env } from "@/env";
-import { useValidation, type Validation } from "../hooks/validation";
-import { TLEditorDirect } from "./TLEditor";
+import { useValidation, type Validation } from "../../hooks/validation";
+import { TLEditorDirect } from "../TLEditor";
 import type { ClassValue } from "clsx";
-import Image from "next/image";
-import { api } from "@/trpc/react";
-import { Spinner } from "./spinner";
-import { AsyncImage } from "./asyncImage";
-import { SFXEditPanel } from "./sfxEditPanel";
-import { TLCard } from "./tlCard";
+import { SFXEditPanel } from "../sfxEditPanel";
+import { TLCard } from "../tlCard";
+import { parseExtraFieldData, parseSFXText } from "./utils";
 
 export type SaveState = "default" | "done" | "waiting";
 
@@ -43,200 +39,6 @@ type SFXCardClasses = {
   };
 };
 
-type SFXField =
-  | {
-      type: "string";
-      data: string;
-    }
-  | { type: "img"; data: string }
-  | { type: "sfxlink"; data: number }
-  | { type: "link"; data: string };
-
-type Arrayable<T> = T | T[];
-
-const sfxFieldFromString = (str: string): Arrayable<SFXField | null> => {
-  const imgRegex =
-    /(img:(?<img>.+))|(imgs:\[(?<imgs>[^,]+,?(?:[^,]+,?)+)\])/gi.exec(str);
-
-  if (!!imgRegex) {
-    if (!!imgRegex.groups?.img) {
-      return { type: "img", data: imgRegex.groups.img };
-    }
-    if (!!imgRegex.groups?.imgs) {
-      return imgRegex.groups.imgs.split(",").map((data) => {
-        return { data, type: "img" };
-      });
-    }
-  }
-
-  return { type: "string", data: str };
-};
-
-const GetLocalImg = ({
-  filename,
-  alt,
-  nonDB,
-}: {
-  filename: string;
-  alt: string;
-  nonDB?: React.ReactNode;
-}) => {
-  const [img] = nonDB
-    ? [filename]
-    : api.picture.getPicture.useSuspenseQuery(filename);
-
-  const popupRef = useRef<HTMLDialogElement>(null);
-
-  if (typeof img !== "string")
-    return (
-      <span className={cn("text-(--error-text)")} title={img.err.message}>
-        {alt}
-      </span>
-    );
-
-  const src = nonDB ? img : `data:image/png;base64,${img}`;
-
-  return (
-    <>
-      <div
-        className={cn(
-          "relative z-0 h-fit max-h-[100px] w-fit font-bold",
-          "before:items-center before:bg-(--accent-600)",
-          "before:text-black before:opacity-0",
-          "before:absolute before:hidden before:h-full",
-          "before:w-full before:justify-center before:content-['show']",
-          "hover:cursor-pointer hover:before:flex hover:before:opacity-75",
-          "text-center hover:before:wrap-anywhere hover:before:break-all",
-        )}
-        onClick={() => {
-          popupRef.current?.showPopover();
-        }}
-      >
-        {nonDB ? (
-          <AsyncImage
-            src={src}
-            fallback={nonDB}
-            alt={alt}
-            unoptimized
-            priority={true}
-            height={0}
-            width={0}
-            className={cn(
-              "-z-10 h-[100px] w-auto",
-              "relative hover:cursor-pointer",
-            )}
-            containerClassName={cn("w-fit h-full")}
-            style={{ position: "initial", width: "auto" }}
-          />
-        ) : (
-          <Image
-            src={src}
-            alt={alt}
-            width={0}
-            height={0}
-            unoptimized
-            className={cn("h-[100px] w-auto", "hover:cursor-pointer")}
-          />
-        )}
-      </div>
-      <dialog
-        ref={popupRef}
-        popover="auto"
-        className={cn(
-          "absolute top-0 right-0 left-0 cursor-pointer",
-          "z-20 h-full w-full items-center justify-center",
-          "bg-(--dialog-bg)/70",
-        )}
-        onClick={() => {
-          popupRef.current?.hidePopover();
-        }}
-      >
-        <div className={cn("flex h-full w-full items-center justify-center")}>
-          {nonDB ? (
-            <AsyncImage
-              fallback={nonDB}
-              width={0}
-              height={0}
-              containerClassName={cn("z-30")}
-              className={cn("z-40 h-auto w-auto")}
-              src={src}
-              alt={alt}
-              unoptimized
-              priority={true}
-              loader={({ src }) => src}
-            />
-          ) : (
-            <Image
-              width={0}
-              height={0}
-              unoptimized
-              className={cn("h-auto w-auto")}
-              src={src}
-              alt={alt}
-            />
-          )}
-        </div>
-      </dialog>
-    </>
-  );
-};
-
-const parseSFXText = (str?: string | null): ReactNode => {
-  const fields: SFXField[] =
-    str
-      ?.split(";")
-      .map((fieldstr) => {
-        return sfxFieldFromString(fieldstr);
-      })
-      .flat(1)
-      .filter((q) => !!q) ?? [];
-
-  // TODO: make extra and fields intertwine or add (sm:) option
-
-  return (
-    <>
-      {fields
-        .filter((q) => q.type === "string")
-        .map((q, i, arr) => {
-          return (
-            <React.Fragment key={q.data}>
-              {arr[0]?.data.startsWith("- ") && `${i + 1}. `}
-              {i === 0 && q.data.startsWith("- ")
-                ? q.data.substring(1)
-                : q.data}
-              {"\n"}
-            </React.Fragment>
-          );
-        })}
-      <div className={cn("flex justify-around gap-2")}>
-        {fields
-          .filter((q) => q.type === "img")
-          .map((q, i) => {
-            const alt = `Example #${i + 1}`;
-            const img = (
-              <Suspense
-                key={`img_${q.data}`}
-                fallback={<Spinner className={cn("h-[75px] w-[75px]")} />}
-              >
-                {q.data.startsWith("@") ? (
-                  <GetLocalImg alt={alt} filename={q.data.substring(1)} />
-                ) : (
-                  <GetLocalImg
-                    alt={alt}
-                    filename={q.data}
-                    nonDB={<Spinner className={cn("h-[75px] w-[75px]")} />}
-                  />
-                )}
-              </Suspense>
-            );
-
-            return img;
-          })}
-      </div>
-    </>
-  );
-};
-
 const SFXCard = ({
   sfx,
   tlExtra,
@@ -249,6 +51,17 @@ const SFXCard = ({
 
   const usedSFX = useMemo(() => ({ ...sfx }), [sfx]);
   const titleId = `sfx_${usedSFX.id}_title`;
+
+  const extraData = useCallback(
+    (field: string) => {
+      const efD = parseExtraFieldData(tlExtra ?? "");
+      if (efD) return { field: field, data: efD };
+      return undefined;
+    },
+    [tlExtra],
+  );
+
+  const tlExtraText = parseSFXText(`${sfx.id}`, "", extraData("tlExtra"));
 
   return (
     <article
@@ -285,7 +98,7 @@ const SFXCard = ({
               classNames?.topinfo?.reading,
             )}
           >
-            {parseSFXText(usedSFX.read)}
+            {parseSFXText(`${sfx.id}`, usedSFX.read, extraData("read"))}
           </div>
         )}
         <div
@@ -302,7 +115,7 @@ const SFXCard = ({
         </div>
       </header>
 
-      {tlExtra && (
+      {!!tlExtraText && (
         <section
           className={cn(
             "flex w-fit border-2 border-x-0 border-t-0 border-dashed",
@@ -312,7 +125,7 @@ const SFXCard = ({
           aria-labelledby={titleId}
           aria-label="SFX translation info"
         >
-          <span>{tlExtra}</span>
+          <span>{tlExtraText}</span>
         </section>
       )}
 
@@ -327,7 +140,7 @@ const SFXCard = ({
             classNames?.bottominfo?.def,
           )}
         >
-          {parseSFXText(usedSFX.def)}
+          {parseSFXText(`${sfx.id}`, usedSFX.def, extraData("def"))}
         </div>
         <div
           className={cn(
@@ -335,7 +148,7 @@ const SFXCard = ({
             classNames?.bottominfo?.extra,
           )}
         >
-          {parseSFXText(usedSFX.extra)}
+          {parseSFXText(`${sfx.id}`, usedSFX.extra, extraData("extra"))}
         </div>
       </section>
 

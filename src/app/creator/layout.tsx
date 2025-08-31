@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 import type { ReactNode } from "react";
 
 export const metadata: Metadata = {
@@ -15,6 +16,10 @@ export const metadata: Metadata = {
     url: "https://sfxvault.org/creator",
   },
 };
-export default function ClientLayout({ children }: { children: ReactNode }) {
-  return children;
+export default async function ClientLayout({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  return <NuqsAdapter>{children}</NuqsAdapter>;
 }
