@@ -4,12 +4,12 @@ import { api } from "@/trpc/react";
 import DarkModeSwitch, { AccentSwitch } from "./_components/darkModeSwitch";
 import AboutDialog from "./_components/aboutDialog";
 import { useTheme } from "./hooks/theme";
-import { cn } from "@/utils";
+import { cn, type SearchParams } from "@/utils";
 import Link from "next/link";
 import SearchBar from "./_components/searchBar";
 import { Suspense } from "react";
-import { SFXListPanel } from "./_components/sfx/sfxList.";
-import { isValidSearch, SearchProvider, useSearch } from "./hooks/search";
+import { SFXListPanel } from "./_components/sfx/sfxList";
+import { isValidSearch, type SearchQuery, useSearch } from "./hooks/search";
 import { Spinner } from "./_components/spinner";
 import { CookieBanner } from "./_components/cookieBanner";
 import { QuestionMarkSVG } from "./_components/questionMark";
@@ -23,23 +23,21 @@ const PageLoad = () => {
   );
 };
 
-const List = () => {
-  const { search } = useSearch();
-
+const List = ({ query }: { query: SearchQuery }) => {
   const { data: sfxs, isLoading } = api.sfx.listSFX.useQuery(
-    { query: search.query, langs: search.langs, id: search.id },
+    { query: query.query, langs: query.langs, id: query.id },
     {
-      enabled: isValidSearch(search, ["#creat", "#edit", "#new", "#dash"]),
+      enabled: isValidSearch(query, ["#creat", "#edit", "#new", "#dash"]),
     },
   );
 
   if (isLoading) return <PageLoad key={"load"} />;
 
   if (
-    search.query?.startsWith("#creat") ||
-    search.query?.startsWith("#edit") ||
-    search.query?.startsWith("#new") ||
-    search.query?.startsWith("#dash")
+    query.query?.startsWith("#creat") ||
+    query.query?.startsWith("#edit") ||
+    query.query?.startsWith("#new") ||
+    query.query?.startsWith("#dash")
   ) {
     return (
       <section className={cn("py-12 text-center text-lg")}>
@@ -93,7 +91,13 @@ const List = () => {
   );
 };
 
-export const SearchPage = () => {
+export const SearchPage = ({
+  searchParams,
+}: {
+  searchParams: Awaited<SearchParams>;
+}) => {
+  const search = useSearch(searchParams);
+
   const { mode, accent } = useTheme();
 
   return (
@@ -112,53 +116,51 @@ export const SearchPage = () => {
         aria-label="Search layout"
       >
         <Suspense fallback={<PageLoad key={"load"} />}>
-          <SearchProvider>
-            <AboutDialog
-              id="aboutDialog"
-              classNames={{ container: "max-w-sm" }}
-            />
+          <AboutDialog
+            id="aboutDialog"
+            classNames={{ container: "max-w-sm" }}
+          />
 
-            <header className={cn("flex items-center justify-between")}>
-              <h1
+          <header className={cn("flex items-center justify-between")}>
+            <h1
+              className={cn(
+                "text-center text-4xl font-extrabold tracking-tight",
+                "w-fit text-(--header-text)",
+              )}
+            >
+              SFX&nbsp;Vault
+              <small
                 className={cn(
-                  "text-center text-4xl font-extrabold tracking-tight",
-                  "w-fit text-(--header-text)",
+                  "block max-w-44 px-2 text-sm font-normal text-balance",
+                  "text-(--label-text)",
                 )}
               >
-                SFX&nbsp;Vault
-                <small
-                  className={cn(
-                    "block max-w-44 px-2 text-sm font-normal text-balance",
-                    "text-(--label-text)",
-                  )}
-                >
-                  SFX translations for use in manga!
-                </small>
-              </h1>
-              <SearchBar />
-              <nav className={cn("flex items-center gap-2")} aria-label="Theme">
-                <AccentSwitch />
-                <DarkModeSwitch />
-                <button
-                  type="button"
-                  aria-label="Open About dialog"
-                  popoverTarget="aboutDialog"
-                  popoverTargetAction="show"
-                  className={cn(
-                    "block h-full w-full rounded-full",
-                    "absolute top-2 right-2 h-6 w-6 cursor-pointer p-[3px]",
-                    "focus:ring-2 focus:ring-(color:--input-focus-border) focus:outline-none",
-                  )}
-                >
-                  <QuestionMarkSVG />
-                </button>
-              </nav>
-            </header>
+                SFX translations for use in manga!
+              </small>
+            </h1>
+            <SearchBar setSearch={search.onChange} value={search.curValue} />
+            <nav className={cn("flex items-center gap-2")} aria-label="Theme">
+              <AccentSwitch />
+              <DarkModeSwitch />
+              <button
+                type="button"
+                aria-label="Open About dialog"
+                popoverTarget="aboutDialog"
+                popoverTargetAction="show"
+                className={cn(
+                  "block h-full w-full rounded-full",
+                  "absolute top-2 right-2 h-6 w-6 cursor-pointer p-[3px]",
+                  "focus:ring-2 focus:ring-(color:--input-focus-border) focus:outline-none",
+                )}
+              >
+                <QuestionMarkSVG />
+              </button>
+            </nav>
+          </header>
 
-            <hr className={cn("border-(--separator)")} />
-            <CookieBanner />
-            <List />
-          </SearchProvider>
+          <hr className={cn("border-(--separator)")} />
+          <CookieBanner />
+          <List query={search.query} />
         </Suspense>
       </section>
     </main>

@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { SearchPage } from "./main";
 import { api } from "@/trpc/server";
+import type { SearchParams } from "@/utils";
 
 type Props = {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
+  searchParams: SearchParams;
 };
 
 const paramStr = (q: string | string[], joiner = ""): string =>
@@ -78,6 +79,6 @@ export async function generateMetadata({
   return basicMetadata;
 }
 
-export default function Home({}: Props) {
-  return <SearchPage />;
+export default async function Home({ searchParams }: Props) {
+  return <SearchPage searchParams={await searchParams} />;
 }

@@ -1,30 +1,51 @@
 "use client";
 
-import { type SearchOptions } from "@/utils";
-import { useRouter, useSearchParams } from "next/navigation";
-// darkmode hook, provider and context
-
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  type Dispatch,
-  type SetStateAction,
-} from "react";
+import { type SearchOptions, type SearchParams } from "@/utils";
+import { parseAsString, useQueryStates } from "nuqs";
+import { useCallback, useEffect, useState } from "react";
+import { useDebouncedCallback } from "use-debounce";
 
 export type SearchQuery = Exclude<SearchOptions, "list"> & {
   stop: boolean;
   linked?: boolean;
 };
 
-const SearchContext = createContext<{
-  search: SearchQuery;
-  setSearch: Dispatch<SetStateAction<SearchQuery>>;
-} | null>(null);
+export const getParamAsString = (
+  q: Awaited<SearchParams>[string],
+  {
+    ifArray,
+    defaultValue,
+    prefix,
+  }: {
+    ifArray?: (t: string[]) => string;
+    defaultValue?: string;
+    prefix?: string;
+  },
+): string => {
+  const def = defaultValue ?? "";
+  const dearr = ifArray ?? ((s) => s.join(","));
+  return !q
+    ? def
+    : Array.isArray(q)
+      ? `${prefix ?? ""}${dearr(q)}`
+      : `${prefix ?? ""}${q}`;
+};
 
-export const parseSearchQuery = (query: string, stop: boolean): SearchQuery => {
+export const searchParamsToQuery = (
+  params?: Awaited<SearchParams>,
+): SearchQuery | null => {
+  const q = getParamAsString(params?.q, {});
+  const id = getParamAsString(params?.id, { prefix: "id:" });
+  const l = getParamAsString(params?.l, { prefix: "lang:" });
+  const query = `${q}${q ? " " : ""}${id}${(q ?? id) ? " " : ""}${l}`;
+
+  return strToSearchQuery(query);
+};
+
+export const strToSearchQuery = (query?: string): SearchQuery | null => {
+  if (query === "") return { stop: false };
+  if (!query) return null;
+
   const langRegex = /lang:(?<langs>(?:[a-z]{2,4},?)+)/gi;
 
   const langs: string[] = [];
@@ -46,10 +67,14 @@ export const parseSearchQuery = (query: string, stop: boolean): SearchQuery => {
 
   const value = query.replace(langRegex, "").replace(idRegex, "").trim();
 
-  return { query: value, langs, stop, id: id > 0 ? id : 0 };
+  return { query: value, langs, stop: false, id: id > 0 ? id : 0 };
 };
 
-export const queryToString = (query: SearchQuery): string => {
+export const searchQueryToString = (
+  query: SearchQuery | null,
+): string | null => {
+  if (!query) return null;
+
   const qStr = query.query ?? "";
 
   const langs = query.langs?.join(",") ?? "";
@@ -64,17 +89,11 @@ export const queryToString = (query: SearchQuery): string => {
   return `${qStr}${!!langQ ? space1 + langQ : ""}${!!idStr ? space2 + idStr : ""}`;
 };
 
-export const useSearch = () => {
-  const context = useContext(SearchContext);
-  if (!context)
-    throw new Error("useSearch must be used within a SearchProvider");
-  return context;
-};
-
 export const isValidSearch = (
-  search: SearchQuery,
+  search?: SearchQuery | null,
   invalidStrings: string[] = [],
-) => {
+): search is SearchQuery => {
+  if (!search) return false;
   const qLength = search.query?.length ?? 0;
   const lLength = search.langs?.length ?? 0;
   const id = search.id ?? 0;
@@ -83,56 +102,78 @@ export const isValidSearch = (
   return qLength >= 3 || qLength === 0 || lLength > 0 || id > 0;
 };
 
-export const SearchProvider = ({ children }: { children: React.ReactNode }) => {
-  const queryParams = useSearchParams();
+export const useSearch = (
+  searchParams?: Awaited<SearchParams>,
+  options?: { history?: "push" | "replace" },
+) => {
+  const [states, setStates] = useQueryStates(
+    {
+      q: parseAsString,
+      l: parseAsString,
+      id: parseAsString,
+    },
+    { clearOnDefault: true, history: options?.history ?? "push" },
+  );
 
-  const router = useRouter();
+  const params = {
+    ...{ q: states.q ?? "", id: states.id ?? "", l: states.l ?? "" },
+    ...searchParams,
+  };
 
-  const langs = queryParams.get("l")?.split(",").filter(Boolean) ?? [];
-  const strId = queryParams.get("id") ?? "0";
-  const id = parseInt(strId) || 0;
+  const [searchStr, setSearch] = useState<string>(
+    searchQueryToString(searchParamsToQuery(params)) ?? "",
+  );
 
-  const [search, setSearch] = useState<SearchQuery>({
-    langs,
-    query: queryParams.get("q") ?? "",
-    id,
-    stop: true,
-  });
+  const [searchQuery, setSearchQuery] = useState<SearchQuery>({ stop: false });
 
-  const [lastValidSearch, setValidSearch] = useState(search);
+  const handleSearch = useCallback(
+    (newSearch: string): void => {
+      const query = strToSearchQuery(newSearch);
+      if (isValidSearch(query)) {
+        console.log("Searching it up!");
+        setSearchQuery(query);
+        const q = !!query?.query ? query.query : null;
+        const id = !!query?.id && query.id > 0 ? query.id.toString() : null;
+        const l =
+          query?.langs && query?.langs?.length > 0
+            ? query.langs.join(",")
+            : null;
+        void setStates({
+          q,
+          id,
+          l,
+        });
+      }
+    },
+    [setStates],
+  );
+
+  const search = useDebouncedCallback(handleSearch, 200);
 
   useEffect(() => {
-    if (isValidSearch(search)) {
-      setValidSearch(search);
+    search(searchStr);
+    const queries = strToSearchQuery(searchStr);
+    const q = !!queries?.query ? queries.query : null;
+    const id = !!queries?.id && queries.id > 0 ? queries.id.toString() : null;
+    const l =
+      queries?.langs && queries?.langs?.length > 0
+        ? queries.langs.join(",")
+        : null;
+    void setStates({
+      q,
+      id,
+      l,
+    });
+  }, [search, searchStr, setStates]);
 
-      const newurl = new URL(location.href);
+  useEffect(() => {
+    const str = searchQueryToString(searchParamsToQuery(searchParams)) ?? "";
+    setSearch(str);
+  }, [searchParams]);
 
-      const changeVal = (url: URL, k: string, b: string) => {
-        if (!!b) url.searchParams.set(k, b);
-        else url.searchParams.delete(k);
-      };
-
-      console.log("value of search changed", search);
-
-      changeVal(newurl, "q", search.query ?? "");
-      changeVal(newurl, "l", search.langs?.join(",") ?? "");
-      changeVal(
-        newurl,
-        "id",
-        Number(search.id) > 0 ? `${Number(search.id)}` : "",
-      );
-
-      console.log("newURL", newurl.toString());
-
-      router.replace(newurl.toString());
-    }
-  }, [router, search]);
-
-  const data = useMemo(() => {
-    return { search: lastValidSearch, setSearch };
-  }, [lastValidSearch]);
-
-  return (
-    <SearchContext.Provider value={data}>{children}</SearchContext.Provider>
-  );
+  return {
+    onChange: setSearch,
+    curValue: searchStr,
+    query: searchQuery,
+  };
 };

@@ -79,6 +79,13 @@
   --input-text: var(--accent-600);
   --input-hover-text: var(--accent-700);
   --input-placeholder-text: var(--input-text);
+  @supports (color: color-mix(in lab, red, red)) {
+    --input-placeholder-text: color-mix(
+      in oklab,
+      var(--input-text) 50%,
+      transparent
+    );
+  }
 
   &.dark {
     --input-bg: var(--color-slate-700);
@@ -92,6 +99,13 @@
     --input-text: var(--accent-300);
     --input-hover-text: var(--accent-100);
     --input-placeholder-text: var(--input-text);
+    @supports (color: color-mix(in lab, red, red)) {
+      --input-placeholder-text: color-mix(
+        in oklab,
+        var(--input-text) 50%,
+        transparent
+      );
+    }
   }
 
   --input-error-border: var(--error-800);

@@ -74,7 +74,7 @@ export const EditableSelect = ({
     <>
       <div
         className={cn(
-          "inline-flex w-fit cursor-pointer items-center overflow-hidden rounded",
+          "inline-flex w-fit cursor-pointer items-center rounded",
           "border border-(--input-border) bg-(--select-bg)",
           classNames?.main,
         )}
