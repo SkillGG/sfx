@@ -93,6 +93,10 @@ export const getEveryField = <T extends SFXField["type"]>(
 };
 
 export const sfxFieldFromString = (str: string): Arrayable<SFXField | null> => {
+  const strLines = str.split(";");
+
+  console.log(strLines);
+
   const imgArray: SFXField[] = getEveryField(
     /(img:(?<img>.+))|(imgs:\[(?<imgs>[^,]+,?(?:[^,]+,?)+)\])/gi,
     str,
