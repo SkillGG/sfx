@@ -101,13 +101,13 @@ describe("String parse - jump", () => {
             ...emptyFieldResult,
             // fail
             [to]: [
-              { hidden: false, type: "string", value: "b", index: 2 },
               {
                 hidden: false,
                 type: "string",
                 value: `[_${to}(1)]a`,
                 index: 1,
               },
+              { hidden: false, type: "string", value: "b", index: 2 },
             ],
           }
         : {

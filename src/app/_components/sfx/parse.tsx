@@ -47,36 +47,36 @@ export const stringToSFXFieldKey = (k: string): keyof SFXFieldsData | null => {
   return null;
 };
 
-export const parseLineAsJump = (str: string): JumpLineData | null => {
-  const rx = /^\[_(?<to>[a-z]+)\((?<index>\d+)\)\]$/.exec(str);
-  if (!rx) return null;
-  const toStr = rx.groups?.to;
-  if (!toStr) return null;
-  const to = stringToSFXFieldKey(toStr);
-  if (!to) return null;
-  const idx = rx.groups?.index;
-  if (!idx) return null;
-  const index = Number(idx);
-  if (isNaN(index) || index < 0 || !isFinite(index)) return null;
-  return { index, to };
-};
-
-export const parseRemoveLine = (str: string): RemoveLineData | null => {
-  const rx = /^\-(?<key>[a-z]+)\((?<index>\d+)\)$/i.exec(str);
-  if (!rx) return null;
-  const key = rx.groups?.key;
-  if (!key) return null;
-  const index = rx.groups?.index;
-  if (!index) return null;
-  const i = Number(index);
-  if (i <= 0 || !isFinite(i) || isNaN(i)) return null;
-  const kKey = stringToSFXFieldKey(key);
-  if (!kKey) return null;
-  return { index: i, key: kKey };
-};
-
-export const parseLineAsSFXField = (str: string): SFXField => {
-  return { type: "string", value: str, index: -1, hidden: false };
+export const Parser = {
+  asJump(str: string): JumpLineData | null {
+    const rx = /^\[_(?<to>[a-z]+)\((?<index>\d+)\)\]$/.exec(str);
+    if (!rx) return null;
+    const toStr = rx.groups?.to;
+    if (!toStr) return null;
+    const to = stringToSFXFieldKey(toStr);
+    if (!to) return null;
+    const idx = rx.groups?.index;
+    if (!idx) return null;
+    const index = Number(idx);
+    if (isNaN(index) || index < 0 || !isFinite(index)) return null;
+    return { index, to };
+  },
+  asHide(str: string): RemoveLineData | null {
+    const rx = /^\-(?<key>[a-z]+)\((?<index>\d+)\)$/i.exec(str);
+    if (!rx) return null;
+    const key = rx.groups?.key;
+    if (!key) return null;
+    const index = rx.groups?.index;
+    if (!index) return null;
+    const i = Number(index);
+    if (i <= 0 || !isFinite(i) || isNaN(i)) return null;
+    const kKey = stringToSFXFieldKey(key);
+    if (!kKey) return null;
+    return { index: i, key: kKey };
+  },
+  asString(str: string): SFXField {
+    return { type: "string", value: str, index: -1, hidden: false };
+  },
 };
 
 export const parseSFXFields = (
@@ -100,15 +100,23 @@ export const parseSFXFields = (
       .map<SFXField | null>((line) => {
         if (!line) return null;
 
-        const jump = parseLineAsJump(line);
+        const jump = Parser.asJump(line);
+
+        if (jump?.to === "read") {
+          const parsed = Parser.asString(line);
+          return {
+            ...parsed,
+            index: ++index,
+          };
+        }
 
         if (jump) {
           // TODO: figure this out
           return null;
         }
 
-        const parsed = parseLineAsSFXField(line);
-        return { ...parsed, index: parsed.index < 0 ? ++index : parsed.index };
+        const parsed = Parser.asString(line);
+        return { ...parsed, index: ++index };
       })
       .filter((q) => !!q) ?? [];
 
@@ -116,8 +124,8 @@ export const parseSFXFields = (
     .split(";")
     .map<SFXField | null>((line) => {
       if (!line) return null;
-      const parsed = parseLineAsSFXField(line);
-      return { ...parsed, index: parsed.index < 0 ? ++index : parsed.index };
+      const parsed = Parser.asString(line);
+      return { ...parsed, index: ++index };
     })
     .filter((q) => !!q);
 
@@ -126,8 +134,8 @@ export const parseSFXFields = (
       ?.split(";")
       .map<SFXField | null>((line) => {
         if (!line) return null;
-        const parsed = parseLineAsSFXField(line);
-        return { ...parsed, index: parsed.index < 0 ? ++index : parsed.index };
+        const parsed = Parser.asString(line);
+        return { ...parsed, index: ++index };
       })
       .filter((q) => !!q) ?? [];
 
@@ -136,7 +144,7 @@ export const parseSFXFields = (
       ?.split(";")
       .map<SFXField | null>((line) => {
         if (!line) return null;
-        const isRemoveLine = parseRemoveLine(line);
+        const isRemoveLine = Parser.asHide(line);
         if (isRemoveLine) {
           const data = fieldsData[isRemoveLine.key]?.find(
             (_, i) => i + 1 === isRemoveLine.index,
@@ -144,10 +152,10 @@ export const parseSFXFields = (
           if (data) data.hidden = true;
           return null;
         }
-        const parsed = parseLineAsSFXField(line);
+        const parsed = Parser.asString(line);
         return {
           ...parsed,
-          index: parsed.index < 0 ? ++index : parsed.index,
+          index: ++index,
         };
       })
       .filter((q) => !!q) ?? [];
