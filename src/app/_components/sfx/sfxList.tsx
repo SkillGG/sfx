@@ -4,11 +4,13 @@ import { api } from "@/trpc/react";
 import { cn, type CollapsedOnomatopoeia, type Promisable } from "@/utils";
 import { SFX, type SFXClasses } from ".";
 import type { ClassValue } from "clsx";
-import { Spinner } from "../spinner";
 import { useState } from "react";
 import type { SearchQuery } from "@/app/hooks/search";
 
 export type SeparatedOnomatopoeia = CollapsedOnomatopoeia & { separated: true };
+
+export const DEFAULT_PAGE = 0;
+export const DEFAULT_ON_PAGE = 10;
 
 export const SFXListPanel = ({
   editable,
@@ -16,8 +18,8 @@ export const SFXListPanel = ({
   customQuery,
 
   classNames,
-  page = 0,
-  onPage = 10,
+  page = DEFAULT_PAGE,
+  onPage = DEFAULT_ON_PAGE,
 
   allowSeparate,
 
@@ -47,27 +49,23 @@ export const SFXListPanel = ({
     sfx: CollapsedOnomatopoeia | SeparatedOnomatopoeia,
   ) => Promisable<void>;
 }) => {
-  const dbSFX = api.sfx.listSFX.useQuery(
-    { ...customQuery, order: "desc", limit: onPage, skip: onPage * page },
-    { enabled: !sfxList },
-  );
+  const [dbSFX] = sfxList
+    ? ([sfxList] as const)
+    : api.sfx.listSFX.useSuspenseQuery({
+        ...customQuery,
+        order: "desc",
+        limit: onPage,
+        skip: onPage * page,
+      });
 
   const [separated, setSeparated] = useState<SeparatedOnomatopoeia[]>([]);
 
-  const sfxs = [...separated, ...(sfxList ?? dbSFX.data ?? [])];
+  const sfxs = [...separated, ...dbSFX];
 
   const separateFn = (sfx: CollapsedOnomatopoeia) => {
     console.log(sfx);
     setSeparated((prev) => [...prev, { ...sfx, separated: true }]);
   };
-
-  if (dbSFX.isLoading || !sfxs) {
-    return (
-      <div className={(cn(classNames?.loading), "flex h-full")}>
-        <Spinner className={cn("mx-auto my-auto")} />
-      </div>
-    );
-  }
 
   return (
     <ul

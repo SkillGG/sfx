@@ -2,14 +2,9 @@ import { api } from "@/trpc/react";
 import { cn } from "@/utils";
 import type { ClassValue } from "clsx";
 import Link from "next/link";
+import { memo } from "react";
 
-export const SFXLink = ({
-  id,
-  className,
-}: {
-  id: number;
-  className?: ClassValue;
-}) => {
+const SFXLink = ({ id, className }: { id: number; className?: ClassValue }) => {
   const [[sfx]] = api.sfx.listSFX.useSuspenseQuery({ id });
   if (!sfx) return null;
 
@@ -25,3 +20,7 @@ export const SFXLink = ({
     </>
   );
 };
+
+export default memo(SFXLink, (prev, next) => {
+  return prev.id === next.id;
+});

@@ -1,7 +1,7 @@
 "use client";
 
 import { api } from "@/trpc/react";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useTheme } from "../hooks/theme";
 import DarkModeSwitch, { AccentSwitch } from "../_components/darkModeSwitch";
 import { SFXLangSelect } from "../_components/sfx/sfxLangSelect";
@@ -21,6 +21,7 @@ import { SFXEditPanel } from "../_components/sfxEditPanel";
 import { useValidation, type Validation } from "../hooks/validation";
 import { useSearch } from "../hooks/search";
 import SearchBar from "../_components/searchBar";
+import { Spinner } from "../_components/spinner";
 
 // SFX creator page
 const CreatorPage = () => {
@@ -302,40 +303,42 @@ const CreatorPage = () => {
             "h-full overflow-auto",
           )}
         >
-          <SFXListPanel
-            customQuery={search.query}
-            allowSeparate
-            editable
-            classNames={{
-              sfxs: {
-                default: {
-                  tls: {
-                    sfx: {
-                      default: {
-                        container: `basis-[45%] grow`,
+          <Suspense fallback={<Spinner className={"m-auto"} />}>
+            <SFXListPanel
+              customQuery={search.query}
+              allowSeparate
+              editable
+              classNames={{
+                sfxs: {
+                  default: {
+                    tls: {
+                      sfx: {
+                        default: {
+                          container: `basis-[45%] grow`,
+                        },
                       },
                     },
                   },
                 },
-              },
-            }}
-            onRemove={async (sfx) => {
-              if (auth) {
-                if ("separated" in sfx) {
-                  return;
+              }}
+              onRemove={async (sfx) => {
+                if (auth) {
+                  if ("separated" in sfx) {
+                    return;
+                  }
+                  await removeSFX.mutateAsync({ id: sfx.id, auth });
+                  await utils.sfx.listSFX.invalidate();
                 }
-                await removeSFX.mutateAsync({ id: sfx.id, auth });
-                await utils.sfx.listSFX.invalidate();
-              }
-            }}
-            onSave={async (old, sfx) => {
-              if (auth) {
-                console.log("Updating SFX", sfx);
-                await updateSFX.mutateAsync({ id: old.id, sfx, auth });
-                await utils.sfx.listSFX.invalidate();
-              }
-            }}
-          />
+              }}
+              onSave={async (old, sfx) => {
+                if (auth) {
+                  console.log("Updating SFX", sfx);
+                  await updateSFX.mutateAsync({ id: old.id, sfx, auth });
+                  await utils.sfx.listSFX.invalidate();
+                }
+              }}
+            />
+          </Suspense>
         </div>
         <div className={cn("row-start-2 flex justify-center gap-3")}>
           <SearchBar
