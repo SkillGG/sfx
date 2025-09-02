@@ -68,24 +68,32 @@ const List = ({ query }: { query: SearchQuery }) => {
           And I&apos;ll add it asap
         </div>
       ) : (
-        <SFXListPanel
-          sfxList={sfxs}
-          classNames={{
-            container:
-              "max-h-[70dvh] overflow-auto px-2 py-1 flex flex-col gap-2",
-            sfxs: {
-              default: {
-                tls: {
-                  sfx: {
-                    default: {
-                      container: "basis-[45%] grow",
+        <Suspense
+          fallback={
+            <div className={"flex h-full"}>
+              <Spinner className={cn("mx-auto my-auto")} />
+            </div>
+          }
+        >
+          <SFXListPanel
+            sfxList={sfxs}
+            classNames={{
+              container:
+                "max-h-[70dvh] overflow-auto px-2 py-1 flex flex-col gap-2",
+              sfxs: {
+                default: {
+                  tls: {
+                    sfx: {
+                      default: {
+                        container: "basis-[45%] grow",
+                      },
                     },
                   },
                 },
               },
-            },
-          }}
-        />
+            }}
+          />
+        </Suspense>
       )}
     </section>
   );

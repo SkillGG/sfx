@@ -1,7 +1,7 @@
 import React, { Suspense, type ReactNode } from "react";
 import { Spinner } from "../spinner";
 import { cn } from "@/utils";
-import { SFXLink } from "./sfxLink";
+import SFXLink from "./sfxLink";
 import { LocalImg } from "./localImg";
 
 export type SFXField =
@@ -93,10 +93,6 @@ export const getEveryField = <T extends SFXField["type"]>(
 };
 
 export const sfxFieldFromString = (str: string): Arrayable<SFXField | null> => {
-  const strLines = str.split(";");
-
-  console.log(strLines);
-
   const imgArray: SFXField[] = getEveryField(
     /(img:(?<img>.+))|(imgs:\[(?<imgs>[^,]+,?(?:[^,]+,?)+)\])/gi,
     str,
@@ -219,7 +215,7 @@ export const parseSFXText = (
   const sfxLinkFields = fields.filter((q) => q.type == "sfxlink");
 
   return (
-    <>
+    <React.Fragment key={key}>
       {fields
         .filter((q) => q.type === "string")
         .filter(
@@ -240,7 +236,7 @@ export const parseSFXText = (
           );
         })}
       {sfxLinkFields.length > 0 && (
-        <Suspense fallback={<Spinner className={cn("size-[1rem] border-2")} />}>
+        <>
           See also:
           {sfxLinkFields
             .reduce<number[]>((arr, q) => [...arr, q.data], [])
@@ -253,7 +249,7 @@ export const parseSFXText = (
                 />
               );
             })}
-        </Suspense>
+        </>
       )}
       <div className={cn("mt-1 flex justify-around gap-2")}>
         {fields
@@ -280,6 +276,6 @@ export const parseSFXText = (
             return img;
           })}
       </div>
-    </>
+    </React.Fragment>
   );
 };
