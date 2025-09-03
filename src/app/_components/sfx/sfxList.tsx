@@ -5,7 +5,7 @@ import { cn, type CollapsedOnomatopoeia, type Promisable } from "@/utils/utils";
 import { SFX, type SFXClasses } from ".";
 import type { ClassValue } from "clsx";
 import { useState } from "react";
-import type { SearchQuery } from "@/app/hooks/search";
+import type { SearchQuery } from "@/utils/searchUtils";
 
 export type SeparatedOnomatopoeia = CollapsedOnomatopoeia & { separated: true };
 

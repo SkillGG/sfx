@@ -8,9 +8,6 @@ type Props = {
   searchParams: SearchParams;
 };
 
-const paramStr = (q: string | string[], joiner = ""): string =>
-  typeof q === "string" ? q : q.join(joiner);
-
 export async function generateMetadata({
   searchParams,
 }: Props): Promise<Metadata> {
