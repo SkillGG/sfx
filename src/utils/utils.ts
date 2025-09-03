@@ -1,4 +1,4 @@
-import type { Translation } from "@prisma/client";
+import type { Language, Translation } from "@prisma/client";
 import { twMerge } from "tailwind-merge";
 import clsx, { type ClassValue } from "clsx";
 import type z from "zod/v4";
@@ -294,3 +294,16 @@ export type SearchParams = Promise<
 >;
 
 export const noop = () => void 0;
+
+export type LangObject = Record<string, string>;
+
+export const toLangObject = (l: Language[]): LangObject => {
+  const ret: LangObject = {};
+  for (const { id, name } of l) ret[id] = name;
+  return ret;
+};
+
+export const IMAGE_SIZE = {
+  width: 600,
+  height: 600 * 0.5,
+};

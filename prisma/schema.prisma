@@ -25,7 +25,8 @@ model Onomatopoeia {
     searchdef   String
     searchextra String?
 
-    language String
+    language   Language @relation(fields: [languageId], references: [id])
+    languageId String
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -53,6 +54,12 @@ model Translation {
 
     @@index([sfx1Id])
     @@index([sfx2Id])
+}
+
+model Language {
+    id           String         @id
+    name         String
+    Onomatopoeia Onomatopoeia[]
 }
 
 model UserSession {

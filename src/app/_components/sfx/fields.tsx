@@ -2,7 +2,7 @@ import { cn } from "@/utils/utils";
 import { Suspense } from "react";
 import { LocalImg } from "./localImg";
 import { Spinner } from "../spinner";
-import type { SFXField } from "@/utils/sfxParse";
+import type { SFXField } from "@/utils/parse/sfxParse";
 
 export const SFXFieldPanel = ({ field }: { field: SFXField }) => {
   switch (field.type) {

@@ -1,3 +1,5 @@
+"use client";
+
 import { cn, type CollapsedOnomatopoeia, type Promisable } from "@/utils/utils";
 import React, {
   useCallback,
@@ -14,30 +16,13 @@ import { TLEditorDirect } from "../TLEditor";
 import type { ClassValue } from "clsx";
 import { SFXEditPanel } from "../sfxEditPanel";
 import { TLCard } from "../tlCard";
-import { parseExtraFieldData, parseSFXText } from "./utils";
-
-export type SaveState = "default" | "done" | "waiting";
-
-type SFXTLDiscriminator = { sfx: CollapsedOnomatopoeia };
-
-type SFXCardClasses = {
-  container?: ClassValue;
-  topinfo?: {
-    container?: ClassValue;
-    text?: ClassValue;
-    reading?: ClassValue;
-    language?: ClassValue;
-  };
-  bottominfo?: {
-    container?: ClassValue;
-    def?: ClassValue;
-    extra?: ClassValue;
-  };
-  tls?: {
-    container?: ClassValue;
-    sfx?: SFXClasses;
-  };
-};
+import {
+  parseExtraFieldData,
+  parseSFXText,
+  type SaveState,
+  type SFXCardClasses,
+  type SFXTLDiscriminator,
+} from "./utils";
 
 const SFXCard = ({
   sfx,

@@ -21,7 +21,7 @@ export const SFXLangSelect = ({
   onChange: (lang: string) => void;
   classNames?: SFXLangSelectClassNames;
 }) => {
-  const { langs, setLangs } = useSFXLangs();
+  const { langs } = useSFXLangs();
 
   const [selectedValue, setSelectedValue] = useState(
     removeValues?.includes(value)
@@ -60,7 +60,7 @@ export const SFXLangSelect = ({
         value: code,
       }))}
       onAdd={(item) => {
-        setLangs((prev) => [...prev, { name: item.label, code: item.value }]);
+        // fix adding languages
         onChange(item.value);
       }}
       addTitle="Add Language"

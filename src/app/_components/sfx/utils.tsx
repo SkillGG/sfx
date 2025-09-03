@@ -1,8 +1,33 @@
 import React, { Suspense, type ReactNode } from "react";
 import { Spinner } from "../spinner";
-import { cn } from "@/utils/utils";
+import { cn, type CollapsedOnomatopoeia } from "@/utils/utils";
 import SFXLink from "./sfxLink";
 import { LocalImg } from "./localImg";
+import type { ClassValue } from "clsx";
+import type { SFXClasses } from ".";
+
+export type SaveState = "default" | "done" | "waiting";
+
+export type SFXTLDiscriminator = { sfx: CollapsedOnomatopoeia };
+
+export type SFXCardClasses = {
+  container?: ClassValue;
+  topinfo?: {
+    container?: ClassValue;
+    text?: ClassValue;
+    reading?: ClassValue;
+    language?: ClassValue;
+  };
+  bottominfo?: {
+    container?: ClassValue;
+    def?: ClassValue;
+    extra?: ClassValue;
+  };
+  tls?: {
+    container?: ClassValue;
+    sfx?: SFXClasses;
+  };
+};
 
 export type SFXField =
   | {

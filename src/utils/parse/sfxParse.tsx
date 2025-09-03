@@ -287,7 +287,7 @@ export const parseSFXFields = (
 
   if (log)
     console.log(
-      "Going into parsing:\n",
+      "Going into special field sorting:\n",
       "fields:",
       fieldsData,
       "\n",
@@ -375,7 +375,13 @@ export const parseSFXFields = (
     if (!f) continue;
 
     const obj = f.find((_, i) => i === relIndex);
-    if (obj) obj.hidden = true;
+    if (obj) {
+      const children = f.filter((q) =>
+        obj.index % 1 === 0 ? q.index === obj.index + 0.5 : false,
+      );
+      children.forEach((c) => (c.hidden = true));
+      obj.hidden = true;
+    }
   }
 
   print("Result:", fieldsData);
