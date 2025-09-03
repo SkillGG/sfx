@@ -5,10 +5,9 @@ import { Geist } from "next/font/google";
 import { TRPCReactProvider } from "@/trpc/react";
 import { SFXLangProvider } from "./hooks/langs";
 import { ThemeProvider } from "./hooks/theme";
-import { cn, type SearchParams } from "@/utils/utils";
+import { cn } from "@/utils/utils";
 import type { Metadata } from "next";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
-import { searchParamsToQuery, searchQueryToString } from "@/utils/searchUtils";
 
 export const metadata: Metadata = {
   title: "SFX Vault",

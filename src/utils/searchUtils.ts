@@ -65,6 +65,17 @@ export const strToSearchQuery = (query?: string): SearchQuery | null => {
   return { query: value, langs, stop: false, id: id > 0 ? id : 0 };
 };
 
+export const searchQueryToParams = (
+  query: SearchQuery | null,
+): Awaited<SearchParams> | null => {
+  if (!query) return query;
+  const searchParams: Awaited<SearchParams> = {};
+  if (query.query) searchParams.q = query.query;
+  if (query.id) searchParams.id = `${query.id}`;
+  if (query.langs?.length) searchParams.l = `${query.langs.join(",")}`;
+  return searchParams;
+};
+
 export const searchQueryToString = (
   query: SearchQuery | null,
 ): string | null => {

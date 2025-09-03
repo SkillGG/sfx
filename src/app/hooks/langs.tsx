@@ -1,6 +1,7 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { api } from "@/trpc/react";
+import { createContext, useContext, useEffect } from "react";
 
 export type SFXLang = { name: string; code: string };
 
@@ -18,10 +19,12 @@ const DEFAULT_LANGUAGES = [
 
 const SFXLangs = createContext<{
   langs: SFXLang[];
-  setLangs: (langs: SFXLang[] | ((prev: SFXLang[]) => SFXLang[])) => void;
+  setLangs: (
+    langs: SFXLang[] | ((prev: SFXLang[]) => SFXLang[]),
+  ) => Promise<void>;
 }>({
   langs: [],
-  setLangs: (a) => a,
+  setLangs: async () => void 0,
 });
 
 export const useSFXLangs = () => {
@@ -35,42 +38,40 @@ export const SFXLangProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
-  const [langs, setLangs] = useState<SFXLang[]>(DEFAULT_LANGUAGES);
+  const { data } = api.sfx.listLangs.useQuery();
+
+  const utils = api.useUtils();
+
+  const addLang = api.sfx.addLang.useMutation();
 
   useEffect(() => {
-    const lsLangs = localStorage.getItem("langs");
-    if (lsLangs) {
-      // check typing
-      const parsedLangs: unknown = JSON.parse(lsLangs);
-      if (
-        Array.isArray(parsedLangs) &&
-        parsedLangs.every(
-          (q: unknown): q is SFXLang =>
-            typeof q === "object" &&
-            !!q &&
-            "name" in q &&
-            "code" in q &&
-            typeof q.name === "string" &&
-            typeof q.code === "string",
-        )
-      ) {
-        if (parsedLangs.length === 0) return;
-        setLangs(parsedLangs);
-      }
+    if (data?.length === 0) {
+      // seed with default langs
+
+      console.log("Populating languages!");
+
+      void Promise.all(
+        DEFAULT_LANGUAGES.map((lang) => {
+          return addLang.mutateAsync({ id: lang.code, name: lang.name });
+        }),
+      ).then(() => {
+        return utils.invalidate();
+      });
     }
-  }, []);
+  }, [addLang, data, utils]);
 
-  useEffect(() => {
-    localStorage.setItem("langs", JSON.stringify(langs));
-  }, [langs]);
+  data?.sort(
+    (a, b) =>
+      DEFAULT_LANGUAGES.findIndex((q) => q.code === a.id) -
+      DEFAULT_LANGUAGES.findIndex((q) => q.code === b.id),
+  );
 
   return (
     <SFXLangs.Provider
       value={{
-        langs,
-        setLangs: (ls) => {
-          if (typeof ls === "function") setLangs(ls(langs));
-          else setLangs(ls);
+        langs: (data ?? []).map((q) => ({ code: q.id, name: q.name })),
+        setLangs: async (_ls) => {
+          //
         },
       }}
     >

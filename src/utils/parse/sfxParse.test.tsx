@@ -6,6 +6,14 @@ const sF = (index: number, value: string, hidden = false): SFXField => {
   return { hidden, index, type: "string", value };
 };
 
+const imgF = (
+  index: number,
+  { url, local }: { url: string; local: boolean },
+  hidden = false,
+): SFXField => {
+  return { hidden, type: "img", index, local, url };
+};
+
 export const fieldData = (
   read = "",
   def = "",
@@ -61,6 +69,36 @@ describe("String parse - hide", () => {
       [q]: [sF(1, "a", true), sF(2, "b")],
     });
   });
+
+  it(`hide using keywords`, () => {
+    [
+      { key: "read", abbrs: ["r", "read"] } as const,
+      { key: "def", abbrs: ["d", "def"] } as const,
+      { key: "extra", abbrs: ["e", "ex", "extra"] } as const,
+    ].forEach(({ key, abbrs }) => {
+      for (const abbr of abbrs) {
+        expect(
+          parseSFXFields(
+            fieldData(
+              key === "read" ? "a" : "",
+              key === "def" ? "a" : "",
+              key === "extra" ? "a" : "",
+              `-${abbr}(1)`,
+            ),
+          ),
+        ).toEqual({ ...emptyFieldResult, [key]: [sF(1, "a", true)] });
+      }
+    });
+  });
+
+  it("hide same multiple times", () => {
+    expect(
+      parseSFXFields(fieldData("a;b", "-read(1)", "-read(1)", "-read(1)")),
+    ).toEqual({
+      ...emptyFieldResult,
+      read: [sF(1, "a", true), sF(2, "b", false)],
+    });
+  });
 });
 
 describe("String parse - jump", () => {
@@ -74,6 +112,10 @@ describe("String parse - jump", () => {
     { from: "extra", to: "read" } as const,
     { from: "extra", to: "def" } as const,
     { from: "extra", to: "extra" } as const,
+    { from: "tlExtra", to: "read" } as const,
+    { from: "tlExtra", to: "def" } as const,
+    { from: "tlExtra", to: "extra" } as const,
+    { from: "tlExtra", to: "tlExtra" } as const,
   ])("$from => $to", ({ from, to }) => {
     const failObj = {
       ...fieldData(),
@@ -144,6 +186,31 @@ describe("String parse - jump", () => {
       extra: [sF(6, "g"), sF(7, "[_e(1)]h"), sF(8, "i")],
     });
   }, 1000);
+
+  it(`jump using keywords`, () => {
+    [
+      { key: "read", abbrs: ["r", "read"] } as const,
+      { key: "def", abbrs: ["d", "def"] } as const,
+      { key: "extra", abbrs: ["e", "ex", "extra"] } as const,
+    ].forEach(({ key, abbrs }) => {
+      for (const abbr of abbrs) {
+        const jump = `[_${abbr}(1)]jump`;
+        expect(
+          parseSFXFields(
+            fieldData(
+              key === "read" ? "a" : "",
+              key === "def" ? "a" : "",
+              key === "extra" ? "a" : "",
+              jump,
+            ),
+          ),
+        ).toEqual({
+          ...emptyFieldResult,
+          [key]: [sF(1, "a"), sF(1.5, "jump")],
+        });
+      }
+    });
+  });
 });
 
 describe("String parse - jump & hide", () => {
@@ -154,6 +221,49 @@ describe("String parse - jump & hide", () => {
       ...emptyFieldResult,
       read: [sF(1, "a"), sF(1.5, "b", true), sF(2, "c"), sF(3, "d")],
       def: [sF(4, "e"), sF(5, "f")],
+    });
+  });
+
+  it("hide children after jump", () => {
+    expect(
+      parseSFXFields(fieldData("a;c", "[_r(1)]b", "", "-read(1)")),
+    ).toEqual({
+      ...emptyFieldResult,
+      read: [sF(1, "a", true), sF(1.5, "b", true), sF(2, "c")],
+    });
+  });
+});
+
+describe("String parse - img", () => {
+  it("local img", () => {
+    expect(parseSFXFields(fieldData("img:@test.png"))).toEqual({
+      ...emptyFieldResult,
+      read: [imgF(1, { local: true, url: "test.png" })],
+    });
+  });
+
+  it("nonlocal img", () => {
+    expect(
+      parseSFXFields(fieldData("img:https://example.com/test.png")),
+    ).toEqual({
+      ...emptyFieldResult,
+      read: [imgF(1, { url: "https://example.com/test.png", local: false })],
+    });
+  });
+
+  it("hidden img", () => {
+    expect(
+      parseSFXFields(fieldData("img:@test.png", "", "", "-read(1)")),
+    ).toEqual({
+      ...emptyFieldResult,
+      read: [imgF(1, { url: "test.png", local: true }, true)],
+    });
+  });
+
+  it("moved img", () => {
+    expect(parseSFXFields(fieldData("[_d(1)]img:@test.png", "a"))).toEqual({
+      ...emptyFieldResult,
+      def: [sF(1, "a"), imgF(1.5, { url: "test.png", local: true })],
     });
   });
 });

@@ -6,7 +6,7 @@ import type {
 import type { PrismaClient } from "@prisma/client";
 import { sfxGetTLs } from "./sfx";
 
-const sfxContains = (sfx: SFXData, search: string) => {
+const sfxContains = (sfx: Omit<SFXData, "language">, search: string) => {
   const rx = new RegExp(search, "i");
   return (
     rx.test(sfx.def) ||
@@ -29,7 +29,7 @@ export const searchDBForSFX = async (
       def: true,
       extra: true,
       id: true,
-      language: true,
+      languageId: true,
       createdAt: true,
       updatedAt: true,
       ogTranslations: {
@@ -44,7 +44,7 @@ export const searchDBForSFX = async (
       AND: [
         search.id && search.id > 0 ? { id: search.id } : { id: { gt: -1 } },
         search.langs && search.langs.length > 0
-          ? { language: { in: search.langs } }
+          ? { language: { id: { in: search.langs } } }
           : { id: { gt: -1 } },
         {
           OR: [
@@ -111,7 +111,7 @@ export const searchDBForSFX = async (
       read: string | null;
       def: string;
       extra: string | null;
-      language: string;
+      languageId: string;
       ogtls: (typeof sfxs)[number]["ogTranslations"];
       optls: (typeof sfxs)[number]["tlTranslations"];
       show?: "both" | "reverse";
@@ -123,7 +123,7 @@ export const searchDBForSFX = async (
       def: sfx.def,
       extra: sfx.extra,
       id: sfx.id,
-      language: sfx.language,
+      languageId: sfx.languageId,
       read: sfx.read,
       text: sfx.text,
       updatedAt: sfx.updatedAt,

@@ -9,7 +9,7 @@ import {
 import { checkSession } from "./user";
 import { searchDBForSFX } from "./_utils/search";
 import { sfxGetTLs } from "./_utils/sfx";
-import { Parser } from "@/utils/sfxParse";
+import { Parser } from "@/utils/parse/sfxParse";
 
 const authShape = object({ token: string(), deviceName: string() });
 
@@ -22,6 +22,24 @@ const properID = (n: number | string) =>
   })(Number(n));
 
 export const sfxRouter = createTRPCRouter({
+  listLangs: publicProcedure.query(async ({ ctx }) => {
+    return await ctx.db.language.findMany({});
+  }),
+  addLang: publicProcedure
+    .input(object({ id: string(), name: string() }))
+    .mutation(async ({ ctx, input }) => {
+      await ctx.db.language.upsert({
+        where: { id: input.id },
+        create: { ...input },
+        update: { name: input.name },
+      });
+      return true;
+    }),
+  removeLang: publicProcedure
+    .input(string())
+    .mutation(async ({ ctx, input: id }) => {
+      await ctx.db.language.delete({ where: { id } });
+    }),
   listSFX: publicProcedure
     .input(SearchOptions.optional())
     .query(async ({ ctx, input }): Promise<CollapsedOnomatopoeia[]> => {
@@ -44,18 +62,20 @@ export const sfxRouter = createTRPCRouter({
 
       console.log("List searchh", search);
 
-      const sfxs = await ctx.db.onomatopoeia.findMany({
-        orderBy: { id: "asc" },
-        select: {
-          def: true,
-          extra: true,
-          id: true,
-          language: true,
-          read: true,
-          text: true,
-          updatedAt: true,
-        },
-      });
+      const sfxs = (
+        await ctx.db.onomatopoeia.findMany({
+          orderBy: { id: "asc" },
+          select: {
+            def: true,
+            extra: true,
+            id: true,
+            languageId: true,
+            read: true,
+            text: true,
+            updatedAt: true,
+          },
+        })
+      ).map((sfx) => ({ ...sfx, language: sfx.languageId }));
 
       if (input === "list") return sfxs.map((q) => ({ ...q, tls: [] }));
 
@@ -126,7 +146,7 @@ export const sfxRouter = createTRPCRouter({
                   data: {
                     def: sfx.def,
                     extra: sfx.extra,
-                    language: sfx.language,
+                    languageId: sfx.language,
                     read: sfx.read,
                     text: sfx.text,
                     searchread: Parser.strip(sfx.read),
@@ -152,7 +172,7 @@ export const sfxRouter = createTRPCRouter({
                   def: tl.sfx.def,
                   read: tl.sfx.read,
                   text: tl.sfx.text,
-                  language: tl.sfx.language,
+                  languageId: tl.sfx.language,
                   extra: tl.sfx.extra,
                   searchread: Parser.strip(tl.sfx.read),
                   searchextra: Parser.strip(tl.sfx.extra),
@@ -169,7 +189,7 @@ export const sfxRouter = createTRPCRouter({
                   def: tl.sfx.def,
                   read: tl.sfx.read,
                   text: tl.sfx.text,
-                  language: tl.sfx.language,
+                  languageId: tl.sfx.language,
                   extra: tl.sfx.extra,
                   searchread: Parser.strip(tl.sfx.read),
                   searchextra: Parser.strip(tl.sfx.extra),
@@ -214,7 +234,7 @@ export const sfxRouter = createTRPCRouter({
         type CreateCreateObject = {
           def: string;
           extra: string | null;
-          language: string;
+          languageId: string;
           read: string | null;
           text: string;
           searchread: string;
@@ -236,7 +256,7 @@ export const sfxRouter = createTRPCRouter({
         const createCreateObject = ({
           def,
           extra,
-          language,
+          languageId,
           read,
           text,
           tls,
@@ -251,7 +271,7 @@ export const sfxRouter = createTRPCRouter({
             def,
             extra,
             read,
-            language,
+            languageId,
             searchdef: Parser.strip(def),
             searchread: Parser.strip(read),
             searchextra: Parser.strip(extra),
@@ -261,7 +281,10 @@ export const sfxRouter = createTRPCRouter({
                 tlSFX: {
                   connectOrCreate: {
                     where: { id: properID(tl.sfx.id) ? tl.sfx.id : -1 },
-                    create: createCreateObject(tl.sfx),
+                    create: createCreateObject({
+                      ...tl.sfx,
+                      languageId: tl.sfx.language,
+                    }),
                   },
                 },
               })),
@@ -272,7 +295,7 @@ export const sfxRouter = createTRPCRouter({
         const createObject = createCreateObject({
           def,
           extra,
-          language,
+          languageId: language,
           read,
           text,
           tls,

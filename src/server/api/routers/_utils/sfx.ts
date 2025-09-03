@@ -9,7 +9,7 @@ export const sfxGetTLs = async (
     read: string | null;
     def: string;
     extra: string | null;
-    language: string;
+    languageId: string;
     show?: "both" | "reverse";
     hideTLSFXs?: number[];
   }[],
@@ -70,6 +70,7 @@ export const sfxGetTLs = async (
         sfx2Id: tl.sfx2Id,
         sfx: {
           ...oppositeSFX,
+          language: oppositeSFX.languageId,
           tls: [],
         },
       });
@@ -81,7 +82,11 @@ export const sfxGetTLs = async (
     )
       continue;
 
-    Collapsed.push({ ...sfxWithTL.sfx, tls: collapsedTLs });
+    Collapsed.push({
+      ...sfxWithTL.sfx,
+      language: sfxWithTL.sfx.languageId,
+      tls: collapsedTLs,
+    });
   }
 
   return reverse ? Collapsed.reverse() : Collapsed;
