@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from "react";
 import Image, { type ImageProps } from "next/image";
-import { cn } from "@/utils";
+import { cn } from "@/utils/utils";
 
 interface AsyncImageProps extends ImageProps {
   containerClassName?: string;

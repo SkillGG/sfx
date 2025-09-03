@@ -1,7 +1,7 @@
 "use client";
 
 import { api } from "@/trpc/react";
-import { cn } from "@/utils";
+import { cn } from "@/utils/utils";
 import { useState } from "react";
 import DarkModeSwitch, { AccentSwitch } from "../_components/darkModeSwitch";
 import { useTheme } from "../hooks/theme";

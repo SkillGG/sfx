@@ -3,7 +3,7 @@ import {
   type CollapsedOnomatopoeia,
   type CollapsedTL,
   type Promisable,
-} from "@/utils";
+} from "@/utils/utils";
 import {
   SFXLangSelect,
   type SFXLangSelectClassNames,

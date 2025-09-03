@@ -5,7 +5,7 @@ import {
   type CollapsedOnomatopoeia,
   type CollapsedTL,
   type Promisable,
-} from "@/utils";
+} from "@/utils/utils";
 import { useSFXLangs } from "../hooks/langs";
 import { useState } from "react";
 import { ToggleableEditField } from "./sfxEditPanel/toggleableEditField";

@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { SearchPage } from "./main";
 import { api } from "@/trpc/server";
-import type { SearchParams } from "@/utils";
+import type { SearchParams } from "@/utils/utils";
+import { searchParamsToQuery, searchQueryToString } from "@/utils/searchUtils";
 
 type Props = {
   searchParams: SearchParams;
@@ -13,8 +14,15 @@ const paramStr = (q: string | string[], joiner = ""): string =>
 export async function generateMetadata({
   searchParams,
 }: Props): Promise<Metadata> {
+  const params = await searchParams;
+  const query = searchParamsToQuery(params);
+  const searchStr = searchQueryToString(query);
+
   const basicMetadata: Metadata = {
-    metadataBase: new URL("https://sfxvault.org/"),
+    metadataBase: new URL("https://www.sfxvault.org/"),
+    alternates: {
+      canonical: `https://www.sfxvault.org${!!searchStr ? `/${searchStr}` : ""}`,
+    },
     title: "SFX Vault",
     description:
       "A searchable collection of manga sound effects (onomatopoeia) with translations across multiple languages.",
@@ -30,25 +38,12 @@ export async function generateMetadata({
     },
   };
 
-  // read route params
-  const qs = await searchParams;
-
-  const q = qs ? ("q" in qs ? qs.q : "") : "";
-
-  const query = q ?? "";
-
-  const id = qs ? ("id" in qs ? qs.id : "") : "";
-
-  const l = qs ? ("l" in qs ? qs.l : "") : "";
-
-  const langs = paramStr(l ?? "")
-    .split(",")
-    .filter(Boolean);
+  const langs = query?.langs ?? [];
 
   const langStr = `${langs.length > 0 ? `${langs.map((q) => `[${q}]`).join(",")} ` : ""}`;
 
-  if (id) {
-    const intID = Number(paramStr(id));
+  if (query?.id) {
+    const intID = Number(query.id);
 
     if (intID > 0) {
       const sfx = await api.sfx.listSFX({ id: intID });
@@ -62,10 +57,10 @@ export async function generateMetadata({
     }
   }
 
-  if (query) {
+  if (query?.query) {
     return {
       ...basicMetadata,
-      title: `SFX Vault - ${langStr}${paramStr(query)}`,
+      title: `SFX Vault - ${langStr}${query.query}`,
     };
   }
 

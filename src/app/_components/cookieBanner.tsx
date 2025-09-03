@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { cn } from "@/utils";
+import { cn } from "@/utils/utils";
 import { QuestionMarkSVG } from "./questionMark";
 import CookiesDialog from "./cookiesDialog";
 

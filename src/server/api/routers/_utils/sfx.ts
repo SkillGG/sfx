@@ -1,4 +1,4 @@
-import type { CollapsedOnomatopoeia, CollapsedTL } from "@/utils";
+import type { CollapsedOnomatopoeia, CollapsedTL } from "@/utils/utils";
 import type { PrismaClient } from "@prisma/client";
 
 export const sfxGetTLs = async (

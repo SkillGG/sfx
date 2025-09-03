@@ -1,5 +1,5 @@
 import { api } from "@/trpc/react";
-import { cn } from "@/utils";
+import { cn } from "@/utils/utils";
 import Image from "next/image";
 import { useRef } from "react";
 import { AsyncImage } from "../asyncImage";

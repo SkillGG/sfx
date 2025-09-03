@@ -1,6 +1,6 @@
 import React, { Suspense, type ReactNode } from "react";
 import { Spinner } from "../spinner";
-import { cn } from "@/utils";
+import { cn } from "@/utils/utils";
 import SFXLink from "./sfxLink";
 import { LocalImg } from "./localImg";
 

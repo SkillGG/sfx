@@ -11,7 +11,7 @@ import {
   parseMemoryData,
   type CollapsedOnomatopoeia,
   type CollapsedTL,
-} from "@/utils";
+} from "@/utils/utils";
 import { TLEditorDirect } from "../_components/TLEditor";
 import type { SFXLang } from "../hooks/langs";
 import { useUser, type UserSessionData } from "../hooks/userlogin";

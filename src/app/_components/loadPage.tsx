@@ -1,4 +1,4 @@
-import { cn } from "@/utils";
+import { cn } from "@/utils/utils";
 import { useTheme } from "../hooks/theme";
 import { Spinner } from "./spinner";
 

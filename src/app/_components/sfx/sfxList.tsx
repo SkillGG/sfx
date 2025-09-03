@@ -1,7 +1,7 @@
 "use client";
 
 import { api } from "@/trpc/react";
-import { cn, type CollapsedOnomatopoeia, type Promisable } from "@/utils";
+import { cn, type CollapsedOnomatopoeia, type Promisable } from "@/utils/utils";
 import { SFX, type SFXClasses } from ".";
 import type { ClassValue } from "clsx";
 import { useState } from "react";

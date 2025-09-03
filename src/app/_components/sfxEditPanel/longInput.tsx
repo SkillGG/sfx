@@ -1,4 +1,4 @@
-import { cn } from "@/utils";
+import { cn } from "@/utils/utils";
 import { DEFAULT_SFX_INPUT_STYLES } from "../sfx";
 import type { Validation } from "@/app/hooks/validation";
 import type React from "react";

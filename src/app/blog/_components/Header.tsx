@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@/utils";
+import { cn } from "@/utils/utils";
 import ThemeControls from "../../_components/themeControls";
 
 export const BlogHeader = ({ title }: { title: React.ReactNode }) => {

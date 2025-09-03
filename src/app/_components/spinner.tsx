@@ -1,4 +1,4 @@
-import { cn } from "@/utils";
+import { cn } from "@/utils/utils";
 import type { ClassValue } from "clsx";
 
 export const Spinner = ({ className }: { className?: ClassValue }) => {

@@ -1,4 +1,8 @@
-import type { CollapsedOnomatopoeia, SearchOptions, SFXData } from "@/utils";
+import type {
+  CollapsedOnomatopoeia,
+  SearchOptions,
+  SFXData,
+} from "@/utils/utils";
 import type { PrismaClient } from "@prisma/client";
 import { sfxGetTLs } from "./sfx";
 
@@ -21,17 +25,19 @@ export const searchDBForSFX = async (
   const query = search.query;
 
   const sfxs = await db.onomatopoeia.findMany({
-    include: {
+    select: {
+      def: true,
+      extra: true,
+      id: true,
+      language: true,
+      createdAt: true,
+      updatedAt: true,
       ogTranslations: {
-        include: {
-          tlSFX: true,
-        },
+        include: { tlSFX: true },
       },
-      tlTranslations: {
-        include: {
-          ogSFX: true,
-        },
-      },
+      tlTranslations: { include: { ogSFX: true } },
+      read: true,
+      text: true,
     },
 
     where: {
@@ -43,30 +49,30 @@ export const searchDBForSFX = async (
         {
           OR: [
             {
-              def: { contains: query },
+              searchdef: { contains: query },
             },
             {
-              extra: { contains: query },
+              searchextra: { contains: query },
             },
             {
               text: { contains: query },
             },
-            { read: { contains: query } },
+            { searchread: { contains: query } },
             {
               ogTranslations: {
                 some: {
                   tlSFX: {
                     OR: [
                       {
-                        def: { contains: query },
+                        searchdef: { contains: query },
                       },
                       {
-                        extra: { contains: query },
+                        searchextra: { contains: query },
                       },
                       {
                         text: { contains: query },
                       },
-                      { read: { contains: query } },
+                      { searchread: { contains: query } },
                     ],
                   },
                 },
@@ -78,15 +84,15 @@ export const searchDBForSFX = async (
                   ogSFX: {
                     OR: [
                       {
-                        def: { contains: query },
+                        searchdef: { contains: query },
                       },
                       {
-                        extra: { contains: query },
+                        searchextra: { contains: query },
                       },
                       {
                         text: { contains: query },
                       },
-                      { read: { contains: query } },
+                      { searchread: { contains: query } },
                     ],
                   },
                 },

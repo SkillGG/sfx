@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import CreatorPage from "./main";
 import { api } from "@/trpc/react";
-import { cn } from "@/utils";
+import { cn } from "@/utils/utils";
 import LoginPage from "./login";
 import { UserSessionProvider } from "../hooks/userlogin";
 import { LoadPageSpinner } from "../_components/loadPage";

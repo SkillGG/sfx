@@ -7,7 +7,7 @@ import {
   validateSFX,
   validateTranslation,
   type ValidationResult,
-} from "@/utils";
+} from "@/utils/utils";
 import { useState } from "react";
 
 export type Validation = ReturnType<typeof useValidation>;

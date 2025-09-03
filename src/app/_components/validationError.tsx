@@ -1,6 +1,6 @@
 "use client";
 
-import { type ValidationError, cn } from "@/utils";
+import { type ValidationError, cn } from "@/utils/utils";
 
 type ValidationErrorDisplayProps = {
   errors: ValidationError[];

@@ -1,4 +1,4 @@
-import { cn, type CollapsedOnomatopoeia, type Promisable } from "@/utils";
+import { cn, type CollapsedOnomatopoeia, type Promisable } from "@/utils/utils";
 import React, {
   useCallback,
   useEffect,

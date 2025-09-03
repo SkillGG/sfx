@@ -4,15 +4,16 @@ import { api } from "@/trpc/react";
 import DarkModeSwitch, { AccentSwitch } from "./_components/darkModeSwitch";
 import AboutDialog from "./_components/aboutDialog";
 import { useTheme } from "./hooks/theme";
-import { cn, type SearchParams } from "@/utils";
+import { cn, type SearchParams } from "@/utils/utils";
 import Link from "next/link";
 import SearchBar from "./_components/searchBar";
 import { Suspense } from "react";
 import { SFXListPanel } from "./_components/sfx/sfxList";
-import { isValidSearch, type SearchQuery, useSearch } from "./hooks/search";
+import { useSearch } from "./hooks/search";
 import { Spinner } from "./_components/spinner";
 import { CookieBanner } from "./_components/cookieBanner";
 import { QuestionMarkSVG } from "./_components/questionMark";
+import { isValidSearch, type SearchQuery } from "@/utils/searchUtils";
 
 const PageLoad = () => {
   const { mode } = useTheme();

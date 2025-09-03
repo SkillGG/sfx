@@ -292,3 +292,5 @@ export const parseMemoryData = (
 export type SearchParams = Promise<
   Record<string, string | string[] | undefined>
 >;
+
+export const noop = () => void 0;

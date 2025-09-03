@@ -4,7 +4,7 @@ import {
   type CollapsedOnomatopoeia,
   type CollapsedTL,
   type Promisable,
-} from "@/utils";
+} from "@/utils/utils";
 import type { RefObject } from "react";
 import { SFX } from "./sfx";
 

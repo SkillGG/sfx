@@ -1,10 +1,15 @@
 import { object, string, number, array } from "zod/v4";
 
 import { createTRPCRouter, publicProcedure } from "@/server/api/trpc";
-import { CollapsedOnomatopoeia, CollapsedTL, SearchOptions } from "@/utils";
+import {
+  CollapsedOnomatopoeia,
+  CollapsedTL,
+  SearchOptions,
+} from "@/utils/utils";
 import { checkSession } from "./user";
 import { searchDBForSFX } from "./_utils/search";
 import { sfxGetTLs } from "./_utils/sfx";
+import { Parser } from "@/utils/sfxParse";
 
 const authShape = object({ token: string(), deviceName: string() });
 
@@ -124,6 +129,9 @@ export const sfxRouter = createTRPCRouter({
                     language: sfx.language,
                     read: sfx.read,
                     text: sfx.text,
+                    searchread: Parser.strip(sfx.read),
+                    searchextra: Parser.strip(sfx.extra),
+                    searchdef: Parser.strip(sfx.def),
                     updatedAt: new Date(),
                   },
                 });
@@ -146,6 +154,9 @@ export const sfxRouter = createTRPCRouter({
                   text: tl.sfx.text,
                   language: tl.sfx.language,
                   extra: tl.sfx.extra,
+                  searchread: Parser.strip(tl.sfx.read),
+                  searchextra: Parser.strip(tl.sfx.extra),
+                  searchdef: Parser.strip(tl.sfx.def),
                   tlTranslations: {
                     create: {
                       additionalInfo: tl.additionalInfo,
@@ -160,6 +171,9 @@ export const sfxRouter = createTRPCRouter({
                   text: tl.sfx.text,
                   language: tl.sfx.language,
                   extra: tl.sfx.extra,
+                  searchread: Parser.strip(tl.sfx.read),
+                  searchextra: Parser.strip(tl.sfx.extra),
+                  searchdef: Parser.strip(tl.sfx.def),
                   tlTranslations: {
                     create: {
                       additionalInfo: tl.additionalInfo,
@@ -203,6 +217,9 @@ export const sfxRouter = createTRPCRouter({
           language: string;
           read: string | null;
           text: string;
+          searchread: string;
+          searchdef: string;
+          searchextra: string;
           ogTranslations: {
             create: {
               additionalInfo: string | null;
@@ -223,7 +240,10 @@ export const sfxRouter = createTRPCRouter({
           read,
           text,
           tls,
-        }: Omit<CreateCreateObject, "ogTranslations"> & {
+        }: Omit<
+          CreateCreateObject,
+          "ogTranslations" | `search${"def" | "extra" | "read"}`
+        > & {
           tls: CollapsedTL[];
         }): CreateCreateObject => {
           return {
@@ -232,6 +252,9 @@ export const sfxRouter = createTRPCRouter({
             extra,
             read,
             language,
+            searchdef: Parser.strip(def),
+            searchread: Parser.strip(read),
+            searchextra: Parser.strip(extra),
             ogTranslations: {
               create: tls.map((tl) => ({
                 additionalInfo: tl.additionalInfo,

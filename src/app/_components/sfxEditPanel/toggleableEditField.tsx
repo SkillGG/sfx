@@ -1,6 +1,6 @@
 import type { Validation } from "@/app/hooks/validation";
 import type { SFXFieldWithName } from ".";
-import { cn } from "@/utils";
+import { cn } from "@/utils/utils";
 import { DEFAULT_SFX_INPUT_STYLES, DEFAULT_SFX_LABEL_STYLES } from "../sfx";
 import { ValidationErrorDisplay } from "../validationError";
 import { useRef } from "react";

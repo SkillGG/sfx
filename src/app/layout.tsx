@@ -5,9 +5,10 @@ import { Geist } from "next/font/google";
 import { TRPCReactProvider } from "@/trpc/react";
 import { SFXLangProvider } from "./hooks/langs";
 import { ThemeProvider } from "./hooks/theme";
-import { cn } from "@/utils";
+import { cn, type SearchParams } from "@/utils/utils";
 import type { Metadata } from "next";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
+import { searchParamsToQuery, searchQueryToString } from "@/utils/searchUtils";
 
 export const metadata: Metadata = {
   title: "SFX Vault",
@@ -28,7 +29,7 @@ const geist = Geist({
   variable: "--font-geist-sans",
 });
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (

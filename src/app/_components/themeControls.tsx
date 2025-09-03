@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@/utils";
+import { cn } from "@/utils/utils";
 import DarkModeSwitch, { AccentSwitch } from "./darkModeSwitch";
 
 export const ThemeControls = ({ className }: { className?: string }) => {

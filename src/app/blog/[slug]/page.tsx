@@ -1,4 +1,4 @@
-import { cn } from "@/utils";
+import { cn } from "@/utils/utils";
 import { getArticleBySlug, getArticles } from "@/articles";
 import BlogHeader from "../_components/Header";
 import Tag from "../_components/Tag";

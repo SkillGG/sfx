@@ -1,7 +1,7 @@
 import { env } from "@/env";
 import { createTRPCRouter, publicProcedure } from "../trpc";
 import { object, string } from "zod/v4-mini";
-import { getRandomWordString } from "@/utils";
+import { getRandomWordString } from "@/utils/utils";
 import { type PrismaClient } from "@prisma/client";
 
 export const refreshSession = async (db: PrismaClient, dname: string) => {

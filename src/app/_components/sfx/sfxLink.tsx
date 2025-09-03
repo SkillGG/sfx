@@ -1,5 +1,5 @@
 import { api } from "@/trpc/react";
-import { cn } from "@/utils";
+import { cn } from "@/utils/utils";
 import type { ClassValue } from "clsx";
 import Link from "next/link";
 import { memo } from "react";

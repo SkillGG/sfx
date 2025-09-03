@@ -1,5 +1,5 @@
 import { ACCENTS, useTheme } from "../hooks/theme";
-import { cn } from "@/utils";
+import { cn } from "@/utils/utils";
 
 export const DarkModeSwitch = ({ className }: { className?: string }) => {
   const { mode, setMode } = useTheme();
