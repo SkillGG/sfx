@@ -17,12 +17,31 @@ export async function generateMetadata({
 
   const curURL = `https://www.sfxvault.org${!!searchStr ? `/${searchStr}` : ""}`;
 
+  const keywords = ["SFX", "onomatopoeia", "SFX translation", "japansese sfx"];
+
+  if (query?.query || query?.id || query?.langs?.length) {
+    const searchResult = await api.sfx.listSFX(query);
+
+    if (searchResult.length > 0) {
+      keywords.push(
+        ...searchResult
+          .map((q) => [
+            q.text + " translation",
+            q.text + " TL",
+            q.text + q.language,
+          ])
+          .flat(2),
+      );
+    }
+  }
+
   const basicMetadata: Metadata = {
     metadataBase: new URL("https://www.sfxvault.org/"),
     alternates: {
       canonical: curURL,
     },
     title: "SFX Vault",
+    keywords: keywords,
     description:
       "A searchable collection of manga sound effects (onomatopoeia) with translations across multiple languages.",
     openGraph: {
