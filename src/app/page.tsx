@@ -15,8 +15,8 @@ export async function generateMetadata({
   const params = await searchParams;
   const query = searchParamsToQuery(params);
 
-  const baseURL = `http://localhost:3000`;
-  // const baseURL = `https://www.sfxvault.org`;
+  // const baseURL = `http://localhost:3000`;
+  const baseURL = `https://www.sfxvault.org`;
 
   const curURL = new URL(`${baseURL}`);
 
