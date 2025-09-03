@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
 import { parseSFXFields } from "@/utils/parse/sfxParse";
 import type { LangObject } from "@/utils/utils";
 import type { SFXTLDiscriminator } from "./utils";
