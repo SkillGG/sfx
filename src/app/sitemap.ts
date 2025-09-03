@@ -1,7 +1,7 @@
 import { api } from "@/trpc/server";
 import type { MetadataRoute } from "next";
 
-const ORIGIN = "https://sfxvault.org";
+const ORIGIN = "https://www.sfxvault.org";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const sfxs = await api.sfx.listSFX("list");
