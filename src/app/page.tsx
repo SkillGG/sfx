@@ -15,10 +15,12 @@ export async function generateMetadata({
   const query = searchParamsToQuery(params);
   const searchStr = searchQueryToString(query);
 
+  const curURL = `https://www.sfxvault.org${!!searchStr ? `/${searchStr}` : ""}`;
+
   const basicMetadata: Metadata = {
     metadataBase: new URL("https://www.sfxvault.org/"),
     alternates: {
-      canonical: `https://www.sfxvault.org${!!searchStr ? `/${searchStr}` : ""}`,
+      canonical: curURL,
     },
     title: "SFX Vault",
     description:
@@ -31,7 +33,7 @@ export async function generateMetadata({
       determiner: "the",
       emails: ["contact@sfxvault.org"],
       siteName: "SFX Vault",
-      url: "https://sfxvault.org",
+      url: curURL,
     },
   };
 
