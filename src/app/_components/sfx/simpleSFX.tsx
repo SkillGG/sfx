@@ -29,12 +29,11 @@ export const SimpleSFXCard = async ({
         style={{
           display: "flex",
           flexDirection: "column",
-          gap: "8px",
           borderRadius: "8px",
           border: "1px dashed #1d4ed8",
+          borderStyle: "dashed",
           minWidth: "80%",
           backgroundColor: "#374151",
-          opacity: 0.5,
           padding: "12px 16px",
           boxShadow: "0 1px 2px 0 #1e3a8a",
         }}
@@ -45,7 +44,6 @@ export const SimpleSFXCard = async ({
           style={{
             display: "flex",
             alignItems: "baseline",
-            gap: "8px",
           }}
         >
           <div
@@ -53,9 +51,10 @@ export const SimpleSFXCard = async ({
               display: "flex",
               alignSelf: "center",
               paddingRight: "8px",
-              fontSize: "18px",
-              fontWeight: "bold",
-              color: "#dbeafe",
+              fontSize: "30px",
+              fontWeight: 900,
+              color: "#e0e7ff",
+              fontFamily: `ui-sans-serif, system-ui, sans-serif`,
             }}
             id={titleId}
           >
@@ -68,13 +67,17 @@ export const SimpleSFXCard = async ({
                 display: "flex",
                 flexDirection: "column",
                 whiteSpace: "pre-wrap",
-                color: "#93c5fd",
+                color: "#60a5fa",
+                marginLeft: "15px",
               }}
             >
               {parsed.read
                 .filter((q) => q.type === "string")
                 .map((z) => (
-                  <div key={z.index} style={{ display: "flex" }}>
+                  <div
+                    key={z.index}
+                    style={{ display: "flex", fontSize: "14px" }}
+                  >
                     {z.value}
                   </div>
                 ))}
@@ -83,7 +86,11 @@ export const SimpleSFXCard = async ({
         </div>
 
         <div
-          style={{ display: "flex", flexDirection: "column" }}
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            marginLeft: "25px",
+          }}
           aria-labelledby={titleId}
           aria-label="SFX details"
         >
@@ -106,7 +113,7 @@ export const SimpleSFXCard = async ({
           <div
             style={{
               display: "flex",
-              paddingLeft: "32px",
+              paddingLeft: "35px",
               fontSize: "14px",
               whiteSpace: "pre-wrap",
               color: "#3b82f6",
