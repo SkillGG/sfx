@@ -3,6 +3,7 @@
 import { api } from "@/trpc/react";
 import { cn, type CollapsedOnomatopoeia, type Promisable } from "@/utils/utils";
 import { SFX, type SFXClasses } from ".";
+import { SFX as SFXv2 } from "../sfxv2";
 import type { ClassValue } from "clsx";
 import { useState } from "react";
 import type { SearchQuery } from "@/utils/searchUtils";
@@ -23,6 +24,8 @@ export const SFXListPanel = ({
 
   allowSeparate,
 
+  useNewSFX,
+
   onSave,
   onRemove,
 }: {
@@ -40,6 +43,8 @@ export const SFXListPanel = ({
     sfxs?: SFXClasses;
     loading?: ClassValue;
   };
+
+  useNewSFX?: boolean;
 
   onSave?: (
     old: CollapsedOnomatopoeia,
@@ -76,29 +81,61 @@ export const SFXListPanel = ({
       {sfxs.map((sfx) => {
         return (
           <li key={`sfx_${sfx.id}`} className={cn("list-none")}>
-            <SFX
-              labels={
-                "separated" in sfx
-                  ? {
-                      removeDefault: "Hide",
-                      removing: "Hide",
-                    }
-                  : { separate: "Show as standalone" }
-              }
-              separate={
-                allowSeparate && !("separated" in sfx) ? separateFn : undefined
-              }
-              sfx={sfx}
-              editable={editable}
-              classNames={classNames?.sfxs}
-              onRemove={async () => {
-                await onRemove?.(sfx);
-                setSeparated((prev) => prev.filter((q) => q.id !== sfx.id));
-              }}
-              onSave={async (fx) => {
-                await onSave?.(sfx, fx);
-              }}
-            />
+            {useNewSFX ? (
+              <>
+                <SFXv2
+                  labels={
+                    "separated" in sfx
+                      ? {
+                          removeDefault: "Hide",
+                          removing: "Hide",
+                        }
+                      : { separate: "Show as standalone" }
+                  }
+                  separate={
+                    allowSeparate && !("separated" in sfx)
+                      ? separateFn
+                      : undefined
+                  }
+                  sfx={sfx}
+                  editable={editable}
+                  classNames={classNames?.sfxs}
+                  onRemove={async () => {
+                    await onRemove?.(sfx);
+                    setSeparated((prev) => prev.filter((q) => q.id !== sfx.id));
+                  }}
+                  onSave={async (fx) => {
+                    await onSave?.(sfx, fx);
+                  }}
+                />
+              </>
+            ) : (
+              <SFX
+                labels={
+                  "separated" in sfx
+                    ? {
+                        removeDefault: "Hide",
+                        removing: "Hide",
+                      }
+                    : { separate: "Show as standalone" }
+                }
+                separate={
+                  allowSeparate && !("separated" in sfx)
+                    ? separateFn
+                    : undefined
+                }
+                sfx={sfx}
+                editable={editable}
+                classNames={classNames?.sfxs}
+                onRemove={async () => {
+                  await onRemove?.(sfx);
+                  setSeparated((prev) => prev.filter((q) => q.id !== sfx.id));
+                }}
+                onSave={async (fx) => {
+                  await onSave?.(sfx, fx);
+                }}
+              />
+            )}
           </li>
         );
       })}

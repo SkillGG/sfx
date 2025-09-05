@@ -308,6 +308,7 @@ const CreatorPage = () => {
               customQuery={search.query}
               allowSeparate
               editable
+              useNewSFX
               classNames={{
                 sfxs: {
                   default: {

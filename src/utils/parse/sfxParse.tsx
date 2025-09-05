@@ -1,4 +1,7 @@
+import { type api as serverApi } from "@/trpc/server";
+import { type api as clientApi } from "@/trpc/react";
 import { type CollapsedOnomatopoeia } from "@/utils/utils";
+import z from "zod";
 /**
  * Syntax:
  *
@@ -15,21 +18,32 @@ import { type CollapsedOnomatopoeia } from "@/utils/utils";
 
 const noop = () => void 0;
 
-type FieldBase = {
+export type FieldBase = {
   /** Final absolute index */
   index: number;
   hidden: boolean;
 };
 
-type StringField = {
+export type StringField = {
   type: "string";
   value: string;
   counter?: number;
   classNames?: string;
 };
-type ImageField = { type: "img"; url: string; local: boolean };
+export type ImageField = { type: "img"; url: string; local: boolean };
 
-export type SFXField = FieldBase & (StringField | ImageField);
+export type LinkField = { type: "link"; url: string; label: string };
+
+type Api = typeof clientApi | typeof serverApi;
+
+export type SFXLinkField = {
+  type: "sfxlink";
+  id: number;
+  consume?: (api: Api) => Promise<{ id: number; label: string } | null>;
+};
+
+export type SFXField = FieldBase &
+  (StringField | ImageField | LinkField | SFXLinkField);
 
 export type SFXFieldsData = {
   def?: SFXField[];
@@ -47,13 +61,13 @@ export const SFXFieldsKeys: (keyof SFXFieldsData)[] = [
 const forEachField = (cb: (o: keyof SFXFieldsData) => void) =>
   SFXFieldsKeys.forEach(cb);
 
-type RemoveLineData = {
+type HideFieldData = {
   /** Relative index */
   index: number;
   key: keyof SFXFieldsData;
 };
 
-type JumpLineData = {
+type JumpFieldData = {
   /** Relative index */
   index: number;
   to: keyof SFXFieldsData;
@@ -78,13 +92,19 @@ export const stringToSFXFieldKey = (k: string): keyof SFXFieldsData | null => {
   return null;
 };
 
-type ParseResult = SFXField | RemoveLineData | JumpLineData;
+type ParseResult = SFXField | HideFieldData | JumpFieldData;
 
+/**
+ * Parser for SFX Data
+ */
 export const Parser = {
+  /** Strip all non-text data (e.g. jumps `[_d(2)]`, hide patterns `-d(1)` , images, etc.)
+   *
+   * Used for search purposes */
   strip(str?: string | null): string {
     if (!str) return "";
 
-    const parsed = this.parse(str);
+    const parsed = this.parse(str.trim());
 
     if (this.isJump(parsed)) {
       return parsed.data;
@@ -92,20 +112,36 @@ export const Parser = {
 
     if (this.isHide(parsed)) return "";
 
+    if (this.isField(parsed)) {
+      if (
+        (["link", "sfxlink", "img"] as SFXField["type"][]).includes(parsed.type)
+      )
+        return "";
+    }
+
     return str;
   },
-  isJump(o: ParseResult): o is JumpLineData {
+  /** Tests if {@link Parser.parse} resulted in a {@link JumpFieldData} */
+  isJump(o: ParseResult): o is JumpFieldData {
     return "to" in o;
   },
-  isHide(o: ParseResult): o is RemoveLineData {
+  /** Tests if {@link Parser.parse} resulted in a {@link HideFieldData} */
+  isHide(o: ParseResult): o is HideFieldData {
     return "key" in o;
   },
+  /** Tests if {@link Parser.parse} resulted in a {@link SFXField} */
   isField(o: ParseResult): o is SFXField {
     return "type" in o;
   },
-  asJump(str: string, log = false): JumpLineData | null {
+  /** Parse string as a {@link JumpFieldData}.
+   * @returns {JumpFieldData} {@link JumpFieldData} if parsed successfully
+   * @returns {null} {@link null} if string was not a jump clause
+   */
+  asJump(str: string, log = false): JumpFieldData | null {
     const print = log ? console.log : noop;
-    const rx = /^\[_(?<to>[a-z]+)\((?<index>\d+)\)\](?<data>.*)$/.exec(str);
+    const rx = /^\[_(?<to>[a-z]+)\((?<index>\d+)\)\](?<data>.*)$/.exec(
+      str.trim(),
+    );
     if (!rx) {
       print(`'${str}'`, "no RX", " in asJump");
       return null;
@@ -137,9 +173,13 @@ export const Parser = {
     }
     return { index: index - 1, to, data, raw: str };
   },
-  asHide(str: string, log = false): RemoveLineData | null {
+  /** Parse string as a {@link HideFieldData}.
+   * @returns {HideFieldData} {@link HideFieldData} if parsed successfully
+   * @returns {null} {@link null} if string was not a hide clause
+   */
+  asHide(str: string, log = false): HideFieldData | null {
     const print = log ? console.log : noop;
-    const rx = /^\-(?<key>[a-z]+)\((?<index>\d+)\)$/i.exec(str);
+    const rx = /^\-(?<key>[a-z]+)\((?<index>\d+)\)$/i.exec(str.trim());
     if (!rx) {
       print(`'${str}'`, "no RX", " in asHide");
       return null;
@@ -167,10 +207,14 @@ export const Parser = {
     print(`'${str}'`, { index: i - 1, key: kKey }, " in asHide");
     return { index: i - 1, key: kKey };
   },
+  /** Parse string as a {@link ImageField}.
+   * @returns {ImageField} {@link ImageField} if parsed successfully
+   * @returns {null} {@link null} if string was not a hide clause
+   */
   asImage(str: string, log?: boolean): ImageField | null {
     const print = log ? console.log : noop;
 
-    const rx = /^img:(?<url>.*)$/gi.exec(str);
+    const rx = /^img:(?<url>.*)$/gi.exec(str.trim());
     if (!rx?.groups?.url) {
       print(`${str}`, "not img syntax", `in asImage`);
       return null;
@@ -182,21 +226,117 @@ export const Parser = {
       local: rx.groups.url.startsWith("@"),
     };
   },
-  asString(str: string): StringField {
-    return { type: "string", value: str };
+  /** Parse string as a {@link LinkField}.
+   * @returns {LinkField} {@link LinkField} if parsed successfully
+   * @returns {null} {@link null} if string was not a hide clause
+   */
+  asLink(str: string, log = false): LinkField | null {
+    const print = log ? console.log : noop;
+    const rx = /^\[(?<url>https?:\/\/[^\)]*)\]\((?<label>.*?)\)/.exec(
+      str.trim(),
+    );
+
+    if (!rx) {
+      print(`'${str}'`, "no RX", " in asLink");
+      return null;
+    }
+
+    if (!rx?.groups?.url || !rx?.groups?.label) {
+      print(`'${str}'`, "no label or link", " in asLink");
+      return null;
+    }
+
+    if (!z.string().url().safeParse(rx.groups.url).success) {
+      print(`'${str}'`, "invalid url", " in asLink");
+      return null;
+    }
+    const { label, url } = rx.groups;
+    return { type: "link", label, url };
   },
+  /** Parse string as a {@link SFXLinkField}.
+   * @returns {SFXLinkField} {@link SFXLinkField} if parsed successfully
+   * @returns {null} {@link null} if string was not a hide clause
+   */
+  asSFXLink(str: string, log = false): SFXLinkField | null {
+    const print = log ? console.log : noop;
+    const rx = /^sfx:(?<id>\d+)$/gi.exec(str.trim());
+
+    if (!rx) {
+      print(`${str}`, "no RX", " in asSFXLink");
+      return null;
+    }
+
+    if (!rx.groups?.id) {
+      print(`${str}`, "no id", " in asSFXLink");
+      return null;
+    }
+
+    const intID = Number(rx.groups.id);
+
+    if (isNaN(intID) || !isFinite(intID) || !Number.isInteger(intID)) {
+      print(`${str}`, "invalid number", " in asSFXLink");
+      return null;
+    }
+
+    return {
+      id: intID,
+      type: "sfxlink",
+      consume: async (api) => {
+        let result: CollapsedOnomatopoeia[] = [];
+        if ("useUtils" in api) {
+          // clientApi
+          result = await api.useUtils().sfx.listSFX.fetch({ id: intID });
+        } else {
+          //serverApi;
+          result = await api.sfx.listSFX({ id: intID });
+        }
+
+        if (result.length > 0 && result[0]) {
+          return { id: result[0].id, label: result[0].text };
+        }
+
+        return null;
+      },
+    };
+  },
+  stringCounter: 0,
+  asString(str: string): StringField {
+    if (str.startsWith("- ")) {
+      this.stringCounter++;
+    }
+
+    return {
+      type: "string",
+      value: str,
+      ...(this.stringCounter > 0 ? { counter: this.stringCounter } : {}),
+    };
+  },
+  /**
+   * Parse the string as either a command ({@link JumpFieldData}/{@link HideFieldData}) or as a {@link SFXField}
+   * @param str string to parse
+   * @param log Log errors with console.log?
+   * @returns {ParseResult} {@link ParseResult} -- A result of the parse
+   */
   parse(str: string, log = false): ParseResult {
     const jump = this.asJump(str, log);
     if (jump) return jump;
     const hide = this.asHide(str, log);
     if (hide) return hide;
-    return this.asField(str);
+    return this.asField(str, log);
+  },
+  get fieldParsers() {
+    // Use arrow functions to avoid unbound method issues
+    return [
+      (str: string, log?: boolean) => this.asImage(str, log),
+      (str: string, log?: boolean) => this.asLink(str, log),
+      (str: string, log?: boolean) => this.asSFXLink(str, log),
+    ] as const;
   },
   asField(str: string, log = false): SFXField {
-    const img = this.asImage(str, log);
-
-    if (img) return { ...img, index: -1, hidden: false };
-
+    for (const parser of this.fieldParsers) {
+      const result = parser(str, log);
+      if (result) return { ...result, index: -1, hidden: false };
+    }
     return { ...this.asString(str), index: -1, hidden: false };
   },
 };
@@ -283,6 +423,7 @@ export const parseSFXFields = (
       ?.split(";")
       .map<SFXField | null>(parseFieldData)
       .filter((q) => !!q);
+    Parser.stringCounter = 0;
   });
 
   if (log)
@@ -383,8 +524,6 @@ export const parseSFXFields = (
       obj.hidden = true;
     }
   }
-
-  print("Result:", fieldsData);
 
   return fieldsData;
 };

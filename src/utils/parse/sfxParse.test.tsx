@@ -1,8 +1,18 @@
 import "@testing-library/jest-dom";
 // import { getByAltText, render, screen } from "@testing-library/react";
-import { parseSFXFields, type SFXField, type SFXFieldsData } from "./sfxParse";
+import {
+  parseSFXFields,
+  type FieldBase,
+  type SFXField,
+  type SFXFieldsData,
+  type StringField,
+} from "./sfxParse";
 
-const sF = (index: number, value: string, hidden = false): SFXField => {
+const sF = (
+  index: number,
+  value: string,
+  hidden = false,
+): FieldBase & StringField => {
   return { hidden, index, type: "string", value };
 };
 
@@ -170,7 +180,6 @@ describe("String parse - jump", () => {
   });
 
   it("jump multi fail", () => {
-    console.log("=== Multiple fails ===");
     expect(
       parseSFXFields(
         fieldData(
@@ -264,6 +273,55 @@ describe("String parse - img", () => {
     expect(parseSFXFields(fieldData("[_d(1)]img:@test.png", "a"))).toEqual({
       ...emptyFieldResult,
       def: [sF(1, "a"), imgF(1.5, { url: "test.png", local: true })],
+    });
+  });
+});
+
+describe("String parse - links", () => {
+  it("site link", () => {
+    expect(
+      parseSFXFields(fieldData("[https://google.com](Test)")),
+    ).toEqual<SFXFieldsData>({
+      ...emptyFieldResult,
+      read: [
+        {
+          hidden: false,
+          index: 1,
+          type: "link",
+          url: "https://google.com",
+          label: "Test",
+        },
+      ],
+    });
+  });
+
+  it("sfx link", async () => {
+    const parsed = parseSFXFields(fieldData("sfx:1"));
+
+    expect(parsed).toMatchObject<Omit<SFXFieldsData, "data">>({
+      ...emptyFieldResult,
+      read: [
+        {
+          type: "sfxlink",
+          hidden: false,
+          id: 1,
+          index: 1,
+        },
+      ],
+    });
+    expect(parsed).toBe(expect.any(Function));
+  });
+});
+
+describe("String parse - counted strings", () => {
+  it.each(["read", "def", "extra"] as const)("from start - in %s", (key) => {
+    expect(parseSFXFields({ ...fieldData(), [key]: "- a;b;c" })).toEqual({
+      ...emptyFieldResult,
+      read: [
+        { ...sF(1, "a"), counter: 1 },
+        { ...sF(2, "b"), counter: 2 },
+        { ...sF(3, "c"), counter: 3 },
+      ],
     });
   });
 });
