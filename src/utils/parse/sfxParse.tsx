@@ -301,13 +301,13 @@ export const Parser = {
   },
   stringCounter: 0,
   asString(str: string): StringField {
-    if (str.startsWith("- ")) {
+    if (str.startsWith("- ") || this.stringCounter > 0) {
       this.stringCounter++;
     }
 
     return {
       type: "string",
-      value: str,
+      value: str.startsWith("- ") ? str.substring(2) : str,
       ...(this.stringCounter > 0 ? { counter: this.stringCounter } : {}),
     };
   },
@@ -451,7 +451,9 @@ export const parseSFXFields = (
       }
       if (i === q.relIndex) {
         const obj = { ...q.data, index: field.index + 0.5 };
-        fieldData.splice(i + skip + 1, 0, obj);
+        const halves = fieldData.filter((q) => q.index === obj.index); // move to the end of queues queue
+        print("Halves", halves);
+        fieldData.splice(i + skip + halves.length + 1, 0, obj);
         fieldData.sort((a, b) => a.index - b.index);
         print("Added obj", obj, "into field", q.key);
         print("Result: ", fieldsData);

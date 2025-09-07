@@ -12,8 +12,9 @@ const sF = (
   index: number,
   value: string,
   hidden = false,
+  counter?: number,
 ): FieldBase & StringField => {
-  return { hidden, index, type: "string", value };
+  return { hidden, index, type: "string", value, counter };
 };
 
 const imgF = (
@@ -169,6 +170,15 @@ describe("String parse - jump", () => {
     });
   });
 
+  it("two jump to the same place", () => {
+    expect(
+      parseSFXFields(fieldData("a", "[_r(1)]b", "[_r(1)]c", "[_r(1)]d"), true),
+    ).toEqual({
+      ...emptyFieldResult,
+      read: [sF(1, "a"), sF(1.5, "b"), sF(1.5, "c"), sF(1.5, "d")],
+    });
+  });
+
   it("jump single fail", () => {
     expect(
       parseSFXFields(fieldData("[_def(4)]a", "b;c")),
@@ -309,7 +319,10 @@ describe("String parse - links", () => {
         },
       ],
     });
-    expect(parsed).toBe(expect.any(Function));
+    expect(parsed?.read?.[0]?.type).toBe("sfxlink");
+    if (parsed?.read?.[0]?.type === "sfxlink") {
+      expect(parsed?.read?.[0]?.consume).toEqual(expect.any(Function));
+    }
   });
 });
 
@@ -317,11 +330,69 @@ describe("String parse - counted strings", () => {
   it.each(["read", "def", "extra"] as const)("from start - in %s", (key) => {
     expect(parseSFXFields({ ...fieldData(), [key]: "- a;b;c" })).toEqual({
       ...emptyFieldResult,
+      [key]: [sF(1, "a", false, 1), sF(2, "b", false, 2), sF(3, "c", false, 3)],
+    });
+  });
+
+  it("no leaking", () => {
+    expect(parseSFXFields(fieldData("- a;b", "- a;b"))).toEqual({
+      ...emptyFieldResult,
+      read: [sF(1, "a", false, 1), sF(2, "b", false, 2)],
+      def: [sF(3, "a", false, 1), sF(4, "b", false, 2)],
+    });
+  });
+
+  it("skip others", () => {
+    expect(
+      parseSFXFields(fieldData("- a;b;img:@test.png;c", "- a;sfx:1;c")),
+    ).toMatchObject({
+      ...emptyFieldResult,
       read: [
-        { ...sF(1, "a"), counter: 1 },
-        { ...sF(2, "b"), counter: 2 },
-        { ...sF(3, "c"), counter: 3 },
+        sF(1, "a", false, 1),
+        sF(2, "b", false, 2),
+        imgF(3, { url: "test.png", local: true }),
+        sF(4, "c", false, 3),
       ],
+      def: [
+        sF(5, "a", false, 1),
+        { type: "sfxlink", id: 1, hidden: false, index: 6 },
+        sF(7, "c", false, 2),
+      ],
+    });
+  });
+
+  it("counted jumps", () => {
+    expect(parseSFXFields(fieldData("- a;b;c", "- a;b;[_r(1)]c;d"))).toEqual({
+      ...emptyFieldResult,
+      read: [
+        sF(1, "a", false, 1),
+        sF(1.5, "c", false, 1),
+        sF(2, "b", false, 2),
+        sF(3, "c", false, 3),
+      ],
+      def: [sF(4, "a", false, 1), sF(5, "b", false, 2), sF(6, "d", false, 3)],
+    });
+  });
+
+  it("counted multi jump", () => {
+    expect(
+      parseSFXFields(fieldData("- a;b;c", "- a;b;[_r(1)]c;[_r(1)]d")),
+    ).toEqual({
+      ...emptyFieldResult,
+      read: [
+        sF(1, "a", false, 1),
+        sF(1.5, "c", false, 1),
+        sF(1.5, "d", false, 2),
+        sF(2, "b", false, 2),
+        sF(3, "c", false, 3),
+      ],
+      def: [sF(4, "a", false, 1), sF(5, "b", false, 2)],
+    });
+  });
+
+  it("counting forwards jump", () => {
+    expect(parseSFXFields(fieldData("- a;b;[_d(1)]c;d", "- a;b;c"))).toEqual({
+      ...emptyFieldResult,
     });
   });
 });
