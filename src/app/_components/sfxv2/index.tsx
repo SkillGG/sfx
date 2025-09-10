@@ -17,8 +17,6 @@ import type { ClassValue } from "clsx";
 import { SFXEditPanel } from "../sfxEditPanel";
 import { TLCard } from "../tlCard";
 import {
-  parseExtraFieldData,
-  parseSFXText,
   type SaveState,
   type SFXCardClasses,
   type SFXTLDiscriminator,
@@ -27,8 +25,8 @@ import { parseSFXFields } from "@/utils/parse/sfxParse";
 
 const SFXCard = ({
   sfx,
-  tlExtra,
   classNames,
+  tlExtra,
 }: SFXTLDiscriminator & {
   classNames?: SFXCardClasses;
   tlExtra?: string;
@@ -38,20 +36,28 @@ const SFXCard = ({
   const usedSFX = useMemo(() => ({ ...sfx }), [sfx]);
   const titleId = `sfx_${usedSFX.id}_title`;
 
-  const extraData = useCallback(
-    (field: string) => {
-      const efD = parseExtraFieldData(tlExtra ?? "");
-      if (efD) return { field: field, data: efD };
-      return undefined;
-    },
-    [tlExtra],
+  const parsed = useMemo(
+    () =>
+      parseSFXFields({
+        def: sfx.def,
+        extra: sfx.extra,
+        read: sfx.read,
+        tlExtra,
+      }),
+    [sfx.def, sfx.extra, sfx.read, tlExtra],
   );
 
-  const tlExtraText = parseSFXText(`${sfx.id}`, "", extraData("tlExtra"));
-
-  const parsed = parseSFXFields(sfx);
-
-  console.log("parsed", sfx.text, parsed);
+  console.log(
+    "Parsed for",
+    sfx.id,
+    {
+      def: sfx.def,
+      extra: sfx.extra,
+      read: sfx.read,
+      tlExtra,
+    },
+    parsed,
+  );
 
   return (
     <article
@@ -64,6 +70,7 @@ const SFXCard = ({
       aria-labelledby={titleId}
       aria-label="SFX entry"
     >
+      <div className="absolute top-2 left-2 text-red-500">*</div>
       <header
         className={cn(
           "flex-rowitems-baseline flex gap-2",
@@ -84,11 +91,20 @@ const SFXCard = ({
         {usedSFX.read && (
           <div
             className={cn(
-              "text-sm whitespace-pre-wrap text-(--sfx-read-text)",
+              "text-center text-sm text-(--sfx-read-text)",
               classNames?.topinfo?.reading,
             )}
           >
-            {parseSFXText(`${sfx.id}`, usedSFX.read, extraData("read"))}
+            {parsed.read
+              ?.filter((q) => q.type === "string")
+              .filter((q) => !q.hidden)
+              .map((read) => {
+                return (
+                  <div key={`${usedSFX.id}_read_${read.index}_${read.value}`}>
+                    {read.value}
+                  </div>
+                );
+              })}
           </div>
         )}
         <div
@@ -105,7 +121,7 @@ const SFXCard = ({
         </div>
       </header>
 
-      {!!tlExtraText && (
+      {!!parsed.tlExtra?.length && (
         <section
           className={cn(
             "flex w-fit border-2 border-x-0 border-t-0 border-dashed",
@@ -115,30 +131,56 @@ const SFXCard = ({
           aria-labelledby={titleId}
           aria-label="SFX translation info"
         >
-          <span>{tlExtraText}</span>
+          {parsed.tlExtra
+            .filter((q) => q.type === "string")
+            .filter((q) => !q.hidden)
+            .map((field) => (
+              <div key={`${sfx.id}_tl_${field.index}_${field.value}`}>
+                {field.value}
+              </div>
+            ))}
         </section>
       )}
 
       <section
         className={cn(classNames?.bottominfo?.container)}
         aria-labelledby={titleId}
-        aria-label="SFX details"
+        aria-label="SFX definition"
       >
         <div
-          className={cn(
-            "whitespace-pre-wrap text-(--sfx-def-text)",
-            classNames?.bottominfo?.def,
-          )}
+          className={cn("text-(--sfx-def-text)", classNames?.bottominfo?.def)}
         >
-          {parseSFXText(`${sfx.id}`, usedSFX.def, extraData("def"))}
+          {parsed.def
+            ?.filter((q) => q.type === "string")
+            .filter((q) => !q.hidden)
+            .map((field) => (
+              <div key={`${usedSFX.id}_def_${field.index}_${field.value}`}>
+                {field.counter ? `${field.counter}. ` : ""}
+                {field.value}
+              </div>
+            ))}
         </div>
+      </section>
+      <section
+        className={cn(classNames?.bottominfo?.container)}
+        aria-labelledby={titleId}
+        aria-label="SFX extras"
+      >
         <div
           className={cn(
             "pl-8 text-sm whitespace-pre-wrap text-(--sfx-extra-text)",
             classNames?.bottominfo?.extra,
           )}
         >
-          {parseSFXText(`${sfx.id}`, usedSFX.extra, extraData("extra"))}
+          {parsed.extra
+            ?.filter((q) => q.type === "string")
+            .filter((q) => !q.hidden)
+            .map((field) => (
+              <div key={`${usedSFX.id}_extra_${field.index}_${field.value}`}>
+                {field.counter ? `${field.counter}. ` : ""}
+                {field.value}
+              </div>
+            ))}
         </div>
       </section>
 
@@ -158,6 +200,7 @@ const SFXCard = ({
                 <TLCard
                   key={tl.sfx1Id + "." + tl.sfx2Id}
                   tl={tl}
+                  useNewSFX={true}
                   classNames={{
                     ...classNames?.tls?.sfx,
                     container: cn(
@@ -507,6 +550,7 @@ export const SFX = ({
   const [sfxCopy, setSFXCopy] = useState<CollapsedOnomatopoeia>({ ...sfx });
 
   useEffect(() => {
+    console.log("Rendering new SFX", sfx.id);
     setSFXCopy(sfx);
   }, [sfx]);
 
@@ -527,12 +571,17 @@ export const SFX = ({
     if (mode === "view")
       return (
         <div
-          className={cn("mb-2 flex flex-col gap-2", classNames?.editable?.main)}
+          className={cn(
+            "relative mb-2 flex flex-col gap-2",
+            classNames?.editable?.main,
+          )}
         >
           <SFX
             sfx={sfxCopy}
             classNames={
-              classNames?.editable?.sfx ?? { default: classNames?.default }
+              classNames?.editable?.sfx ?? {
+                default: classNames?.default,
+              }
             }
           />
           <div

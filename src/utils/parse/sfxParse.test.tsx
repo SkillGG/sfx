@@ -74,7 +74,7 @@ describe("String parse - multiple", () => {
 describe("String parse - hide", () => {
   it.each(["def", "read", "extra"])(`%s`, (q) => {
     expect(
-      parseSFXFields({ ...fieldData("", "", "", `-${q}(1)`), [q]: `a;b` }),
+      parseSFXFields({ ...fieldData("", "", "", `-${q}1`), [q]: `a;b` }),
     ).toEqual<SFXFieldsData>({
       ...emptyFieldResult,
       [q]: [sF(1, "a", true), sF(2, "b")],
@@ -94,7 +94,7 @@ describe("String parse - hide", () => {
               key === "read" ? "a" : "",
               key === "def" ? "a" : "",
               key === "extra" ? "a" : "",
-              `-${abbr}(1)`,
+              `-${abbr}1`,
             ),
           ),
         ).toEqual({ ...emptyFieldResult, [key]: [sF(1, "a", true)] });
@@ -104,7 +104,7 @@ describe("String parse - hide", () => {
 
   it("hide same multiple times", () => {
     expect(
-      parseSFXFields(fieldData("a;b", "-read(1)", "-read(1)", "-read(1)")),
+      parseSFXFields(fieldData("a;b", "-read1", "-read1", "-read1")),
     ).toEqual({
       ...emptyFieldResult,
       read: [sF(1, "a", true), sF(2, "b", false)],
@@ -130,11 +130,11 @@ describe("String parse - jump", () => {
   ])("$from => $to", ({ from, to }) => {
     const failObj = {
       ...fieldData(),
-      [to]: `[_${to}(1)]a;b`,
+      [to]: `_${to}1:a;b`,
     };
     const successObj = {
       ...fieldData(),
-      [from]: `[_${to}(1)]a`,
+      [from]: `_${to}1:a`,
       [to]: `b`,
     };
 
@@ -145,7 +145,7 @@ describe("String parse - jump", () => {
         ? {
             ...emptyFieldResult,
             // fail
-            [to]: [sF(1, `[_${to}(1)]a`), sF(2, "b")],
+            [to]: [sF(1, `_${to}1:a`), sF(2, "b")],
           }
         : {
             ...emptyFieldResult,
@@ -158,9 +158,9 @@ describe("String parse - jump", () => {
   it("multiple jumps", () => {
     expect(
       parseSFXFields({
-        read: "a;b;[_d(1)]c",
+        read: "a;b;_d1:c",
         def: "d;e;f",
-        extra: "g;[_d(2)]h;i",
+        extra: "g;_d2:h;i",
       }),
     ).toEqual<SFXFieldsData>({
       ...emptyFieldResult,
@@ -171,20 +171,16 @@ describe("String parse - jump", () => {
   });
 
   it("two jump to the same place", () => {
-    expect(
-      parseSFXFields(fieldData("a", "[_r(1)]b", "[_r(1)]c", "[_r(1)]d"), true),
-    ).toEqual({
+    expect(parseSFXFields(fieldData("a", "_r1:b", "_r1:c", "_r1:d"))).toEqual({
       ...emptyFieldResult,
       read: [sF(1, "a"), sF(1.5, "b"), sF(1.5, "c"), sF(1.5, "d")],
     });
   });
 
   it("jump single fail", () => {
-    expect(
-      parseSFXFields(fieldData("[_def(4)]a", "b;c")),
-    ).toEqual<SFXFieldsData>({
+    expect(parseSFXFields(fieldData("_def4:a", "b;c"))).toEqual<SFXFieldsData>({
       ...emptyFieldResult,
-      read: [sF(1, "[_def(4)]a")],
+      read: [sF(1, "_def4:a")],
       def: [sF(2, "b"), sF(3, "c")],
     });
   });
@@ -192,17 +188,13 @@ describe("String parse - jump", () => {
   it("jump multi fail", () => {
     expect(
       parseSFXFields(
-        fieldData(
-          "[_e(12)]a;[_d(1)]b;c",
-          "d;[_e(12)]e;[_r(12)]f",
-          "g;[_e(1)]h;i",
-        ),
+        fieldData("_e12:a;_d1:b;c", "d;_e12:e;_r12:f", "g;_e1:h;i"),
       ),
     ).toEqual<SFXFieldsData>({
       ...emptyFieldResult,
-      read: [sF(1, "[_e(12)]a"), sF(2, `c`)],
-      def: [sF(3, "d"), sF(3.5, `b`), sF(4, "[_e(12)]e"), sF(5, "[_r(12)]f")],
-      extra: [sF(6, "g"), sF(7, "[_e(1)]h"), sF(8, "i")],
+      read: [sF(1, "_e12:a"), sF(2, `c`)],
+      def: [sF(3, "d"), sF(3.5, `b`), sF(4, "_e12:e"), sF(5, "_r12:f")],
+      extra: [sF(6, "g"), sF(7, "_e1:h"), sF(8, "i")],
     });
   }, 1000);
 
@@ -213,7 +205,7 @@ describe("String parse - jump", () => {
       { key: "extra", abbrs: ["e", "ex", "extra"] } as const,
     ].forEach(({ key, abbrs }) => {
       for (const abbr of abbrs) {
-        const jump = `[_${abbr}(1)]jump`;
+        const jump = `_${abbr}1:jump`;
         expect(
           parseSFXFields(
             fieldData(
@@ -230,12 +222,19 @@ describe("String parse - jump", () => {
       }
     });
   });
+
+  it("double jump", () => {
+    expect(parseSFXFields(fieldData("a;b", "_r1:_r2:c"))).toEqual({
+      ...emptyFieldResult,
+      read: [sF(1, "a"), sF(1.5, "_r2:c"), sF(2, "b")],
+    });
+  });
 });
 
 describe("String parse - jump & hide", () => {
   it("hide jumped field", () => {
     expect(
-      parseSFXFields(fieldData("a;c;d", "[_r(1)]b;e;f", "", "-read(2)")),
+      parseSFXFields(fieldData("a;c;d", "_r1:b;e;f", "", "-read2")),
     ).toEqual<SFXFieldsData>({
       ...emptyFieldResult,
       read: [sF(1, "a"), sF(1.5, "b", true), sF(2, "c"), sF(3, "d")],
@@ -244,9 +243,7 @@ describe("String parse - jump & hide", () => {
   });
 
   it("hide children after jump", () => {
-    expect(
-      parseSFXFields(fieldData("a;c", "[_r(1)]b", "", "-read(1)")),
-    ).toEqual({
+    expect(parseSFXFields(fieldData("a;c", "_r1:b", "", "-read1"))).toEqual({
       ...emptyFieldResult,
       read: [sF(1, "a", true), sF(1.5, "b", true), sF(2, "c")],
     });
@@ -272,7 +269,7 @@ describe("String parse - img", () => {
 
   it("hidden img", () => {
     expect(
-      parseSFXFields(fieldData("img:@test.png", "", "", "-read(1)")),
+      parseSFXFields(fieldData("img:@test.png", "", "", "-read1")),
     ).toEqual({
       ...emptyFieldResult,
       read: [imgF(1, { url: "test.png", local: true }, true)],
@@ -280,7 +277,7 @@ describe("String parse - img", () => {
   });
 
   it("moved img", () => {
-    expect(parseSFXFields(fieldData("[_d(1)]img:@test.png", "a"))).toEqual({
+    expect(parseSFXFields(fieldData("_d1:img:@test.png", "a"))).toEqual({
       ...emptyFieldResult,
       def: [sF(1, "a"), imgF(1.5, { url: "test.png", local: true })],
     });
@@ -362,27 +359,40 @@ describe("String parse - counted strings", () => {
   });
 
   it("counted jumps", () => {
-    expect(parseSFXFields(fieldData("- a;b;c", "- a;b;[_r(1)]c;d"))).toEqual({
+    expect(parseSFXFields(fieldData("- a;b;c", "- d;e;_r1:f;g"))).toEqual({
       ...emptyFieldResult,
       read: [
         sF(1, "a", false, 1),
-        sF(1.5, "c", false, 1),
+        sF(1.5, "f"),
         sF(2, "b", false, 2),
         sF(3, "c", false, 3),
       ],
-      def: [sF(4, "a", false, 1), sF(5, "b", false, 2), sF(6, "d", false, 3)],
+      def: [sF(4, "d", false, 1), sF(5, "e", false, 2), sF(6, "g", false, 3)],
     });
   });
 
+  it("inner jump counters", () => {
+    expect(parseSFXFields(fieldData("- a;b", "- d;e;_r1:- f;_r1:g;h"))).toEqual(
+      {
+        ...emptyFieldResult,
+        read: [
+          sF(1, "a", false, 1),
+          sF(1.5, "f", false, 1),
+          sF(1.5, "g", false, 2),
+          sF(2, "b", false, 2),
+        ],
+        def: [sF(3, "d", false, 1), sF(4, "e", false, 2), sF(5, "h", false, 3)],
+      },
+    );
+  });
+
   it("counted multi jump", () => {
-    expect(
-      parseSFXFields(fieldData("- a;b;c", "- a;b;[_r(1)]c;[_r(1)]d")),
-    ).toEqual({
+    expect(parseSFXFields(fieldData("- a;b;c", "- a;b;_r1:c;_r1:d"))).toEqual({
       ...emptyFieldResult,
       read: [
         sF(1, "a", false, 1),
-        sF(1.5, "c", false, 1),
-        sF(1.5, "d", false, 2),
+        sF(1.5, "c"),
+        sF(1.5, "d"),
         sF(2, "b", false, 2),
         sF(3, "c", false, 3),
       ],
@@ -391,8 +401,15 @@ describe("String parse - counted strings", () => {
   });
 
   it("counting forwards jump", () => {
-    expect(parseSFXFields(fieldData("- a;b;[_d(1)]c;d", "- a;b;c"))).toEqual({
+    expect(parseSFXFields(fieldData("- a;b;_d1:c;d", "- a;b;c"))).toEqual({
       ...emptyFieldResult,
+      read: [sF(1, "a", false, 1), sF(2, "b", false, 2), sF(3, "d", false, 3)],
+      def: [
+        sF(4, "a", false, 1),
+        sF(4.5, "c"),
+        sF(5, "b", false, 2),
+        sF(6, "c", false, 3),
+      ],
     });
   });
 });

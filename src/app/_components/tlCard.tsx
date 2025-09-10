@@ -1,5 +1,11 @@
 import type { ClassValue } from "clsx";
-import { SFX, SFXEdit, type SFXClasses, type SFXEditClassNames } from "./sfx";
+import {
+  SFX as SFXv1,
+  SFXEdit as SFXEditv1,
+  type SFXClasses,
+  type SFXEditClassNames,
+} from "./sfx";
+import { SFX as SFXv2, SFXEdit as SFXEditv2 } from "./sfxv2";
 import {
   cn,
   type CollapsedOnomatopoeia,
@@ -31,6 +37,8 @@ export const TLCard = ({
   noTLs,
   allowDeeperTLs,
 
+  useNewSFX,
+
   classNames,
 
   onChange,
@@ -49,11 +57,15 @@ export const TLCard = ({
   noTLs?: boolean;
   allowDeeperTLs?: boolean;
 
+  useNewSFX?: boolean;
+
   classNames?: TLClassNames;
 
   onSave?: (tl: CollapsedTL | null) => Promisable<void>;
   onChange?: (tl: CollapsedTL) => Promisable<void>;
 }) => {
+  const SFXEdit = useNewSFX ? SFXEditv2 : SFXEditv1;
+
   const { langs } = useSFXLangs();
 
   const [mode, setMode] = useState<"view" | "edit">(
@@ -135,6 +147,8 @@ export const TLCard = ({
       </>
     );
   }
+
+  const SFX = useNewSFX ? SFXv2 : SFXv1;
 
   return (
     <div className={cn("relative", classNames?.container)}>
