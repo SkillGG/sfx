@@ -114,25 +114,48 @@ export const Parser = {
   /** Strip all non-text data (e.g. jumps `[_d(2)]`, hide patterns `-d(1)` , images, etc.)
    *
    * Used for search purposes */
-  strip(str?: string | null): string {
+  strip(
+    str?: string | null,
+    leave?: (SFXField["type"] | "jump" | "hide")[],
+    log?: Log,
+  ): string {
+    const print = log ? __print("LOG", log, "Parser.strip") : noop;
+
     if (!str) return "";
 
-    const parsed = this.parse(str.trim());
+    const arr = str.split(";");
 
-    if (this.isJump(parsed)) {
-      return parsed.data;
-    }
+    return arr
+      .map((str) => {
+        const parsed = this.parse(str.trim());
 
-    if (this.isHide(parsed)) return "";
+        print("Stripping!", str);
 
-    if (this.isField(parsed)) {
-      if (
-        (["link", "sfxlink", "img"] as SFXField["type"][]).includes(parsed.type)
-      )
-        return "";
-    }
+        if (this.isJump(parsed)) {
+          print("jump");
+          return leave?.includes("jump") ? str : parsed.data;
+        }
 
-    return str;
+        if (this.isHide(parsed)) {
+          print("hide");
+          return leave?.includes("hide") ? str : "";
+        }
+
+        if (this.isField(parsed)) {
+          if (
+            (["link", "sfxlink", "img"] as SFXField["type"][]).includes(
+              parsed.type,
+            )
+          ) {
+            print("non-str field");
+            return leave?.includes(parsed.type) ? str : "";
+          }
+        }
+
+        return str;
+      })
+      .filter(Boolean)
+      .join(";");
   },
   /** Tests if {@link Parser.parse} resulted in a {@link JumpFieldData} */
   isJump(o: ParseResult): o is JumpFieldData {

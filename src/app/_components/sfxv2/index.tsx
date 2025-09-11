@@ -1,13 +1,7 @@
 "use client";
 
 import { cn, type CollapsedOnomatopoeia, type Promisable } from "@/utils/utils";
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useSFXLangs } from "../../hooks/langs";
 import { SFXLangSelect } from "./sfxLangSelect";
 import { env } from "@/env";
@@ -21,7 +15,13 @@ import {
   type SFXCardClasses,
   type SFXTLDiscriminator,
 } from "./utils";
-import { parseSFXFields } from "@/utils/parse/sfxParse";
+import { Parser, parseSFXFields } from "@/utils/parse/sfxParse";
+
+const reversedTL = (str?: string): string => {
+  if (!str) return "";
+
+  return Parser.strip(str, ["jump"]);
+};
 
 const SFXCard = ({
   sfx,
@@ -199,7 +199,16 @@ const SFXCard = ({
               return (
                 <TLCard
                   key={tl.sfx1Id + "." + tl.sfx2Id}
-                  tl={tl}
+                  tl={
+                    isReversed
+                      ? {
+                          ...tl,
+                          additionalInfo: reversedTL(
+                            tl.additionalInfo?.substring(1),
+                          ),
+                        }
+                      : tl
+                  }
                   useNewSFX={true}
                   classNames={{
                     ...classNames?.tls?.sfx,
