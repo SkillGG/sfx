@@ -27,6 +27,10 @@ export type SFXCardClasses = {
     container?: ClassValue;
     sfx?: SFXClasses;
   };
+  tlExtras?: {
+    container?: ClassValue;
+    field?: ClassValue;
+  }
 };
 
 export type SFXField =

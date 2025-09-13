@@ -67,6 +67,19 @@
     --select-text: var(--accent-400);
     --select-bg: var(--color-slate-700);
   }
+
+  --login-error-text: var(--error-500);
+  --login-error-bg: var(--error-50);
+  --login-error-border: var(--error-500);
+
+  &.dark {
+    --login-error-text: var(--notice-300);
+    --login-error-bg: var(--error-600);
+    --login-error-border: var(--error-500);
+    @supports (color: color-mix(in lab, red, red)) {
+      --login-error-bg: color-mix(in oklab, var(--error-600) 25%, transparent);
+    }
+  }
 }
 
 /* Inputs */
@@ -197,7 +210,7 @@
   --sfx-read-text: var(--accent-500);
   --sfx-lang-text: var(--accent-500);
   --sfx-lang-new-text: var(--notice-700);
-  --sfx-tlextra-text: var(--accent-400);
+  --sfx-tlextra-text: var(--notice-400);
   --sfx-tlextra-underline: var(--error-300);
   --sfx-def-text: var(--accent-700);
   --sfx-extra-text: var(--accent-400);
@@ -207,7 +220,7 @@
     --sfx-read-text: var(--accent-400);
     --sfx-lang-text: var(--accent-400);
     --sfx-lang-new-text: var(--notice-200);
-    --sfx-tlextra-text: var(--accent-300);
+    --sfx-tlextra-text: var(--notice-100);
     --sfx-tlextra-underline: var(--error-300);
     --sfx-def-text: var(--accent-300);
     --sfx-extra-text: var(--accent-500);

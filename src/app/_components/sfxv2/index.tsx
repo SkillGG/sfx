@@ -15,12 +15,26 @@ import {
   type SFXCardClasses,
   type SFXTLDiscriminator,
 } from "./utils";
-import { Parser, parseSFXFields } from "@/utils/parse/sfxParse";
+import {
+  Parser,
+  parseSFXFields,
+  stringToSFXFieldKey,
+} from "@/utils/parse/sfxParse";
+import { SFXFieldDiv } from "./fields";
+
+const REVERSE_MARK = "⏉";
 
 const reversedTL = (str?: string): string => {
   if (!str) return "";
 
-  return Parser.strip(str, ["jump"]);
+  const hides = Parser.parseMultiple(str)?.filter((q) => Parser.isHide(q));
+
+  return `${Parser.strip(str, ["jump"])};${hides
+    .map((q) =>
+      stringToSFXFieldKey(q.key) === "def" ? `_d${q.index}:(Not here)` : "",
+    )
+    .filter(Boolean)
+    .join(";")}`;
 };
 
 const SFXCard = ({
@@ -89,24 +103,22 @@ const SFXCard = ({
         </div>
 
         {usedSFX.read && (
-          <div
-            className={cn(
-              "text-center text-sm text-(--sfx-read-text)",
-              classNames?.topinfo?.reading,
-            )}
-          >
+          <div className={cn(classNames?.topinfo?.reading)}>
             {parsed.read
               ?.filter((q) => q.type === "string")
               .filter((q) => !q.hidden)
               .map((read) => {
                 return (
-                  <div key={`${usedSFX.id}_read_${read.index}_${read.value}`}>
-                    {read.value}
-                  </div>
+                  <SFXFieldDiv
+                    key={`${usedSFX.id}_read_${read.index}_${read.value}`}
+                    field={read}
+                    type="read"
+                  />
                 );
               })}
           </div>
         )}
+
         <div
           className={cn(
             "flex-1 text-right text-sm",
@@ -126,7 +138,8 @@ const SFXCard = ({
           className={cn(
             "flex w-fit border-2 border-x-0 border-t-0 border-dashed",
             "border-(--sfx-tlextra-underline) px-1",
-            "text-base text-(--sfx-tlextra-text)",
+            "flex-col",
+            classNames?.tlExtras?.container,
           )}
           aria-labelledby={titleId}
           aria-label="SFX translation info"
@@ -135,9 +148,12 @@ const SFXCard = ({
             .filter((q) => q.type === "string")
             .filter((q) => !q.hidden)
             .map((field) => (
-              <div key={`${sfx.id}_tl_${field.index}_${field.value}`}>
-                {field.value}
-              </div>
+              <SFXFieldDiv
+                key={`${sfx.id}_tl_${field.index}_${field.value}`}
+                field={field}
+                type="tlExtra"
+                className={classNames?.tlExtras?.field}
+              />
             ))}
         </section>
       )}
@@ -147,17 +163,16 @@ const SFXCard = ({
         aria-labelledby={titleId}
         aria-label="SFX definition"
       >
-        <div
-          className={cn("text-(--sfx-def-text)", classNames?.bottominfo?.def)}
-        >
+        <div className={cn(classNames?.bottominfo?.def)}>
           {parsed.def
             ?.filter((q) => q.type === "string")
             .filter((q) => !q.hidden)
             .map((field) => (
-              <div key={`${usedSFX.id}_def_${field.index}_${field.value}`}>
-                {field.counter ? `${field.counter}. ` : ""}
-                {field.value}
-              </div>
+              <SFXFieldDiv
+                key={`${usedSFX.id}_def_${field.index}_${field.value}`}
+                field={field}
+                type="def"
+              />
             ))}
         </div>
       </section>
@@ -166,20 +181,16 @@ const SFXCard = ({
         aria-labelledby={titleId}
         aria-label="SFX extras"
       >
-        <div
-          className={cn(
-            "pl-8 text-sm whitespace-pre-wrap text-(--sfx-extra-text)",
-            classNames?.bottominfo?.extra,
-          )}
-        >
+        <div className={cn("pl-8", classNames?.bottominfo?.extra)}>
           {parsed.extra
             ?.filter((q) => q.type === "string")
             .filter((q) => !q.hidden)
             .map((field) => (
-              <div key={`${usedSFX.id}_extra_${field.index}_${field.value}`}>
-                {field.counter ? `${field.counter}. ` : ""}
-                {field.value}
-              </div>
+              <SFXFieldDiv
+                key={`${usedSFX.id}_extra_${field.index}_${field.value}`}
+                field={field}
+                type="extra"
+              />
             ))}
         </div>
       </section>
@@ -195,7 +206,7 @@ const SFXCard = ({
             aria-label="SFX translation list"
           >
             {usedSFX.tls.map((tl) => {
-              const isReversed = tl.additionalInfo?.startsWith("⏉");
+              const isReversed = tl.additionalInfo?.startsWith(REVERSE_MARK);
               return (
                 <TLCard
                   key={tl.sfx1Id + "." + tl.sfx2Id}
@@ -576,7 +587,13 @@ export const SFX = ({
       ? (labels?.removeSure ?? "Are you sure?")
       : (labels?.removeDefault ?? "Remove");
 
-  if (editable) {
+  if (
+    editable &&
+    !(
+      tlExtra?.startsWith(REVERSE_MARK) ||
+      sfx.tls.some((q) => q.additionalInfo?.startsWith(REVERSE_MARK))
+    )
+  ) {
     if (mode === "view")
       return (
         <div

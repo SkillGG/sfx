@@ -22,13 +22,13 @@ export type FieldBase = {
   /** Final absolute index */
   index: number;
   hidden: boolean;
+  jumpedFrom?: keyof SFXFieldsData;
 };
 
 export type StringField = {
   type: "string";
   value: string;
   counter?: number;
-  classNames?: string;
 };
 export type ImageField = { type: "img"; url: string; local: boolean };
 
@@ -75,7 +75,7 @@ type JumpFieldData = {
   raw: string;
 };
 
-export const stringToSFXFieldKey = (k: string): keyof SFXFieldsData | null => {
+export const stringToSFXFieldKey = (k: string): keyof SFXFieldsData => {
   switch (k) {
     case "d":
     case "def":
@@ -88,8 +88,9 @@ export const stringToSFXFieldKey = (k: string): keyof SFXFieldsData | null => {
     case "r":
     case "read":
       return "read";
+    default:
+      return "tlExtra";
   }
-  return null;
 };
 
 type ParseResult = SFXField | HideFieldData | JumpFieldData;
@@ -391,6 +392,9 @@ export const Parser = {
     if (hide) return hide;
     return this.asField(str, log);
   },
+  parseMultiple(str: string, separator = ";", log?: Log): ParseResult[] {
+    return str.split(separator)?.map((q) => this.parse(q, log));
+  },
   get fieldParsers() {
     // Use arrow functions to avoid unbound method issues
     return [
@@ -474,7 +478,7 @@ export const parseSFXFields = (
         const curCount = Parser.stringCounter;
         Parser.stringCounter = 0;
         const specialField: (typeof specialFields)[number] = {
-          data: Parser.asField(field.data, log),
+          data: { ...Parser.asField(field.data, log), jumpedFrom: fieldKey },
           relIndex: field.index,
           key: field.to,
           onFail: {
