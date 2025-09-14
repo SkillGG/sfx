@@ -23,7 +23,10 @@ const jumped = <T extends FieldBase>(q: T, j: string): T => ({
   jumpedFrom: stringToSFXFieldKey(j),
 });
 
-const hide = <T extends FieldBase>(q: T): T => ({ ...q, hidden: true });
+const hide = <T extends FieldBase>(q: T, hI?: number[]): T => ({
+  ...q,
+  hidden: hI ?? true,
+});
 
 const imgF = (
   index: number,
@@ -115,6 +118,20 @@ describe("String parse - hide", () => {
     ).toEqual({
       ...emptyFieldResult,
       read: [hide(sF(1, "a")), sF(2, "b")],
+    });
+  });
+
+  it("hide with reverse indices", () => {
+    expect(parseSFXFields(fieldData("a;b", "", "", "-r1/1,2"))).toEqual({
+      ...emptyFieldResult,
+      read: [hide(sF(1, "a"), [0, 1]), sF(2, "b")],
+    });
+  });
+
+  it("hide same with reverse", () => {
+    expect(parseSFXFields(fieldData("a;b", "", "", "-r1/"))).toEqual({
+      ...emptyFieldResult,
+      read: [hide(sF(1, "a"), [0]), sF(2, "b")],
     });
   });
 });

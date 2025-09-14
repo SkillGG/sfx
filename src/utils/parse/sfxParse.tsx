@@ -11,9 +11,9 @@ import z from "zod";
  *    sfx:<number> //
  *    <text> // string node
  *  <Hide> // hides element
- *    -<field>(<index>) // hide <index> element from <field>. (index is relative)
+ *    -<field><index>/<revIndex> // hide <index> element from <field>. (index is relative)
  *   <Jump> // create SFXData under other SFXData group as if it was part of the original group
- *    [_<field>(<index>)]<text> // create <text> under <field>
+ *    _<field><index>:<text> // create <text> under <field>
  */
 
 const noop = () => void 0;
@@ -21,7 +21,7 @@ const noop = () => void 0;
 export type FieldBase = {
   /** Final absolute index */
   index: number;
-  hidden: boolean;
+  hidden: boolean | number[];
   jumpedFrom?: keyof SFXFieldsData;
 };
 
@@ -65,6 +65,7 @@ type HideFieldData = {
   /** Relative index */
   index: number;
   key: keyof SFXFieldsData;
+  revIndices?: number[];
 };
 
 type JumpFieldData = {
@@ -117,7 +118,7 @@ export const Parser = {
    * Used for search purposes */
   strip(
     str?: string | null,
-    leave?: (SFXField["type"] | "jump" | "hide")[],
+    leave?: (SFXField["type"] | "jump" | "jump_field" | "hide")[],
     log?: Log,
   ): string {
     const print = log ? __print("LOG", log, "Parser.strip") : noop;
@@ -134,7 +135,11 @@ export const Parser = {
 
         if (this.isJump(parsed)) {
           print("jump");
-          return leave?.includes("jump") ? str : parsed.data;
+          return leave?.includes("jump")
+            ? str
+            : leave?.includes("jump_field")
+              ? parsed.data
+              : "";
         }
 
         if (this.isHide(parsed)) {
@@ -150,6 +155,9 @@ export const Parser = {
           ) {
             print("non-str field");
             return leave?.includes(parsed.type) ? str : "";
+          }
+          if (parsed.type === "string") {
+            return leave?.includes("string") ? str : parsed.value;
           }
         }
 
@@ -221,7 +229,10 @@ export const Parser = {
     const printErr = log
       ? __print("ERROR", log, "asHide", console.error)
       : noop;
-    const rx = /^\-(?<key>[a-z]+)(?<index>\d+)$/i.exec(str.trim());
+    const rx =
+      /^\-(?<key>[a-z]+)(?<index>\d+)(?<revIndex>\/(?:\d+,?)*)?$/i.exec(
+        str.trim(),
+      );
     if (!rx) {
       printErr(`'${str}'`, "no RX");
       return null;
@@ -245,6 +256,26 @@ export const Parser = {
     if (!kKey) {
       printErr(`'${str}'`, "invalid key");
       return null;
+    }
+
+    const revIndex = rx.groups?.revIndex;
+    if (revIndex) {
+      const revIndices = revIndex
+        .substring(1)
+        .split(",")
+        .map(Number)
+        .filter((q) => !!q)
+        .map((q) => q - 1);
+      print(`'${str}'`, {
+        index: i - 1,
+        key: kKey,
+        revIndices: revIndices.length > 0 ? revIndices : [i - 1],
+      });
+      return {
+        index: i - 1,
+        key: kKey,
+        revIndices: revIndices.length > 0 ? revIndices : [i - 1],
+      };
     }
     print(`'${str}'`, { index: i - 1, key: kKey });
     return { index: i - 1, key: kKey };
@@ -446,6 +477,7 @@ export const parseSFXFields = (
   const hideCalls: {
     key: keyof SFXFieldsData;
     relIndex: number;
+    revIndices?: number[];
   }[] = [];
 
   forEachField((fieldKey) => {
@@ -493,7 +525,11 @@ export const parseSFXFields = (
         return null;
       }
       if (Parser.isHide(field)) {
-        hideCalls.push({ key: field.key, relIndex: field.index });
+        hideCalls.push({
+          key: field.key,
+          relIndex: field.index,
+          revIndices: field.revIndices,
+        });
         return null;
       }
       return { ...field, index: ++index };
@@ -601,17 +637,19 @@ export const parseSFXFields = (
   });
 
   // hide
-  for (const { key, relIndex } of hideCalls) {
+  for (const hideCall of hideCalls) {
+    const { key, relIndex } = hideCall;
     const f = fieldsData[key];
     if (!f) continue;
 
     const obj = f.find((_, i) => i === relIndex);
     if (obj) {
+      const hideValue = hideCall.revIndices ?? true;
       const children = f.filter((q) =>
         obj.index % 1 === 0 ? q.index === obj.index + 0.5 : false,
       );
-      children.forEach((c) => (c.hidden = true));
-      obj.hidden = true;
+      children.forEach((c) => (c.hidden = hideValue));
+      obj.hidden = hideValue;
     }
   }
 

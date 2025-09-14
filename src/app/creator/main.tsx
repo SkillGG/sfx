@@ -210,6 +210,7 @@ const CreatorPage = () => {
               setSFX(ntext.value);
               setExtra(nextra.value);
             }}
+            className={"max-h-[30vh] overflow-scroll"}
             value={{
               text: {
                 label: "SFX",

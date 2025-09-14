@@ -1,6 +1,5 @@
 import { cn } from "@/utils/utils";
 import { Suspense } from "react";
-import { LocalImg } from "./localImg";
 import { Spinner } from "../spinner";
 import type {
   FieldBase,
@@ -9,19 +8,20 @@ import type {
   StringField as StringFieldType,
 } from "@/utils/parse/sfxParse";
 import type { ClassValue } from "clsx";
+import { LocalImg } from "./localImg";
 
 export const FieldTypeClasses: Record<
   keyof SFXFieldsData | `${keyof SFXFieldsData}_j`,
   string
 > = {
-  read: "text-sm text-center text-(--sfx-read-text)",
-  read_j: "text-sm text-center text-(--sfx-read-text)",
+  read: "text-sm ml-2 text-(--sfx-read-text)",
+  read_j: "text-sm text-(--sfx-read-text) ml-4",
   extra: "text-sm whitespace-pre-wrap text-(--sfx-extra-text)",
   extra_j: "text-sm whitespace-pre-wrap text-(--sfx-extra-text) ml-4",
   tlExtra: "text-base text-(--sfx-tlextra-text)",
   tlExtra_j: "text-sm text-(--sfx-extra-text) ml-4",
   def: "text-(--sfx-def-text)",
-  def_j: "text-(--sfx-def-text)",
+  def_j: "text-(--sfx-def-text) ml-4",
 };
 
 export const StringField = ({
@@ -37,7 +37,9 @@ export const StringField = ({
 
   return (
     <div className={cn(FieldTypeClasses[fieldType], className)}>
-      {field.counter ? `${field.counter}.` : ""}
+      <span className="font-mono">
+        {field.counter ? `${field.counter}. ` : ""}
+      </span>
       {field.value}
     </div>
   );

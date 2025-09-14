@@ -1,10 +1,10 @@
 import React, { Suspense, type ReactNode } from "react";
 import { Spinner } from "../spinner";
 import { cn, type CollapsedOnomatopoeia } from "@/utils/utils";
-import SFXLink from "./sfxLink";
-import { LocalImg } from "./localImg";
 import type { ClassValue } from "clsx";
-import type { SFXClasses } from ".";
+import type { SFXClasses } from "./index";
+import SfxLink from "../sfx/sfxLink";
+import { LocalImg } from "../sfx/localImg";
 
 export type SaveState = "default" | "done" | "waiting";
 
@@ -26,6 +26,10 @@ export type SFXCardClasses = {
   tls?: {
     container?: ClassValue;
     sfx?: SFXClasses;
+  };
+  tlExtras?: {
+    container?: ClassValue;
+    field?: ClassValue;
   };
 };
 
@@ -267,7 +271,7 @@ export const parseSFXText = (
             .reduce<number[]>((arr, q) => [...arr, q.data], [])
             .map((q) => {
               return (
-                <SFXLink
+                <SfxLink
                   key={`${key}_sfx_link_${q}`}
                   id={q}
                   className={cn("mx-1")}

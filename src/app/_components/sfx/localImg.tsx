@@ -3,15 +3,18 @@ import { cn } from "@/utils/utils";
 import Image from "next/image";
 import { useRef } from "react";
 import { AsyncImage } from "../asyncImage";
+import type { ClassValue } from "clsx";
 
 export const LocalImg = ({
   filename,
   alt,
   nonDB,
+  className,
 }: {
   filename: string;
   alt: string;
   nonDB?: React.ReactNode;
+  className?: ClassValue;
 }) => {
   const [img] = nonDB
     ? [filename]
@@ -56,6 +59,7 @@ export const LocalImg = ({
             className={cn(
               "-z-10 h-[100px] w-auto",
               "relative hover:cursor-pointer",
+              className,
             )}
             containerClassName={cn("w-fit h-full")}
             style={{ position: "initial", width: "auto" }}
@@ -67,7 +71,11 @@ export const LocalImg = ({
             width={0}
             height={0}
             unoptimized
-            className={cn("h-[100px] w-auto", "hover:cursor-pointer")}
+            className={cn(
+              "h-[100px] w-auto",
+              "hover:cursor-pointer",
+              className,
+            )}
           />
         )}
       </div>
