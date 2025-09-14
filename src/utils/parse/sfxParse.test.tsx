@@ -9,8 +9,18 @@ import {
   type StringField,
 } from "./sfxParse";
 
-const sF = (index: number, value: string): FieldBase & StringField => {
-  return { hidden: false, index, type: "string", value };
+const sF = (
+  index: number,
+  value: string,
+  key?: string,
+): FieldBase & StringField => {
+  return {
+    hidden: false,
+    index,
+    type: "string",
+    value,
+    key: key ?? `${index}`,
+  };
 };
 
 const count = <T extends StringField>(q: T, c: number): T => ({
@@ -18,9 +28,10 @@ const count = <T extends StringField>(q: T, c: number): T => ({
   counter: c,
 });
 
-const jumped = <T extends FieldBase>(q: T, j: string): T => ({
+const jumped = <T extends FieldBase>(q: T, j: string, n = 0): T => ({
   ...q,
   jumpedFrom: stringToSFXFieldKey(j),
+  key: `${q.key}.${n}`,
 });
 
 const hide = <T extends FieldBase>(q: T, hI?: number[]): T => ({
@@ -31,8 +42,16 @@ const hide = <T extends FieldBase>(q: T, hI?: number[]): T => ({
 const imgF = (
   index: number,
   { url, local }: { url: string; local: boolean },
+  key?: string,
 ): SFXField => {
-  return { hidden: false, type: "img", index, local, url };
+  return {
+    hidden: false,
+    type: "img",
+    index,
+    local,
+    url,
+    key: key ?? `${index}`,
+  };
 };
 
 export const fieldData = (
@@ -206,8 +225,8 @@ describe("String parse - jump", () => {
       read: [
         sF(1, "a"),
         jumped(sF(1.5, "b"), "d"),
-        jumped(sF(1.5, "c"), "e"),
-        jumped(sF(1.5, "d"), "t"),
+        jumped(sF(1.5, "c"), "e", 1),
+        jumped(sF(1.5, "d"), "t", 2),
       ],
     });
   });
@@ -345,12 +364,13 @@ describe("String parse - links", () => {
           type: "link",
           url: "https://google.com",
           label: "Test",
+          key: "1",
         },
       ],
     });
   });
 
-  it("sfx link", async () => {
+  it("sfx link", () => {
     const parsed = parseSFXFields(fieldData("sfx:1"));
 
     expect(parsed).toMatchObject<Omit<SFXFieldsData, "data">>({
@@ -359,14 +379,50 @@ describe("String parse - links", () => {
         {
           type: "sfxlink",
           hidden: false,
-          id: 1,
+          ids: [1],
           index: 1,
+          key: "1",
         },
       ],
     });
     if (parsed?.read?.[0]?.type === "sfxlink") {
       expect(parsed?.read?.[0]?.consume).toEqual(expect.any(Function));
     }
+  });
+
+  it("multi sfx link", () => {
+    const parsed = parseSFXFields(fieldData("sfx:1,2,3"));
+
+    expect(parsed).toMatchObject<Omit<SFXFieldsData, "data">>({
+      ...emptyFieldResult,
+      read: [
+        {
+          type: "sfxlink",
+          hidden: false,
+          ids: [1, 2, 3],
+          index: 1,
+          key: "1",
+        },
+      ],
+    });
+  });
+
+  it("labeled sfx", () => {
+    const parsed = parseSFXFields(fieldData("sfx[This is the label__:P]:1"));
+
+    expect(parsed).toMatchObject<Omit<SFXFieldsData, "data">>({
+      ...emptyFieldResult,
+      read: [
+        {
+          type: "sfxlink",
+          hidden: false,
+          ids: [1],
+          label: "This is the label__:P",
+          index: 1,
+          key: "1",
+        },
+      ],
+    });
   });
 });
 
@@ -399,7 +455,7 @@ describe("String parse - counted strings", () => {
       ],
       def: [
         count(sF(5, "a"), 1),
-        { type: "sfxlink", id: 1, hidden: false, index: 6 },
+        { type: "sfxlink", ids: [1], hidden: false, index: 6 },
         count(sF(7, "c"), 2),
       ],
     });
@@ -425,7 +481,7 @@ describe("String parse - counted strings", () => {
         read: [
           count(sF(1, "a"), 1),
           jumped(count(sF(1.5, "f"), 1), "d"),
-          jumped(count(sF(1.5, "g"), 2), "d"),
+          jumped(count(sF(1.5, "g"), 2), "d", 1),
           count(sF(2, "b"), 2),
         ],
         def: [count(sF(3, "d"), 1), count(sF(4, "e"), 2), count(sF(5, "h"), 3)],
@@ -439,7 +495,7 @@ describe("String parse - counted strings", () => {
       read: [
         count(sF(1, "a"), 1),
         jumped(sF(1.5, "c"), "d"),
-        jumped(sF(1.5, "d"), "d"),
+        jumped(sF(1.5, "d"), "d", 1),
         count(sF(2, "b"), 2),
         count(sF(3, "c"), 3),
       ],

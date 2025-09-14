@@ -15,8 +15,8 @@ export async function generateMetadata({
   const params = await searchParams;
   const query = searchParamsToQuery(params);
 
-  // const baseURL = `http://localhost:3000`;
-  const baseURL = `https://www.sfxvault.org`;
+  const baseURL = `http://localhost:3000`;
+  // const baseURL = `https://www.sfxvault.org`;
 
   const curURL = new URL(`${baseURL}`);
 
@@ -59,6 +59,8 @@ export async function generateMetadata({
     let description = basicMetadata.description ?? "";
 
     const twitterImage = `${baseURL}/api/images?id=${query.id}`;
+
+    console.log("metadata IMG", twitterImage);
 
     if (searchResult.length > 0) {
       keywords.push(

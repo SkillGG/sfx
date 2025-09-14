@@ -273,7 +273,7 @@ export const parseSFXText = (
               return (
                 <SfxLink
                   key={`${key}_sfx_link_${q}`}
-                  id={q}
+                  ids={[q]}
                   className={cn("mx-1")}
                 />
               );

@@ -18,8 +18,10 @@ import {
   Parser,
   parseSFXFields,
   stringToSFXFieldKey,
+  type SFXField,
+  type SFXFieldWithMultiIMG,
 } from "@/utils/parse/sfxParse";
-import { SFXFieldDiv } from "./fields";
+import { MultiIMGField, SFXFieldDiv } from "./fields";
 import { SFXLangSelect } from "../sfx/sfxLangSelect";
 
 const REVERSE_MARK = "⏉";
@@ -31,13 +33,32 @@ const reversedTL = (str?: string): string => {
 
   return `${Parser.strip(str)};${hides
     .map((q) =>
-      stringToSFXFieldKey(q.key) === "def"
-        ? q.revIndices?.map((q) => `_d${q + 1}:(Not here)`)
+      stringToSFXFieldKey(q.fieldKey) === "def"
+        ? q.revIndices?.map((q) => `-d${q + 1}`)
         : "",
     )
     .flat(2)
     .filter(Boolean)
     .join(";")}`;
+};
+
+const allowedFields: SFXField["type"][] = ["sfxlink", "string", "link", "img"];
+
+const reduceMultiIMGs = (
+  p: SFXFieldWithMultiIMG[],
+  n: SFXField,
+): SFXFieldWithMultiIMG[] => {
+  if (n.type === "img" && p.length > 0) {
+    const lastP = p[p.length - 1];
+    if (Array.isArray(lastP)) {
+      lastP.push(n);
+      return p;
+    } else if (lastP?.type === "img") {
+      return [...p.slice(0, -1), [lastP, n]];
+    }
+  }
+
+  return [...p, n];
 };
 
 const SFXCard = ({
@@ -74,8 +95,6 @@ const SFXCard = ({
     [sfx.def, sfx.extra, sfx.read, curTLExtra],
   );
 
-  console.log("parsed", sfx.id, parsed);
-
   return (
     <article
       className={cn(
@@ -108,12 +127,21 @@ const SFXCard = ({
         {usedSFX.read && (
           <div className={cn(classNames?.topinfo?.reading)}>
             {parsed.read
-              ?.filter((q) => q.type === "string")
+              ?.filter((q) => allowedFields.includes(q.type))
               .filter((q) => !q.hidden)
+              .reduce(reduceMultiIMGs, [])
               .map((read) => {
+                if (Array.isArray(read)) {
+                  return (
+                    <MultiIMGField
+                      fields={read}
+                      key={`${usedSFX.id}_multiIMG_read_${read.map((q) => q.key).join("_")}`}
+                    />
+                  );
+                }
                 return (
                   <SFXFieldDiv
-                    key={`${usedSFX.id}_read_${read.index}_${read.value}`}
+                    key={`${usedSFX.id}_read_${read.key}`}
                     field={read}
                     type="read"
                   />
@@ -148,16 +176,24 @@ const SFXCard = ({
           aria-label="SFX translation info"
         >
           {parsed.tlExtra
-            .filter((q) => q.type === "string")
+            .filter((q) => allowedFields.includes(q.type))
             .filter((q) => !q.hidden)
-            .map((field) => (
-              <SFXFieldDiv
-                key={`${sfx.id}_tl_${field.index}_${field.value}`}
-                field={field}
-                type="tlExtra"
-                className={classNames?.tlExtras?.field}
-              />
-            ))}
+            .reduce(reduceMultiIMGs, [])
+            .map((field) =>
+              Array.isArray(field) ? (
+                <MultiIMGField
+                  fields={field}
+                  key={`${usedSFX.id}_multiIMG_read_${field.map((q) => q.key).join("_")}`}
+                />
+              ) : (
+                <SFXFieldDiv
+                  key={`${sfx.id}_tl_${field.key}`}
+                  field={field}
+                  type="tlExtra"
+                  className={classNames?.tlExtras?.field}
+                />
+              ),
+            )}
         </section>
       )}
 
@@ -168,15 +204,23 @@ const SFXCard = ({
       >
         <div className={cn(classNames?.bottominfo?.def)}>
           {parsed.def
-            ?.filter((q) => q.type === "string")
+            ?.filter((q) => allowedFields.includes(q.type))
             .filter((q) => !q.hidden)
-            .map((field) => (
-              <SFXFieldDiv
-                key={`${usedSFX.id}_def_${field.index}_${field.value}`}
-                field={field}
-                type="def"
-              />
-            ))}
+            .reduce(reduceMultiIMGs, [])
+            .map((field) =>
+              Array.isArray(field) ? (
+                <MultiIMGField
+                  fields={field}
+                  key={`${usedSFX.id}_multiIMG_read_${field.map((q) => q.key).join("_")}`}
+                />
+              ) : (
+                <SFXFieldDiv
+                  key={`${usedSFX.id}_def_${field.key}`}
+                  field={field}
+                  type="def"
+                />
+              ),
+            )}
         </div>
       </section>
       <section
@@ -186,15 +230,23 @@ const SFXCard = ({
       >
         <div className={cn("pl-8", classNames?.bottominfo?.extra)}>
           {parsed.extra
-            ?.filter((q) => q.type === "string")
+            ?.filter((q) => allowedFields.includes(q.type))
             .filter((q) => !q.hidden)
-            .map((field) => (
-              <SFXFieldDiv
-                key={`${usedSFX.id}_extra_${field.index}_${field.value}`}
-                field={field}
-                type="extra"
-              />
-            ))}
+            .reduce(reduceMultiIMGs, [])
+            .map((field) =>
+              Array.isArray(field) ? (
+                <MultiIMGField
+                  fields={field}
+                  key={`${usedSFX.id}_multiIMG_read_${field.map((q) => q.key).join("_")}`}
+                />
+              ) : (
+                <SFXFieldDiv
+                  key={`${usedSFX.id}_extra_${field.key}`}
+                  field={field}
+                  type="extra"
+                />
+              ),
+            )}
         </div>
       </section>
 
@@ -572,7 +624,7 @@ export const SFX = ({
   const [sfxCopy, setSFXCopy] = useState<CollapsedOnomatopoeia>({ ...sfx });
 
   useEffect(() => {
-    console.log("Rendering new SFX", sfx.id);
+    // console.log("Rendering new SFX", sfx.id);
     setSFXCopy(sfx);
   }, [sfx]);
 

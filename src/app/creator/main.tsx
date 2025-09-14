@@ -286,7 +286,7 @@ const CreatorPage = () => {
       <hr className="my-2 border-(--regular-border) lg:hidden" />
       <div
         className={cn(
-          "grid max-h-[50lvh] flex-1 gap-4 pb-2 lg:flex lg:max-h-none lg:flex-col lg:pb-0",
+          "grid max-h-[50lvh] flex-1 auto-rows-[1fr_1fr_10fr] gap-4 pb-2 lg:flex lg:max-h-none lg:flex-col lg:pb-0",
         )}
       >
         <h2

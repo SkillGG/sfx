@@ -3,37 +3,46 @@ import { Suspense } from "react";
 import { Spinner } from "../spinner";
 import type {
   FieldBase,
+  ImageField,
+  LinkField as LinkFieldType,
   SFXField,
   SFXFieldsData,
+  SFXLinkField as SFXLinkFieldType,
   StringField as StringFieldType,
 } from "@/utils/parse/sfxParse";
 import type { ClassValue } from "clsx";
 import { LocalImg } from "./localImg";
+import SfxLink from "./sfxLink";
+import Link from "next/link";
 
 export const FieldTypeClasses: Record<
   keyof SFXFieldsData | `${keyof SFXFieldsData}_j`,
   string
 > = {
   read: "text-sm ml-2 text-(--sfx-read-text)",
-  read_j: "text-sm text-(--sfx-read-text) ml-4",
+  read_j: "text-sm text-(--sfx-read-text) ml-[2.3em]",
   extra: "text-sm whitespace-pre-wrap text-(--sfx-extra-text)",
-  extra_j: "text-sm whitespace-pre-wrap text-(--sfx-extra-text) ml-4",
+  extra_j: "text-sm whitespace-pre-wrap text-(--sfx-extra-text) ml-[2.3em]",
   tlExtra: "text-base text-(--sfx-tlextra-text)",
-  tlExtra_j: "text-sm text-(--sfx-extra-text) ml-4",
+  tlExtra_j: "text-sm text-(--sfx-extra-text) ml-[2.3em]",
   def: "text-(--sfx-def-text)",
-  def_j: "text-(--sfx-def-text) ml-4",
+  def_j: "text-(--sfx-def-text) ml-[2.3em]",
+};
+
+type FieldProps<T> = {
+  field: T & FieldBase;
+  jumped?: boolean;
+  type: keyof SFXFieldsData;
+  className?: ClassValue;
 };
 
 export const StringField = ({
   field,
   type,
   className,
-}: {
-  field: FieldBase & StringFieldType;
-  type: keyof SFXFieldsData;
-  className?: ClassValue;
-}) => {
-  const fieldType: keyof typeof FieldTypeClasses = `${type}${field.jumpedFrom ? "_j" : ""}`;
+  jumped,
+}: FieldProps<StringFieldType>) => {
+  const fieldType: keyof typeof FieldTypeClasses = `${type}${jumped ? "_j" : ""}`;
 
   return (
     <div className={cn(FieldTypeClasses[fieldType], className)}>
@@ -41,6 +50,76 @@ export const StringField = ({
         {field.counter ? `${field.counter}. ` : ""}
       </span>
       {field.value}
+    </div>
+  );
+};
+
+export const SFXLinkField = ({
+  field,
+  type,
+  className,
+  jumped,
+}: FieldProps<SFXLinkFieldType>) => {
+  const fieldType: keyof typeof FieldTypeClasses = `${type}${jumped ? "_j" : ""}`;
+
+  return (
+    <span className={cn(FieldTypeClasses[fieldType], className)}>
+      {field.label ?? "See also: "}
+      <SfxLink ids={field.ids} />
+    </span>
+  );
+};
+
+export const LinkField = ({
+  field,
+  type,
+  className,
+  jumped,
+}: FieldProps<LinkFieldType>) => {
+  const fieldType: keyof typeof FieldTypeClasses = `${type}${jumped ? "_j" : ""}`;
+  return (
+    <Link
+      className={cn("underline", FieldTypeClasses[fieldType], className)}
+      href={field.url}
+    >
+      {field.label}
+    </Link>
+  );
+};
+
+export const MultiIMGField = ({
+  fields,
+  className,
+}: {
+  fields: (FieldBase & ImageField)[];
+  className?: ClassValue;
+}) => {
+  return (
+    <div className={cn("mt-1 flex justify-around gap-2")}>
+      {fields.map((field) => {
+        const alt = `Example ${field.index}`;
+        return (
+          <Suspense
+            key={`${field.index}_img_${field.url}`}
+            fallback={<Spinner className={cn("h-[75px] w-[75px]")} />}
+          >
+            {field.local ? (
+              <LocalImg
+                alt={alt}
+                filename={field.url}
+                classNames={{ img: className }}
+              />
+            ) : (
+              <LocalImg
+                alt={alt}
+                filename={field.url}
+                nonDB={<Spinner className={cn("h-[75px] w-[75px]")} />}
+                classNames={{ img: className }}
+              />
+            )}
+          </Suspense>
+        );
+      })}
     </div>
   );
 };
@@ -60,7 +139,28 @@ export const SFXFieldDiv = ({
         <StringField
           field={field}
           type={field.jumpedFrom ?? type}
-          className={cn(className)}
+          jumped={!!field.jumpedFrom}
+          className={className}
+        />
+      );
+    case "sfxlink":
+      return (
+        <>
+          <SFXLinkField
+            field={field}
+            type={field.jumpedFrom ?? type}
+            jumped={!!field.jumpedFrom}
+            className={className}
+          />
+        </>
+      );
+    case "link":
+      return (
+        <LinkField
+          field={field}
+          type={field.jumpedFrom ?? type}
+          jumped={!!field.jumpedFrom}
+          className={className}
         />
       );
     case "img":
@@ -70,18 +170,18 @@ export const SFXFieldDiv = ({
           key={`${field.index}_img_${field.url}`}
           fallback={<Spinner className={cn("h-[75px] w-[75px]")} />}
         >
-          {field.url.startsWith("@") ? (
+          {field.local ? (
             <LocalImg
               alt={alt}
-              filename={field.url.substring(1)}
-              className={cn(className)}
+              filename={field.url}
+              classNames={{ container: "mx-auto", img: className }}
             />
           ) : (
             <LocalImg
               alt={alt}
               filename={field.url}
               nonDB={<Spinner className={cn("h-[75px] w-[75px]")} />}
-              className={cn(className)}
+              classNames={{ container: "mx-auto", img: className }}
             />
           )}
         </Suspense>

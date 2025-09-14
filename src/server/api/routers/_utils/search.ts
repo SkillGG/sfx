@@ -42,11 +42,15 @@ export const searchDBForSFX = async (
 
     where: {
       AND: [
-        search.id && search.id > 0 ? { id: search.id } : { id: { gt: -1 } },
-        search.langs && search.langs.length > 0
+        search.ids.length > 0
+          ? { OR: search.ids.filter((q) => q > 0).map((q) => ({ id: q })) }
+          : { id: { gt: -1 } }, // multi ID search
+        search.id && search.id > 0 ? { id: search.id } : { id: { gt: -1 } }, // single ID search
+        search.langs && search.langs.length > 0 // language search
           ? { language: { id: { in: search.langs } } }
           : { id: { gt: -1 } },
         {
+          // text search
           OR: [
             {
               searchdef: { contains: query },
@@ -103,6 +107,25 @@ export const searchDBForSFX = async (
       ],
     },
   });
+
+  const order = search.order ?? "asc";
+
+  if (search.nodedupe) {
+    console.log("NOT DEDUPING!", sfxs);
+    return sfxs
+      .map(
+        (sfx): CollapsedOnomatopoeia => ({
+          def: sfx.def,
+          extra: sfx.extra,
+          id: sfx.id,
+          language: sfx.languageId,
+          read: sfx.read,
+          text: sfx.text,
+          tls: [],
+        }),
+      )
+      .slice(search.skip, search.limit + search.skip);
+  }
 
   const deduped = sfxs.reduce<
     {
@@ -167,8 +190,6 @@ export const searchDBForSFX = async (
 
     return [...arr, sfxObj];
   }, []);
-
-  const order = search.order ?? "asc";
 
   return (await sfxGetTLs(db, deduped, order === "desc")).slice(
     search.skip,

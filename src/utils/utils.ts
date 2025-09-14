@@ -12,6 +12,8 @@ export const SearchOptions = object({
   langs: array(string()),
   order: literal("asc").or(literal("desc")).default("asc"),
   id: number().int(),
+  ids: array(number().int()),
+  nodedupe: boolean(),
 })
   .partial()
   .or(literal("list"));

@@ -23,27 +23,55 @@ export type FieldBase = {
   index: number;
   hidden: boolean | number[];
   jumpedFrom?: keyof SFXFieldsData;
+  key: string;
 };
 
+/** Standard string field. If first string in line starts with `- ` every subsequent string will be prepended with `#. ` */
 export type StringField = {
   type: "string";
   value: string;
   counter?: number;
 };
+
+/** A field showing an image
+ *
+ * local img syntax: `img:@FILENAME`
+ * external img syntax: `img:link/to/img`
+ */
 export type ImageField = { type: "img"; url: string; local: boolean };
 
+/** A field showing a link to an external site
+ *
+ * syntax: `[link](label)`
+ */
 export type LinkField = { type: "link"; url: string; label: string };
 
 type Api = typeof clientApi | typeof serverApi;
 
+/** A link to another sfx within the app (with default label: `See also: `)
+ *
+ * syntax: `sfx[<label>]:<sfxList>`
+ *
+ * sfxlist - a `,` separated list of IDS
+ *
+ *  label - (optional) a label shhown before the list of ids
+ */
 export type SFXLinkField = {
   type: "sfxlink";
-  id: number;
-  consume?: (api: Api) => Promise<{ id: number; label: string } | null>;
+  /** ID of the link */
+  ids: number[];
+  /** A function to get the SFX from the API */
+  consume?: (api: Api) => Promise<{ id: number; label: string }[] | null>;
+  /** A custom label before the sfx list */
+  label?: string;
 };
 
 export type SFXField = FieldBase &
   (StringField | ImageField | LinkField | SFXLinkField);
+
+export type SFXFieldWithMultiIMG =
+  | (FieldBase & (StringField | ImageField | LinkField | SFXLinkField))
+  | (FieldBase & ImageField)[];
 
 export type SFXFieldsData = {
   def?: SFXField[];
@@ -64,7 +92,7 @@ const forEachField = (cb: (o: keyof SFXFieldsData) => void) =>
 type HideFieldData = {
   /** Relative index */
   index: number;
-  key: keyof SFXFieldsData;
+  fieldKey: keyof SFXFieldsData;
   revIndices?: number[];
 };
 
@@ -172,7 +200,7 @@ export const Parser = {
   },
   /** Tests if {@link Parser.parse} resulted in a {@link HideFieldData} */
   isHide(o: ParseResult): o is HideFieldData {
-    return "key" in o;
+    return "fieldKey" in o;
   },
   /** Tests if {@link Parser.parse} resulted in a {@link SFXField} */
   isField(o: ParseResult): o is SFXField {
@@ -273,12 +301,12 @@ export const Parser = {
       });
       return {
         index: i - 1,
-        key: kKey,
+        fieldKey: kKey,
         revIndices: revIndices.length > 0 ? revIndices : [i - 1],
       };
     }
     print(`'${str}'`, { index: i - 1, key: kKey });
-    return { index: i - 1, key: kKey };
+    return { index: i - 1, fieldKey: kKey };
   },
   /** Parse string as a {@link ImageField}.
    * @returns {ImageField} {@link ImageField} if parsed successfully
@@ -345,7 +373,9 @@ export const Parser = {
     const printErr = log
       ? __print("ERROR", log, "asSFXLink", console.error)
       : noop;
-    const rx = /^sfx:(?<id>\d+)$/gi.exec(str.trim());
+    const rx = /^sfx(?:\[(?<label>[^\]]+)\])?:(?<id>(?:\d+,?)+)$/gi.exec(
+      str.trim(),
+    );
 
     if (!rx) {
       printErr(`${str}`, "no RX");
@@ -357,28 +387,36 @@ export const Parser = {
       return null;
     }
 
-    const intID = Number(rx.groups.id);
+    const intID = rx.groups.id
+      .split(",")
+      .map(Number)
+      .filter((q) => !(isNaN(q) || !isFinite(q) || !Number.isInteger(q)));
 
-    if (isNaN(intID) || !isFinite(intID) || !Number.isInteger(intID)) {
-      printErr(`${str}`, "invalid number");
+    if (intID.length === 0) {
+      printErr(`${str}`, "no valid ID in the list!");
       return null;
     }
 
+    const label = rx.groups.label;
+
     const field: SFXLinkField = {
-      id: intID,
+      ids: intID,
       type: "sfxlink",
+      label,
       consume: async (api) => {
         let result: CollapsedOnomatopoeia[] = [];
         if ("useUtils" in api) {
           // clientApi
-          result = await api.useUtils().sfx.listSFX.fetch({ id: intID });
+          result = await api.useUtils().sfx.listSFX.fetch({ ids: intID });
         } else {
           //serverApi;
-          result = await api.sfx.listSFX({ id: intID });
+          result = await api.sfx.listSFX({ ids: intID });
         }
 
-        if (result.length > 0 && result[0]) {
-          return { id: result[0].id, label: result[0].text };
+        if (result.length > 0) {
+          return result
+            .filter((q) => !!q)
+            .map((q) => ({ id: q.id, label: q.text }));
         }
 
         return null;
@@ -437,9 +475,9 @@ export const Parser = {
   asField(str: string, log?: Log): SFXField {
     for (const parser of this.fieldParsers) {
       const result = parser(str, log);
-      if (result) return { ...result, index: -1, hidden: false };
+      if (result) return { ...result, index: -1, hidden: false, key: "" };
     }
-    return { ...this.asString(str, log), index: -1, hidden: false };
+    return { ...this.asString(str, log), index: -1, hidden: false, key: "" };
   },
 };
 
@@ -504,6 +542,7 @@ export const parseSFXFields = (
           return {
             ...parsed,
             index: ++index,
+            key: `${index}`,
             hidden: false,
           };
         }
@@ -526,13 +565,13 @@ export const parseSFXFields = (
       }
       if (Parser.isHide(field)) {
         hideCalls.push({
-          key: field.key,
+          key: field.fieldKey,
           relIndex: field.index,
           revIndices: field.revIndices,
         });
         return null;
       }
-      return { ...field, index: ++index };
+      return { ...field, index: ++index, key: `${index}` };
     };
 
     fieldsData[fieldKey] = data[fieldKey]
@@ -564,22 +603,33 @@ export const parseSFXFields = (
         continue;
       }
       if (i === q.relIndex) {
-        const obj = { ...q.data, index: field.index + 0.5 };
-        const halves = fieldData.filter((q) => q.index === obj.index); // move to the end of queues queue
+        // define field object that will be inserted
+        const fieldObj = {
+          ...q.data,
+          index: field.index + 0.5,
+          key: `${field.index + 0.5}`,
+        };
+        // X.5 should be ordered by te order they come in
+        const halves = fieldData.filter((q) => q.index === fieldObj.index);
         print("Halves", halves);
-        fieldData.splice(i + skip + halves.length + 1, 0, obj);
-        fieldData.sort((a, b) => a.index - b.index);
-        if (obj.type === "string") {
+
+        // if string - increment and add counter number
+        if (fieldObj.type === "string") {
           const countered = halves.filter(
             (q): q is StringField & FieldBase =>
               q.type === "string" && !!q.counter,
           );
           if (countered.length > 0) {
             const prevCounter = countered[countered.length - 1]?.counter;
-            if (prevCounter) obj.counter = prevCounter + 1;
+            if (prevCounter) fieldObj.counter = prevCounter + 1;
           }
         }
-        print("Added obj", obj, "into field", q.key);
+        fieldData.splice(i + skip + halves.length + 1, 0, {
+          ...fieldObj,
+          key: `${fieldObj.key}.${halves.length}`, // add a key for react <fieldID>.5.<order_in_sublist>
+        });
+        fieldData.sort((a, b) => a.index - b.index);
+        print("Added obj", fieldObj, "into field", q.key);
         print("Result: ", fieldsData);
         return;
       }
@@ -587,7 +637,7 @@ export const parseSFXFields = (
     }
     printErr(`Failed!`);
 
-    // fail crunch, add back to field
+    // fail crunch, add back as StringField
 
     const failedField = fieldsData[q.onFail.key];
     if (!failedField) return;
@@ -598,9 +648,13 @@ export const parseSFXFields = (
         const dataQ = fieldsData[fieldKey];
         if (!dataQ) return;
         dataQ.forEach((field) => {
-          field.index = Math.abs(
+          const newIndex = Math.abs(
             field.index >= n ? field.index + 1 : field.index,
           );
+          if (field.index !== newIndex) {
+            field.key = `${newIndex}`;
+          }
+          field.index = newIndex;
         });
       });
       specialFields.forEach((q) => q.onFail.index++);
@@ -614,6 +668,7 @@ export const parseSFXFields = (
       type: "string",
       value: q.onFail.raw,
       index: -q.onFail.index,
+      key: `fail_${q.onFail.raw}`,
     };
     for (const field of failedField) {
       i++;
