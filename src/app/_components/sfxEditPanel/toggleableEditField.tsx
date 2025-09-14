@@ -42,7 +42,7 @@ export const ToggleableEditField = ({
     const newValue = value === null ? temp : null;
     onChange?.(newValue);
     if (newValue !== null) {
-      console.log("focusing");
+      // console.log("focusing");
       setTimeout(() => inputRef?.current?.select(), 0);
     }
   };

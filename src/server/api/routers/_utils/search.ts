@@ -111,7 +111,7 @@ export const searchDBForSFX = async (
   const order = search.order ?? "asc";
 
   if (search.nodedupe) {
-    console.log("NOT DEDUPING!", sfxs);
+    // console.log("NOT DEDUPING!", sfxs);
     return sfxs
       .map(
         (sfx): CollapsedOnomatopoeia => ({

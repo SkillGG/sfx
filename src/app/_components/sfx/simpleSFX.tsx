@@ -72,7 +72,7 @@ const SimpleField = async ({
     case "sfxlink":
       const link = await field.consume?.(api);
 
-      console.log(link);
+      // console.log(link);
 
       return (
         <div

@@ -334,7 +334,7 @@ const CreatorPage = () => {
               }}
               onSave={async (old, sfx) => {
                 if (auth) {
-                  console.log("Updating SFX", sfx);
+                  // console.log("Updating SFX", sfx);
                   await updateSFX.mutateAsync({ id: old.id, sfx, auth });
                   await utils.sfx.listSFX.invalidate();
                 }

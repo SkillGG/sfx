@@ -65,7 +65,7 @@ export const SFXListPanel = ({
   const sfxs = [...separated, ...dbSFX];
 
   const separateFn = (sfx: CollapsedOnomatopoeia) => {
-    console.log(sfx);
+    // console.log(sfx);
     setSeparated((prev) => [...prev, { ...sfx, separated: true }]);
   };
 

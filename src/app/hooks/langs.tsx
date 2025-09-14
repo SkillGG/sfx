@@ -48,7 +48,7 @@ export const SFXLangProvider = ({
     if (data?.length === 0) {
       // seed with default langs
 
-      console.log("Populating languages!");
+      // console.log("Populating languages!");
 
       void Promise.all(
         DEFAULT_LANGUAGES.map((lang) => {

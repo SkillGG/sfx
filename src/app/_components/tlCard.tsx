@@ -195,7 +195,7 @@ export const TLCard = ({
                 "disabled:bg-(--button-submit-disabled-bg) disabled:text-(--button-submit-disabled-text)",
               )}
               onClick={() => {
-                console.log("Separating", tl.sfx);
+                // console.log("Separating", tl.sfx);
                 separate(tl.sfx);
               }}
             >
