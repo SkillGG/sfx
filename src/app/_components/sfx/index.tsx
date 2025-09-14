@@ -1,15 +1,8 @@
 "use client";
 
 import { cn, type CollapsedOnomatopoeia, type Promisable } from "@/utils/utils";
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useSFXLangs } from "../../hooks/langs";
-import { SFXLangSelect } from "./sfxLangSelect";
 import { env } from "@/env";
 import { useValidation, type Validation } from "../../hooks/validation";
 import { TLEditorDirect } from "../TLEditor";
@@ -17,17 +10,61 @@ import type { ClassValue } from "clsx";
 import { SFXEditPanel } from "../sfxEditPanel";
 import { TLCard } from "../tlCard";
 import {
-  parseExtraFieldData,
-  parseSFXText,
   type SaveState,
   type SFXCardClasses,
   type SFXTLDiscriminator,
 } from "./utils";
+import {
+  Parser,
+  parseSFXFields,
+  stringToSFXFieldKey,
+  type SFXField,
+  type SFXFieldWithMultiIMG,
+} from "@/utils/parse/sfxParse";
+import { MultiIMGField, SFXFieldDiv } from "./fields";
+import { SFXLangSelect } from "../sfx/sfxLangSelect";
+
+const REVERSE_MARK = "⏉";
+
+const reversedTL = (str?: string): string => {
+  if (!str) return "";
+
+  const hides = Parser.parseMultiple(str)?.filter((q) => Parser.isHide(q));
+
+  return `${Parser.strip(str)};${hides
+    .map((q) =>
+      stringToSFXFieldKey(q.fieldKey) === "def"
+        ? q.revIndices?.map((q) => `-d${q + 1}`)
+        : "",
+    )
+    .flat(2)
+    .filter(Boolean)
+    .join(";")}`;
+};
+
+const allowedFields: SFXField["type"][] = ["sfxlink", "string", "link", "img"];
+
+const reduceMultiIMGs = (
+  p: SFXFieldWithMultiIMG[],
+  n: SFXField,
+): SFXFieldWithMultiIMG[] => {
+  if (n.type === "img" && p.length > 0) {
+    const lastP = p[p.length - 1];
+    if (Array.isArray(lastP)) {
+      lastP.push(n);
+      return p;
+    } else if (lastP?.type === "img") {
+      return [...p.slice(0, -1), [lastP, n]];
+    }
+  }
+
+  return [...p, n];
+};
 
 const SFXCard = ({
   sfx,
-  tlExtra,
   classNames,
+  tlExtra,
 }: SFXTLDiscriminator & {
   classNames?: SFXCardClasses;
   tlExtra?: string;
@@ -37,16 +74,26 @@ const SFXCard = ({
   const usedSFX = useMemo(() => ({ ...sfx }), [sfx]);
   const titleId = `sfx_${usedSFX.id}_title`;
 
-  const extraData = useCallback(
-    (field: string) => {
-      const efD = parseExtraFieldData(tlExtra ?? "");
-      if (efD) return { field: field, data: efD };
-      return undefined;
-    },
-    [tlExtra],
-  );
+  const curTLExtra = useMemo(() => {
+    const reversedTLs = sfx.tls
+      .filter((q) => q.additionalInfo?.startsWith(REVERSE_MARK))
+      .map((q) => q.additionalInfo?.substring(1) ?? "")
+      .filter<string>((q): q is string => !!q)
+      .filter((q) => !Parser.asHide(q));
 
-  const tlExtraText = parseSFXText(`${sfx.id}`, "", extraData("tlExtra"));
+    return `${tlExtra ?? ""}${tlExtra ? ";" : ""}${reversedTLs.join(";")}`;
+  }, [tlExtra, sfx.tls]);
+
+  const parsed = useMemo(
+    () =>
+      parseSFXFields({
+        def: sfx.def,
+        extra: sfx.extra,
+        read: sfx.read,
+        tlExtra: curTLExtra,
+      }),
+    [sfx.def, sfx.extra, sfx.read, curTLExtra],
+  );
 
   return (
     <article
@@ -59,6 +106,7 @@ const SFXCard = ({
       aria-labelledby={titleId}
       aria-label="SFX entry"
     >
+      {/* <div className="absolute top-2 left-2 text-red-500">*</div> */}
       <header
         className={cn(
           "flex-rowitems-baseline flex gap-2",
@@ -77,15 +125,31 @@ const SFXCard = ({
         </div>
 
         {usedSFX.read && (
-          <div
-            className={cn(
-              "text-sm whitespace-pre-wrap text-(--sfx-read-text)",
-              classNames?.topinfo?.reading,
-            )}
-          >
-            {parseSFXText(`${sfx.id}`, usedSFX.read, extraData("read"))}
+          <div className={cn(classNames?.topinfo?.reading)}>
+            {parsed.read
+              ?.filter((q) => allowedFields.includes(q.type))
+              .filter((q) => !q.hidden)
+              .reduce(reduceMultiIMGs, [])
+              .map((read) => {
+                if (Array.isArray(read)) {
+                  return (
+                    <MultiIMGField
+                      fields={read}
+                      key={`${usedSFX.id}_multiIMG_read_${read.map((q) => q.key).join("_")}`}
+                    />
+                  );
+                }
+                return (
+                  <SFXFieldDiv
+                    key={`${usedSFX.id}_read_${read.key}`}
+                    field={read}
+                    type="read"
+                  />
+                );
+              })}
           </div>
         )}
+
         <div
           className={cn(
             "flex-1 text-right text-sm",
@@ -100,40 +164,89 @@ const SFXCard = ({
         </div>
       </header>
 
-      {!!tlExtraText && (
+      {!!parsed.tlExtra?.length && (
         <section
           className={cn(
             "flex w-fit border-2 border-x-0 border-t-0 border-dashed",
             "border-(--sfx-tlextra-underline) px-1",
-            "text-base text-(--sfx-tlextra-text)",
+            "flex-col",
+            classNames?.tlExtras?.container,
           )}
           aria-labelledby={titleId}
           aria-label="SFX translation info"
         >
-          <span>{tlExtraText}</span>
+          {parsed.tlExtra
+            .filter((q) => allowedFields.includes(q.type))
+            .filter((q) => !q.hidden)
+            .reduce(reduceMultiIMGs, [])
+            .map((field) =>
+              Array.isArray(field) ? (
+                <MultiIMGField
+                  fields={field}
+                  key={`${usedSFX.id}_multiIMG_read_${field.map((q) => q.key).join("_")}`}
+                />
+              ) : (
+                <SFXFieldDiv
+                  key={`${sfx.id}_tl_${field.key}`}
+                  field={field}
+                  type="tlExtra"
+                  className={classNames?.tlExtras?.field}
+                />
+              ),
+            )}
         </section>
       )}
 
       <section
         className={cn(classNames?.bottominfo?.container)}
         aria-labelledby={titleId}
-        aria-label="SFX details"
+        aria-label="SFX definition"
       >
-        <div
-          className={cn(
-            "whitespace-pre-wrap text-(--sfx-def-text)",
-            classNames?.bottominfo?.def,
-          )}
-        >
-          {parseSFXText(`${sfx.id}`, usedSFX.def, extraData("def"))}
+        <div className={cn(classNames?.bottominfo?.def)}>
+          {parsed.def
+            ?.filter((q) => allowedFields.includes(q.type))
+            .filter((q) => !q.hidden)
+            .reduce(reduceMultiIMGs, [])
+            .map((field) =>
+              Array.isArray(field) ? (
+                <MultiIMGField
+                  fields={field}
+                  key={`${usedSFX.id}_multiIMG_read_${field.map((q) => q.key).join("_")}`}
+                />
+              ) : (
+                <SFXFieldDiv
+                  key={`${usedSFX.id}_def_${field.key}`}
+                  field={field}
+                  type="def"
+                />
+              ),
+            )}
         </div>
-        <div
-          className={cn(
-            "pl-8 text-sm whitespace-pre-wrap text-(--sfx-extra-text)",
-            classNames?.bottominfo?.extra,
-          )}
-        >
-          {parseSFXText(`${sfx.id}`, usedSFX.extra, extraData("extra"))}
+      </section>
+      <section
+        className={cn(classNames?.bottominfo?.container)}
+        aria-labelledby={titleId}
+        aria-label="SFX extras"
+      >
+        <div className={cn("pl-8", classNames?.bottominfo?.extra)}>
+          {parsed.extra
+            ?.filter((q) => allowedFields.includes(q.type))
+            .filter((q) => !q.hidden)
+            .reduce(reduceMultiIMGs, [])
+            .map((field) =>
+              Array.isArray(field) ? (
+                <MultiIMGField
+                  fields={field}
+                  key={`${usedSFX.id}_multiIMG_read_${field.map((q) => q.key).join("_")}`}
+                />
+              ) : (
+                <SFXFieldDiv
+                  key={`${usedSFX.id}_extra_${field.key}`}
+                  field={field}
+                  type="extra"
+                />
+              ),
+            )}
         </div>
       </section>
 
@@ -148,11 +261,20 @@ const SFXCard = ({
             aria-label="SFX translation list"
           >
             {usedSFX.tls.map((tl) => {
-              const isReversed = tl.additionalInfo?.startsWith("⏉");
+              const isReversed = tl.additionalInfo?.startsWith(REVERSE_MARK);
               return (
                 <TLCard
                   key={tl.sfx1Id + "." + tl.sfx2Id}
-                  tl={tl}
+                  tl={
+                    isReversed
+                      ? {
+                          ...tl,
+                          additionalInfo: reversedTL(
+                            tl.additionalInfo?.substring(1),
+                          ),
+                        }
+                      : tl
+                  }
                   classNames={{
                     ...classNames?.tls?.sfx,
                     container: cn(
@@ -502,6 +624,7 @@ export const SFX = ({
   const [sfxCopy, setSFXCopy] = useState<CollapsedOnomatopoeia>({ ...sfx });
 
   useEffect(() => {
+    // console.log("Rendering new SFX", sfx.id);
     setSFXCopy(sfx);
   }, [sfx]);
 
@@ -518,16 +641,27 @@ export const SFX = ({
       ? (labels?.removeSure ?? "Are you sure?")
       : (labels?.removeDefault ?? "Remove");
 
-  if (editable) {
+  if (
+    editable &&
+    !(
+      tlExtra?.startsWith(REVERSE_MARK) ||
+      sfx.tls.some((q) => q.additionalInfo?.startsWith(REVERSE_MARK))
+    )
+  ) {
     if (mode === "view")
       return (
         <div
-          className={cn("mb-2 flex flex-col gap-2", classNames?.editable?.main)}
+          className={cn(
+            "relative mb-2 flex flex-col gap-2",
+            classNames?.editable?.main,
+          )}
         >
           <SFX
             sfx={sfxCopy}
             classNames={
-              classNames?.editable?.sfx ?? { default: classNames?.default }
+              classNames?.editable?.sfx ?? {
+                default: classNames?.default,
+              }
             }
           />
           <div

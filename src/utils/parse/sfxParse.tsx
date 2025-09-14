@@ -1,4 +1,7 @@
+import { type api as serverApi } from "@/trpc/server";
+import { type api as clientApi } from "@/trpc/react";
 import { type CollapsedOnomatopoeia } from "@/utils/utils";
+import z from "zod";
 /**
  * Syntax:
  *
@@ -8,28 +11,67 @@ import { type CollapsedOnomatopoeia } from "@/utils/utils";
  *    sfx:<number> //
  *    <text> // string node
  *  <Hide> // hides element
- *    -<field>(<index>) // hide <index> element from <field>. (index is relative)
+ *    -<field><index>/<revIndex> // hide <index> element from <field>. (index is relative)
  *   <Jump> // create SFXData under other SFXData group as if it was part of the original group
- *    [_<field>(<index>)]<text> // create <text> under <field>
+ *    _<field><index>:<text> // create <text> under <field>
  */
 
 const noop = () => void 0;
 
-type FieldBase = {
+export type FieldBase = {
   /** Final absolute index */
   index: number;
-  hidden: boolean;
+  hidden: boolean | number[];
+  jumpedFrom?: keyof SFXFieldsData;
+  key: string;
 };
 
-type StringField = {
+/** Standard string field. If first string in line starts with `- ` every subsequent string will be prepended with `#. ` */
+export type StringField = {
   type: "string";
   value: string;
   counter?: number;
-  classNames?: string;
 };
-type ImageField = { type: "img"; url: string; local: boolean };
 
-export type SFXField = FieldBase & (StringField | ImageField);
+/** A field showing an image
+ *
+ * local img syntax: `img:@FILENAME`
+ * external img syntax: `img:link/to/img`
+ */
+export type ImageField = { type: "img"; url: string; local: boolean };
+
+/** A field showing a link to an external site
+ *
+ * syntax: `[link](label)`
+ */
+export type LinkField = { type: "link"; url: string; label: string };
+
+type Api = typeof clientApi | typeof serverApi;
+
+/** A link to another sfx within the app (with default label: `See also: `)
+ *
+ * syntax: `sfx[<label>]:<sfxList>`
+ *
+ * sfxlist - a `,` separated list of IDS
+ *
+ *  label - (optional) a label shhown before the list of ids
+ */
+export type SFXLinkField = {
+  type: "sfxlink";
+  /** ID of the link */
+  ids: number[];
+  /** A function to get the SFX from the API */
+  consume?: (api: Api) => Promise<{ id: number; label: string }[] | null>;
+  /** A custom label before the sfx list */
+  label?: string;
+};
+
+export type SFXField = FieldBase &
+  (StringField | ImageField | LinkField | SFXLinkField);
+
+export type SFXFieldWithMultiIMG =
+  | (FieldBase & (StringField | ImageField | LinkField | SFXLinkField))
+  | (FieldBase & ImageField)[];
 
 export type SFXFieldsData = {
   def?: SFXField[];
@@ -47,13 +89,14 @@ export const SFXFieldsKeys: (keyof SFXFieldsData)[] = [
 const forEachField = (cb: (o: keyof SFXFieldsData) => void) =>
   SFXFieldsKeys.forEach(cb);
 
-type RemoveLineData = {
+type HideFieldData = {
   /** Relative index */
   index: number;
-  key: keyof SFXFieldsData;
+  fieldKey: keyof SFXFieldsData;
+  revIndices?: number[];
 };
 
-type JumpLineData = {
+type JumpFieldData = {
   /** Relative index */
   index: number;
   to: keyof SFXFieldsData;
@@ -61,7 +104,7 @@ type JumpLineData = {
   raw: string;
 };
 
-export const stringToSFXFieldKey = (k: string): keyof SFXFieldsData | null => {
+export const stringToSFXFieldKey = (k: string): keyof SFXFieldsData => {
   switch (k) {
     case "d":
     case "def":
@@ -74,130 +117,367 @@ export const stringToSFXFieldKey = (k: string): keyof SFXFieldsData | null => {
     case "r":
     case "read":
       return "read";
+    default:
+      return "tlExtra";
   }
-  return null;
 };
 
-type ParseResult = SFXField | RemoveLineData | JumpLineData;
+type ParseResult = SFXField | HideFieldData | JumpFieldData;
 
+type Log = Partial<Record<"LOG" | "WARN" | "ERROR", boolean>>;
+
+const __print = (
+  l: keyof Log,
+  q: Log,
+  inSTR: string,
+  functionOverride?: typeof console.log,
+) => {
+  return (...r: Parameters<(typeof console)["log"]>) => {
+    if (q[l]) (functionOverride ?? console.log)(...r, `in ${inSTR}`);
+  };
+};
+
+/**
+ * Parser for SFX Data
+ */
 export const Parser = {
-  strip(str?: string | null): string {
+  /** Strip all non-text data (e.g. jumps `[_d(2)]`, hide patterns `-d(1)` , images, etc.)
+   *
+   * Used for search purposes */
+  strip(
+    str?: string | null,
+    leave?: (SFXField["type"] | "jump" | "jump_field" | "hide")[],
+    log?: Log,
+  ): string {
+    const print = log ? __print("LOG", log, "Parser.strip") : noop;
+
     if (!str) return "";
 
-    const parsed = this.parse(str);
+    const arr = str.split(";");
 
-    if (this.isJump(parsed)) {
-      return parsed.data;
-    }
+    return arr
+      .map((str) => {
+        const parsed = this.parse(str.trim());
 
-    if (this.isHide(parsed)) return "";
+        print("Stripping!", str);
 
-    return str;
+        if (this.isJump(parsed)) {
+          print("jump");
+          return leave?.includes("jump")
+            ? str
+            : leave?.includes("jump_field")
+              ? parsed.data
+              : "";
+        }
+
+        if (this.isHide(parsed)) {
+          print("hide");
+          return leave?.includes("hide") ? str : "";
+        }
+
+        if (this.isField(parsed)) {
+          if (
+            (["link", "sfxlink", "img"] as SFXField["type"][]).includes(
+              parsed.type,
+            )
+          ) {
+            print("non-str field");
+            return leave?.includes(parsed.type) ? str : "";
+          }
+          if (parsed.type === "string") {
+            return leave?.includes("string") ? str : parsed.value;
+          }
+        }
+
+        return str;
+      })
+      .filter(Boolean)
+      .join(";");
   },
-  isJump(o: ParseResult): o is JumpLineData {
+  /** Tests if {@link Parser.parse} resulted in a {@link JumpFieldData} */
+  isJump(o: ParseResult): o is JumpFieldData {
     return "to" in o;
   },
-  isHide(o: ParseResult): o is RemoveLineData {
-    return "key" in o;
+  /** Tests if {@link Parser.parse} resulted in a {@link HideFieldData} */
+  isHide(o: ParseResult): o is HideFieldData {
+    return "fieldKey" in o;
   },
+  /** Tests if {@link Parser.parse} resulted in a {@link SFXField} */
   isField(o: ParseResult): o is SFXField {
     return "type" in o;
   },
-  asJump(str: string, log = false): JumpLineData | null {
-    const print = log ? console.log : noop;
-    const rx = /^\[_(?<to>[a-z]+)\((?<index>\d+)\)\](?<data>.*)$/.exec(str);
+  /** Parse string as a {@link JumpFieldData}.
+   * @returns {JumpFieldData} {@link JumpFieldData} if parsed successfully
+   * @returns {null} {@link null} if string was not a jump clause
+   */
+  asJump(str: string, log?: Log): JumpFieldData | null {
+    const print = log ? __print("LOG", log, "asJump") : noop;
+    const printErr = log
+      ? __print("ERROR", log, "asJump", console.error)
+      : noop;
+    const rx = /^_(?<to>[a-z]+)(?<index>\d+):(?<data>.*)$/.exec(str.trim());
     if (!rx) {
-      print(`'${str}'`, "no RX", " in asJump");
+      printErr(`'${str}'`, "no RX");
       return null;
     }
     const toStr = rx.groups?.to;
     if (!toStr) {
-      print(`'${str}'`, "no to field", " in asJump");
+      printErr(`'${str}'`, "no to field");
       return null;
     }
     const to = stringToSFXFieldKey(toStr);
     if (!to) {
-      print(`'${str}'`, "wrong to field", " in asJump");
+      printErr(`'${str}'`, "wrong to field");
       return null;
     }
     const idx = rx.groups?.index;
     if (!idx) {
-      print(`'${str}'`, "no idx", " in asJump");
+      printErr(`'${str}'`, "no idx");
       return null;
     }
     const index = Number(idx);
     if (isNaN(index) || index < 0 || !isFinite(index)) {
-      print(`'${str}'`, "NaN", " in asJump");
+      printErr(`'${str}'`, "NaN");
       return null;
     }
     const data = rx.groups?.data;
     if (!data) {
-      print(`'${str}'`, "no data", " in asJump");
+      printErr(`'${str}'`, "no data");
       return null;
     }
+    print(`'${str}'`, { index: index - 1, to, data, raw: str });
     return { index: index - 1, to, data, raw: str };
   },
-  asHide(str: string, log = false): RemoveLineData | null {
-    const print = log ? console.log : noop;
-    const rx = /^\-(?<key>[a-z]+)\((?<index>\d+)\)$/i.exec(str);
+  /** Parse string as a {@link HideFieldData}.
+   * @returns {HideFieldData} {@link HideFieldData} if parsed successfully
+   * @returns {null} {@link null} if string was not a hide clause
+   */
+  asHide(str: string, log?: Log): HideFieldData | null {
+    const print = log ? __print("LOG", log, "asHide") : noop;
+    const printErr = log
+      ? __print("ERROR", log, "asHide", console.error)
+      : noop;
+    const rx =
+      /^\-(?<key>[a-z]+)(?<index>\d+)(?<revIndex>\/(?:\d+,?)*)?$/i.exec(
+        str.trim(),
+      );
     if (!rx) {
-      print(`'${str}'`, "no RX", " in asHide");
+      printErr(`'${str}'`, "no RX");
       return null;
     }
     const key = rx.groups?.key;
     if (!key) {
-      print(`'${str}'`, "No key", " in asHide");
+      printErr(`'${str}'`, "No key");
       return null;
     }
     const index = rx.groups?.index;
     if (!index) {
-      print(`'${str}'`, "No index", " in asHide");
+      printErr(`'${str}'`, "No index");
       return null;
     }
     const i = Number(index);
     if (i <= 0 || !isFinite(i) || isNaN(i)) {
-      print(`'${str}'`, "index NaN", " in asHide");
+      printErr(`'${str}'`, "index NaN");
       return null;
     }
     const kKey = stringToSFXFieldKey(key);
     if (!kKey) {
-      print(`'${str}'`, "invalid key", " in asHide");
+      printErr(`'${str}'`, "invalid key");
       return null;
     }
-    print(`'${str}'`, { index: i - 1, key: kKey }, " in asHide");
-    return { index: i - 1, key: kKey };
+
+    const revIndex = rx.groups?.revIndex;
+    if (revIndex) {
+      const revIndices = revIndex
+        .substring(1)
+        .split(",")
+        .map(Number)
+        .filter((q) => !!q)
+        .map((q) => q - 1);
+      print(`'${str}'`, {
+        index: i - 1,
+        key: kKey,
+        revIndices: revIndices.length > 0 ? revIndices : [i - 1],
+      });
+      return {
+        index: i - 1,
+        fieldKey: kKey,
+        revIndices: revIndices.length > 0 ? revIndices : [i - 1],
+      };
+    }
+    print(`'${str}'`, { index: i - 1, key: kKey });
+    return { index: i - 1, fieldKey: kKey };
   },
-  asImage(str: string, log?: boolean): ImageField | null {
-    const print = log ? console.log : noop;
+  /** Parse string as a {@link ImageField}.
+   * @returns {ImageField} {@link ImageField} if parsed successfully
+   * @returns {null} {@link null} if string was not a hide clause
+   */
+  asImage(str: string, log?: Log): ImageField | null {
+    const print = log ? __print("LOG", log, "asImage") : noop;
+    const printErr = log
+      ? __print("ERROR", log, "asImage", console.error)
+      : noop;
 
-    const rx = /^img:(?<url>.*)$/gi.exec(str);
+    const rx = /^img:(?<url>.*)$/gi.exec(str.trim());
     if (!rx?.groups?.url) {
-      print(`${str}`, "not img syntax", `in asImage`);
+      printErr(`${str}`, "not img syntax");
       return null;
     }
 
-    return {
+    const field: ImageField = {
       type: "img",
       url: rx.groups.url.replace(/^\@/gi, ""),
       local: rx.groups.url.startsWith("@"),
     };
+    print(`${str}`, field);
+    return field;
   },
-  asString(str: string): StringField {
-    return { type: "string", value: str };
+  /** Parse string as a {@link LinkField}.
+   * @returns {LinkField} {@link LinkField} if parsed successfully
+   * @returns {null} {@link null} if string was not a hide clause
+   */
+  asLink(str: string, log?: Log): LinkField | null {
+    const print = log ? __print("LOG", log, "asLink") : noop;
+    const printErr = log
+      ? __print("ERROR", log, "asLink", console.error)
+      : noop;
+    const rx = /^\[(?<url>https?:\/\/[^\)]*)\]\((?<label>.*?)\)/.exec(
+      str.trim(),
+    );
+
+    if (!rx) {
+      printErr(`'${str}'`, "no RX");
+      return null;
+    }
+
+    if (!rx?.groups?.url || !rx?.groups?.label) {
+      printErr(`'${str}'`, "no label or link");
+      return null;
+    }
+
+    if (!z.string().url().safeParse(rx.groups.url).success) {
+      printErr(`'${str}'`, "invalid url");
+      return null;
+    }
+    const { label, url } = rx.groups;
+    const field: LinkField = { type: "link", label, url };
+    print(`${str}`, field);
+    return field;
   },
-  parse(str: string, log = false): ParseResult {
+  /** Parse string as a {@link SFXLinkField}.
+   * @returns {SFXLinkField} {@link SFXLinkField} if parsed successfully
+   * @returns {null} {@link null} if string was not a hide clause
+   */
+  asSFXLink(str: string, log?: Log): SFXLinkField | null {
+    const print = log ? __print("LOG", log, "asSFXLink") : noop;
+    const printErr = log
+      ? __print("ERROR", log, "asSFXLink", console.error)
+      : noop;
+    const rx = /^sfx(?:\[(?<label>[^\]]+)\])?:(?<id>(?:\d+,?)+)$/gi.exec(
+      str.trim(),
+    );
+
+    if (!rx) {
+      printErr(`${str}`, "no RX");
+      return null;
+    }
+
+    if (!rx.groups?.id) {
+      printErr(`${str}`, "no id");
+      return null;
+    }
+
+    const intID = rx.groups.id
+      .split(",")
+      .map(Number)
+      .filter((q) => !(isNaN(q) || !isFinite(q) || !Number.isInteger(q)));
+
+    if (intID.length === 0) {
+      printErr(`${str}`, "no valid ID in the list!");
+      return null;
+    }
+
+    const label = rx.groups.label;
+
+    const field: SFXLinkField = {
+      ids: intID,
+      type: "sfxlink",
+      label,
+      consume: async (api) => {
+        let result: CollapsedOnomatopoeia[] = [];
+        if ("useUtils" in api) {
+          // clientApi
+          result = await api.useUtils().sfx.listSFX.fetch({ ids: intID });
+        } else {
+          //serverApi;
+          result = await api.sfx.listSFX({ ids: intID });
+        }
+
+        if (result.length > 0) {
+          return result
+            .filter((q) => !!q)
+            .map((q) => ({ id: q.id, label: q.text }));
+        }
+
+        return null;
+      },
+    };
+
+    print(`${str}`, field);
+
+    return field;
+  },
+  stringCounter: 0,
+  asString(str: string, log?: Log): StringField {
+    const print = log ? __print("LOG", log, "asString") : noop;
+    const printWarn = log
+      ? __print("WARN", log, "asString", console.warn)
+      : noop;
+    if (str.startsWith("- ") || this.stringCounter > 0) {
+      printWarn(`${str}`, "counted string: ", this.stringCounter);
+      this.stringCounter++;
+    }
+
+    const field: StringField = {
+      type: "string",
+      value: str.startsWith("- ") ? str.substring(2) : str,
+      ...(this.stringCounter > 0 ? { counter: this.stringCounter } : {}),
+    };
+
+    print(`${str}`, field);
+
+    return field;
+  },
+  /**
+   * Parse the string as either a command ({@link JumpFieldData}/{@link HideFieldData}) or as a {@link SFXField}
+   * @param str string to parse
+   * @param log Log errors with console.log?
+   * @returns {ParseResult} {@link ParseResult} -- A result of the parse
+   */
+  parse(str: string, log?: Log): ParseResult {
     const jump = this.asJump(str, log);
     if (jump) return jump;
     const hide = this.asHide(str, log);
     if (hide) return hide;
-    return this.asField(str);
+    return this.asField(str, log);
   },
-  asField(str: string, log = false): SFXField {
-    const img = this.asImage(str, log);
-
-    if (img) return { ...img, index: -1, hidden: false };
-
-    return { ...this.asString(str), index: -1, hidden: false };
+  parseMultiple(str: string, separator = ";", log?: Log): ParseResult[] {
+    return str.split(separator)?.map((q) => this.parse(q, log));
+  },
+  get fieldParsers() {
+    // Use arrow functions to avoid unbound method issues
+    return [
+      (str: string, log?: Log) => this.asImage(str, log),
+      (str: string, log?: Log) => this.asLink(str, log),
+      (str: string, log?: Log) => this.asSFXLink(str, log),
+    ] as const;
+  },
+  asField(str: string, log?: Log): SFXField {
+    for (const parser of this.fieldParsers) {
+      const result = parser(str, log);
+      if (result) return { ...result, index: -1, hidden: false, key: "" };
+    }
+    return { ...this.asString(str, log), index: -1, hidden: false, key: "" };
   },
 };
 
@@ -205,9 +485,15 @@ export const parseSFXFields = (
   data: Pick<CollapsedOnomatopoeia, "def" | "extra" | "read"> & {
     tlExtra?: string;
   },
-  log?: boolean,
+  log?: Log,
 ): SFXFieldsData => {
-  const print = log ? console.log : noop;
+  const print = log ? __print("LOG", log, "parseSFXFields") : noop;
+  const printErr = log
+    ? __print("ERROR", log, "parseSFXFields", console.error)
+    : noop;
+  const printWarn = log
+    ? __print("ERROR", log, "parseSFXFields", console.warn)
+    : noop;
 
   const fieldsData: SFXFieldsData = {};
 
@@ -229,19 +515,20 @@ export const parseSFXFields = (
   const hideCalls: {
     key: keyof SFXFieldsData;
     relIndex: number;
+    revIndices?: number[];
   }[] = [];
 
   forEachField((fieldKey) => {
     print("Parsing data from field: ", fieldKey);
     const dataQ = data[fieldKey];
     if (!dataQ) {
-      print("No dataQ", fieldKey);
+      printErr("No dataQ", fieldKey);
       return (fieldsData[fieldKey] = []);
     }
 
     const parseFieldData = (line: string): SFXField | null => {
       if (!line) {
-        print("No line!", line);
+        printErr("No line!", line);
         return null;
       }
 
@@ -250,16 +537,19 @@ export const parseSFXFields = (
 
       if (Parser.isJump(field)) {
         if (field.to === fieldKey) {
-          const parsed = Parser.asString(line);
-          print(`Same field jump error!`, line);
+          const parsed = Parser.asString(line, log);
+          printWarn(`Same field jump error!`, line);
           return {
             ...parsed,
             index: ++index,
+            key: `${index}`,
             hidden: false,
           };
         }
+        const curCount = Parser.stringCounter;
+        Parser.stringCounter = 0;
         const specialField: (typeof specialFields)[number] = {
-          data: Parser.asField(field.data),
+          data: { ...Parser.asField(field.data, log), jumpedFrom: fieldKey },
           relIndex: field.index,
           key: field.to,
           onFail: {
@@ -268,32 +558,36 @@ export const parseSFXFields = (
             raw: field.raw,
           },
         };
+        Parser.stringCounter = curCount;
         print("Adding special field field:", specialField);
         specialFields.push(specialField);
         return null;
       }
       if (Parser.isHide(field)) {
-        hideCalls.push({ key: field.key, relIndex: field.index });
+        hideCalls.push({
+          key: field.fieldKey,
+          relIndex: field.index,
+          revIndices: field.revIndices,
+        });
         return null;
       }
-      return { ...field, index: ++index };
+      return { ...field, index: ++index, key: `${index}` };
     };
 
     fieldsData[fieldKey] = data[fieldKey]
       ?.split(";")
       .map<SFXField | null>(parseFieldData)
       .filter((q) => !!q);
+    Parser.stringCounter = 0;
   });
-
-  if (log)
-    console.log(
-      "Going into special field sorting:\n",
-      "fields:",
-      fieldsData,
-      "\n",
-      "special:",
-      specialFields,
-    );
+  print(
+    "Going into special field sorting:\n",
+    "fields:",
+    fieldsData,
+    "\n",
+    "special:",
+    specialFields,
+  );
 
   specialFields.forEach((q) => {
     print("Sorting out special field: ", q);
@@ -309,18 +603,41 @@ export const parseSFXFields = (
         continue;
       }
       if (i === q.relIndex) {
-        const obj = { ...q.data, index: field.index + 0.5 };
-        fieldData.splice(i + skip + 1, 0, obj);
+        // define field object that will be inserted
+        const fieldObj = {
+          ...q.data,
+          index: field.index + 0.5,
+          key: `${field.index + 0.5}`,
+        };
+        // X.5 should be ordered by te order they come in
+        const halves = fieldData.filter((q) => q.index === fieldObj.index);
+        print("Halves", halves);
+
+        // if string - increment and add counter number
+        if (fieldObj.type === "string") {
+          const countered = halves.filter(
+            (q): q is StringField & FieldBase =>
+              q.type === "string" && !!q.counter,
+          );
+          if (countered.length > 0) {
+            const prevCounter = countered[countered.length - 1]?.counter;
+            if (prevCounter) fieldObj.counter = prevCounter + 1;
+          }
+        }
+        fieldData.splice(i + skip + halves.length + 1, 0, {
+          ...fieldObj,
+          key: `${fieldObj.key}.${halves.length}`, // add a key for react <fieldID>.5.<order_in_sublist>
+        });
         fieldData.sort((a, b) => a.index - b.index);
-        print("Added obj", obj, "into field", q.key);
+        print("Added obj", fieldObj, "into field", q.key);
         print("Result: ", fieldsData);
         return;
       }
       i++;
     }
-    print(`Failed!`);
+    printErr(`Failed!`);
 
-    // fail crunch, add back to field
+    // fail crunch, add back as StringField
 
     const failedField = fieldsData[q.onFail.key];
     if (!failedField) return;
@@ -331,9 +648,13 @@ export const parseSFXFields = (
         const dataQ = fieldsData[fieldKey];
         if (!dataQ) return;
         dataQ.forEach((field) => {
-          field.index = Math.abs(
+          const newIndex = Math.abs(
             field.index >= n ? field.index + 1 : field.index,
           );
+          if (field.index !== newIndex) {
+            field.key = `${newIndex}`;
+          }
+          field.index = newIndex;
         });
       });
       specialFields.forEach((q) => q.onFail.index++);
@@ -347,6 +668,7 @@ export const parseSFXFields = (
       type: "string",
       value: q.onFail.raw,
       index: -q.onFail.index,
+      key: `fail_${q.onFail.raw}`,
     };
     for (const field of failedField) {
       i++;
@@ -360,7 +682,7 @@ export const parseSFXFields = (
     }
 
     if (!found) {
-      print(
+      printErr(
         `Did not find any field withh index ${q.onFail.index}! Pushing `,
         obj,
       );
@@ -370,21 +692,21 @@ export const parseSFXFields = (
   });
 
   // hide
-  for (const { key, relIndex } of hideCalls) {
+  for (const hideCall of hideCalls) {
+    const { key, relIndex } = hideCall;
     const f = fieldsData[key];
     if (!f) continue;
 
     const obj = f.find((_, i) => i === relIndex);
     if (obj) {
+      const hideValue = hideCall.revIndices ?? true;
       const children = f.filter((q) =>
         obj.index % 1 === 0 ? q.index === obj.index + 0.5 : false,
       );
-      children.forEach((c) => (c.hidden = true));
-      obj.hidden = true;
+      children.forEach((c) => (c.hidden = hideValue));
+      obj.hidden = hideValue;
     }
   }
-
-  print("Result:", fieldsData);
 
   return fieldsData;
 };

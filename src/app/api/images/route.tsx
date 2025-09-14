@@ -18,6 +18,7 @@ export async function GET(req: NextRequest): Promise<Response> {
       const langs = await api.sfx.listLangs();
       toLangObject(langs);
       const sfx = sfxs[0];
+      // console.log("Founds sfx", sfxs);
       if (sfx) {
         const size = IMAGE_SIZE;
         return new ImageResponse(

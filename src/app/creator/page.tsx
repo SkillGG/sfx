@@ -61,14 +61,20 @@ const CheckCreatorLoginPage = () => {
           <div
             className={cn(
               "absolute top-4 right-4 z-50 max-w-xs min-w-[220px] rounded-lg px-4 py-3",
-              "bg-(--error-600) text-(--label-text) shadow-lg",
+              "border-2 border-(--login-error-border) bg-(--login-error-bg) text-(--label-text) shadow-lg",
               "flex items-center justify-between gap-4",
             )}
             role="alert"
             onClick={() => setErr("")}
             style={{ cursor: "pointer" }}
           >
-            <span className={cn("flex-1 text-sm font-medium")}>{err}</span>
+            <span
+              className={cn(
+                "flex-1 text-sm font-medium text-(--login-error-text)",
+              )}
+            >
+              {err}
+            </span>
           </div>
         )}
         <LoginPage />

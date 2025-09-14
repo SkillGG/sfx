@@ -22,7 +22,7 @@ export async function generateMetadata({
 
   if (params)
     Object.entries(params).forEach(([k, v]) => {
-      console.log("setting param", k, v);
+      // console.log("setting param", k, v);
       if (v) curURL.searchParams.set(k, Array.isArray(v) ? v.join(",") : v);
       else curURL.searchParams.delete(k);
     });
@@ -59,6 +59,8 @@ export async function generateMetadata({
     let description = basicMetadata.description ?? "";
 
     const twitterImage = `${baseURL}/api/images?id=${query.id}`;
+
+    // console.log("metadata IMG", twitterImage);
 
     if (searchResult.length > 0) {
       keywords.push(
