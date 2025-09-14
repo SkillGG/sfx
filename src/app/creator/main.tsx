@@ -210,6 +210,7 @@ const CreatorPage = () => {
               setSFX(ntext.value);
               setExtra(nextra.value);
             }}
+            className={"max-h-[30vh] overflow-scroll"}
             value={{
               text: {
                 label: "SFX",
@@ -285,7 +286,7 @@ const CreatorPage = () => {
       <hr className="my-2 border-(--regular-border) lg:hidden" />
       <div
         className={cn(
-          "grid max-h-[50lvh] flex-1 gap-4 pb-2 lg:flex lg:max-h-none lg:flex-col lg:pb-0",
+          "grid max-h-[50lvh] flex-1 auto-rows-[1fr_1fr_10fr] gap-4 pb-2 lg:flex lg:max-h-none lg:flex-col lg:pb-0",
         )}
       >
         <h2
@@ -308,6 +309,7 @@ const CreatorPage = () => {
               customQuery={search.query}
               allowSeparate
               editable
+              useNewSFX
               classNames={{
                 sfxs: {
                   default: {
@@ -332,7 +334,7 @@ const CreatorPage = () => {
               }}
               onSave={async (old, sfx) => {
                 if (auth) {
-                  console.log("Updating SFX", sfx);
+                  // console.log("Updating SFX", sfx);
                   await updateSFX.mutateAsync({ id: old.id, sfx, auth });
                   await utils.sfx.listSFX.invalidate();
                 }

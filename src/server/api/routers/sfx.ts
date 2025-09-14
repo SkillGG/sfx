@@ -49,7 +49,8 @@ export const sfxRouter = createTRPCRouter({
         search &&
         (!!search.query ||
           (search.langs?.length ?? 0) > 0 ||
-          Number(search.id) > 0)
+          Number(search.id) > 0 ||
+          (search.ids?.length ?? 0) > 0)
       )
         return await searchDBForSFX(ctx.db, {
           langs: search.langs ?? [],
@@ -58,9 +59,11 @@ export const sfxRouter = createTRPCRouter({
           order: search.order ?? "asc",
           query: search.query ?? "",
           id: search.id ?? 0,
+          ids: search.ids ?? [],
+          nodedupe: search.nodedupe ?? false,
         });
 
-      console.log("List searchh", search);
+      console.log("List search", search);
 
       const sfxs = (
         await ctx.db.onomatopoeia.findMany({

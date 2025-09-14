@@ -40,7 +40,7 @@ export const useSearch = (
     (newSearch: string): void => {
       const query = strToSearchQuery(newSearch);
       if (isValidSearch(query)) {
-        console.log("Searching it up!");
+        // console.log("Searching it up!");
         setSearchQuery(query);
         const q = !!query?.query ? query.query : null;
         const id = !!query?.id && query.id > 0 ? query.id.toString() : null;

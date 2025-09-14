@@ -87,7 +87,7 @@ export const ConnectSFXDialog = ({
                       )}
                       tabIndex={0}
                       onClick={async () => {
-                        console.log("Adding translation!");
+                        // console.log("Adding translation!");
                         await onChange?.((prev) => [
                           ...prev,
                           {

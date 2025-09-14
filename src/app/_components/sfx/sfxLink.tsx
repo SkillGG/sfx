@@ -4,23 +4,47 @@ import type { ClassValue } from "clsx";
 import Link from "next/link";
 import { memo } from "react";
 
-const SFXLink = ({ id, className }: { id: number; className?: ClassValue }) => {
-  const [[sfx]] = api.sfx.listSFX.useSuspenseQuery({ id });
-  if (!sfx) return null;
+const SFXLink = ({
+  ids,
+  className,
+}: {
+  ids: number[];
+  className?: ClassValue;
+}) => {
+  const [sfxs] = api.sfx.listSFX.useSuspenseQuery({ ids: ids, nodedupe: true });
+
+  if (!sfxs || sfxs.length === 0)
+    return (
+      <div className={cn(className)}>
+        Unknown reference to SFX#{ids.join(", ")}
+      </div>
+    );
 
   return (
     <>
-      <Link
-        className={cn("underline", className)}
-        href={`?id=${sfx.id}`}
-        target="_self"
-      >
-        {sfx.text}
-      </Link>
+      {ids.map((id, i, a) => {
+        const sfx = sfxs.find((s) => s.id === id);
+
+        if (!sfx)
+          return (
+            <span className={cn(className)} key={`sfxlink_fail_${id}`}>
+              [NO={id}]{i !== a.length - 1 && ", "}
+            </span>
+          );
+
+        return (
+          <span key={`sfxlink_${sfx.id}`} className={cn(className)}>
+            <Link href={`?id=${sfx.id}`} className="underline" target="_self">
+              {sfx.text}
+            </Link>
+            {i !== a.length - 1 && ", "}
+          </span>
+        );
+      })}
     </>
   );
 };
 
 export default memo(SFXLink, (prev, next) => {
-  return prev.id === next.id;
+  return prev.ids === next.ids;
 });

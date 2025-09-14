@@ -12,6 +12,8 @@ export const SearchOptions = object({
   langs: array(string()),
   order: literal("asc").or(literal("desc")).default("asc"),
   id: number().int(),
+  ids: array(number().int()),
+  nodedupe: boolean(),
 })
   .partial()
   .or(literal("list"));
@@ -239,14 +241,14 @@ export const parseMemoryData = (
   tls: CollapsedTL[];
 }> | null => {
   if (!q) {
-    console.log("No memory string");
+    // console.log("No memory string");
     return null;
   }
   try {
     const memory: unknown = JSON.parse(q);
     const ret: ReturnType<typeof parseMemoryData> = {};
     if (!memory || !(typeof memory === "object")) {
-      console.log("No memory data!");
+      // console.log("No memory data!");
       return null;
     }
     if ("text" in memory && typeof memory.text === "string")

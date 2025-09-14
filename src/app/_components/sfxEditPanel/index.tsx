@@ -5,6 +5,7 @@ import {
   ToggleableEditField,
   type ToggledEditField,
 } from "./toggleableEditField";
+import type { ClassValue } from "clsx";
 
 export type SFXEditField = EditField | ToggledEditField;
 
@@ -16,10 +17,12 @@ export const SFXEditPanel = <T extends SFXEditFieldObject>({
   validation,
   onChange,
   value,
+  className,
 }: {
   value: T;
   validation: Validation;
   onChange?: (cb: T) => void;
+  className?: ClassValue;
 }) => {
   const fields = Object.entries(value).map<SFXFieldWithName<SFXEditField>>(
     ([k, v]) => ({
@@ -29,7 +32,13 @@ export const SFXEditPanel = <T extends SFXEditFieldObject>({
   );
 
   return (
-    <div className={cn("flex w-full flex-col gap-2", "text-base font-medium")}>
+    <div
+      className={cn(
+        "flex w-full flex-col gap-2",
+        "text-base font-medium",
+        className,
+      )}
+    >
       {fields.map((q) => {
         switch (q.type) {
           case "toggle":

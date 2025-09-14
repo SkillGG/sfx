@@ -66,7 +66,7 @@ const LoginPage = () => {
               className={cn(
                 "rounded-md rounded-r-none border border-r-0",
                 "border-(--input-border) bg-(--input-bg) px-3 py-2",
-                "focus:ring-0 focus:outline-none",
+                "text-(--label-text) focus:ring-0 focus:outline-none",
                 err && "border-(--input-error-border)",
                 !show && "text-(--input-text)",
               )}
@@ -120,7 +120,7 @@ const LoginPage = () => {
           )}
           disabled={login.isPending}
         >
-          {login.isPending ? "Sending..." : "Send"}
+          {login.isPending ? "Logging in..." : "Login"}
         </button>
       </form>
     </div>
