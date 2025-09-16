@@ -85,5 +85,10 @@ export const useSearch = (
     onChange: setSearch,
     curValue: searchStr,
     query: searchQuery,
+    searchIsEmpty:
+      !!searchQuery.id ||
+      (searchQuery.ids?.length ?? 0) > 0 ||
+      !!searchQuery.query ||
+      (searchQuery.langs?.length ?? 0) > 0,
   };
 };

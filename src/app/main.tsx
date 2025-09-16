@@ -26,7 +26,12 @@ const PageLoad = () => {
 
 const List = ({ query }: { query: SearchQuery }) => {
   const { data: sfxs, isLoading } = api.sfx.listSFX.useQuery(
-    { query: query.query, langs: query.langs, id: query.id, featured: true },
+    {
+      query: query.query,
+      langs: query.langs,
+      id: query.id,
+      featured: query.featured,
+    },
     {
       enabled: isValidSearch(query, ["#creat", "#edit", "#new", "#dash"]),
     },
@@ -169,7 +174,7 @@ export const SearchPage = ({
 
           <hr className={cn("border-(--separator)")} />
           <CookieBanner />
-          <List query={search.query} />
+          <List query={{ ...search.query, featured: !search.searchIsEmpty }} />
         </Suspense>
       </section>
     </main>
