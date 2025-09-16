@@ -37,7 +37,10 @@ model Onomatopoeia {
     tlTranslations Translation[] @relation("tlSFX")
 
     @@index([text])
-    @@index([read])
+    @@index([searchread])
+    @@index([searchdef])
+    @@index([searchextra])
+    @@index([languageId])
 }
 
 model Translation {
