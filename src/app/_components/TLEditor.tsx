@@ -42,6 +42,8 @@ export const TLEditorDirect = ({
 
   classNames,
 
+  dev,
+
   onChange,
 }: {
   tls: CollapsedTL[];
@@ -53,6 +55,7 @@ export const TLEditorDirect = ({
   separateLabel?: string;
   classNames?: TLEditorClassNames;
   onChange: (tls: CollapsedTL[]) => Promisable<void>;
+  dev?: boolean;
 }) => {
   const [newTL, setNewTL] = useState<CollapsedTL>({
     additionalInfo: "",
@@ -61,6 +64,7 @@ export const TLEditorDirect = ({
     id: -(tls.length + 1),
     sfx: {
       def: "",
+      featured: false,
       extra: null,
       id: -(tls.length + 1),
       language: "",
@@ -104,6 +108,7 @@ export const TLEditorDirect = ({
       >
         {tls.map((tl) => (
           <TLCard
+            dev={dev}
             tl={tl}
             removeLangs={[sfx?.language ?? ""]}
             separate={separate}

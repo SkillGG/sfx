@@ -40,6 +40,8 @@ export const SFXLangProvider = ({
 }) => {
   const { data } = api.sfx.listLangs.useQuery();
 
+  // console.log("langs", data);
+
   const utils = api.useUtils();
 
   const addLang = api.sfx.addLang.useMutation();

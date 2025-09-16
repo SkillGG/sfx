@@ -82,6 +82,22 @@
   }
 }
 
+:root {
+  --switch-on-bg: var(--complement-300);
+  --switch-off-bg: var(--complement-50);
+
+  --switch-on-color: var(--accent-500);
+  --switch-off-color: var(--accent-500);
+
+  &.dark {
+    --switch-on-bg: var(--complement-400);
+    --switch-off-bg: var(--main-bg);
+
+    --switch-on-color: var(--accent-500);
+    --switch-off-color: var(--accent-100);
+  }
+}
+
 /* Inputs */
 :root {
   --input-bg: var(--color-white);

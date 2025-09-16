@@ -30,6 +30,7 @@ export const searchDBForSFX = async (
       extra: true,
       id: true,
       languageId: true,
+      featured: true,
       createdAt: true,
       updatedAt: true,
       ogTranslations: {
@@ -42,13 +43,14 @@ export const searchDBForSFX = async (
 
     where: {
       AND: [
+        search.featured ? { featured: search.featured } : {},
         search.ids.length > 0
           ? { OR: search.ids.filter((q) => q > 0).map((q) => ({ id: q })) }
-          : { id: { gt: -1 } }, // multi ID search
-        search.id && search.id > 0 ? { id: search.id } : { id: { gt: -1 } }, // single ID search
+          : {}, // multi ID search
+        search.id && search.id > 0 ? { id: search.id } : {}, // single ID search
         search.langs && search.langs.length > 0 // language search
           ? { language: { id: { in: search.langs } } }
-          : { id: { gt: -1 } },
+          : {},
         {
           // text search
           OR: [
@@ -121,6 +123,7 @@ export const searchDBForSFX = async (
           language: sfx.languageId,
           read: sfx.read,
           text: sfx.text,
+          featured: sfx.featured,
           tls: [],
         }),
       )
@@ -134,6 +137,7 @@ export const searchDBForSFX = async (
       read: string | null;
       def: string;
       extra: string | null;
+      featured: boolean;
       languageId: string;
       ogtls: (typeof sfxs)[number]["ogTranslations"];
       optls: (typeof sfxs)[number]["tlTranslations"];
@@ -149,6 +153,7 @@ export const searchDBForSFX = async (
       languageId: sfx.languageId,
       read: sfx.read,
       text: sfx.text,
+      featured: sfx.featured,
       updatedAt: sfx.updatedAt,
       ogtls: sfx.ogTranslations,
       optls: sfx.tlTranslations,

@@ -31,6 +31,8 @@ model Onomatopoeia {
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
+    featured Boolean @default(false)
+
     ogTranslations Translation[] @relation("ogSFX")
     tlTranslations Translation[] @relation("tlSFX")
 

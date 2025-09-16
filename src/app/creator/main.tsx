@@ -47,6 +47,7 @@ const CreatorPage = () => {
   const [extra, setExtra] = useState<string>("");
   const [read, setRead] = useState<string | null>("");
   const [lang, setLang] = useState<SFXLang["code"]>("");
+  const [featured, setFeatured] = useState<boolean>(false);
 
   const [tempRead, setTempRead] = useState<string>("");
 
@@ -72,6 +73,7 @@ const CreatorPage = () => {
       setRead(memoryData.read ?? null);
       setTempRead(memoryData.tempRead ?? "");
       setTLs(memoryData.tls ?? []);
+      setFeatured(memoryData?.featured ?? false);
     }
     setFirstRun(true);
   }, []);
@@ -79,9 +81,18 @@ const CreatorPage = () => {
   useEffect(() => {
     // save to localStorage
     if (!firstRun) return;
-    const memory = { text: sfx, def, extra, lang, read, tls, tempRead };
+    const memory = {
+      text: sfx,
+      def,
+      extra,
+      lang,
+      read,
+      tls,
+      tempRead,
+      featured,
+    };
     localStorage.setItem("memory", JSON.stringify(memory));
-  }, [sfx, def, extra, lang, read, tls, firstRun, tempRead]);
+  }, [sfx, def, extra, lang, read, tls, firstRun, tempRead, featured]);
 
   if (!auth)
     // loading and checking whether user is logged in
@@ -96,6 +107,7 @@ const CreatorPage = () => {
       text: sfx,
       def,
       extra: extra ?? null,
+      featured,
       read: read,
       language: lang ?? "en",
       tls: tls ?? {},
@@ -113,6 +125,7 @@ const CreatorPage = () => {
         read: read,
         language: lang ?? "en",
         tls: tls ?? [],
+        featured,
         auth,
       } satisfies Omit<CollapsedOnomatopoeia, "id"> & { auth: UserSessionData };
 
@@ -203,12 +216,14 @@ const CreatorPage = () => {
               extra: nextra,
               read: nread,
               text: ntext,
+              featured: nf,
             }) => {
               setRead(nread.value);
               setTempRead(nread.temp);
               setDef(ndef.value);
               setSFX(ntext.value);
               setExtra(nextra.value);
+              setFeatured(nf.value ?? featured);
             }}
             className={"max-h-[30vh] overflow-scroll"}
             value={{
@@ -244,6 +259,12 @@ const CreatorPage = () => {
                 key: "newextra",
                 long: true,
               },
+              featured: {
+                label: "Featured",
+                type: "switch",
+                value: featured,
+                key: "newfeatured",
+              },
             }}
           />
         </div>
@@ -256,6 +277,7 @@ const CreatorPage = () => {
           classNames={{
             container: "bg-(--sfx-card-bg)/50",
           }}
+          dev
           removeOnCancel
           sfx={{
             def,
@@ -265,6 +287,7 @@ const CreatorPage = () => {
             read: null,
             text: sfx,
             tls: tls,
+            featured: featured,
           }}
         />
         <button
@@ -306,6 +329,7 @@ const CreatorPage = () => {
         >
           <Suspense fallback={<Spinner className={"m-auto"} />}>
             <SFXListPanel
+              dev
               customQuery={search.query}
               allowSeparate
               editable

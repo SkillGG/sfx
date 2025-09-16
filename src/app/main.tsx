@@ -26,7 +26,7 @@ const PageLoad = () => {
 
 const List = ({ query }: { query: SearchQuery }) => {
   const { data: sfxs, isLoading } = api.sfx.listSFX.useQuery(
-    { query: query.query, langs: query.langs, id: query.id },
+    { query: query.query, langs: query.langs, id: query.id, featured: true },
     {
       enabled: isValidSearch(query, ["#creat", "#edit", "#new", "#dash"]),
     },

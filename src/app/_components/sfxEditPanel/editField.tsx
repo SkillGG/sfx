@@ -21,7 +21,7 @@ export const EditField = ({
 }: {
   field: SFXFieldWithName<EditField>;
   validation?: Validation;
-  onChange: (v: string) => void;
+  onChange: (v: (typeof field)["value"]) => void;
 }) => {
   const { field: fieldName, label, value, placeholder, key, long } = field;
   return (

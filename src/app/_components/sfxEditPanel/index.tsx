@@ -6,8 +6,9 @@ import {
   type ToggledEditField,
 } from "./toggleableEditField";
 import type { ClassValue } from "clsx";
+import { SwitchField } from "./switchField";
 
-export type SFXEditField = EditField | ToggledEditField;
+export type SFXEditField = EditField | ToggledEditField | SwitchField;
 
 type SFXEditFieldObject = Record<string, SFXEditField>;
 
@@ -66,6 +67,22 @@ export const SFXEditPanel = <T extends SFXEditFieldObject>({
                         temp: q.value ?? "",
                         value: null,
                       },
+                    });
+                  }
+                }}
+              />
+            );
+          case "switch":
+            return (
+              <SwitchField
+                field={q}
+                key={q.field}
+                onChange={(newV) => {
+                  const pField = value[q.field];
+                  if (pField) {
+                    onChange?.({
+                      ...value,
+                      [q.field]: { ...pField, value: newV },
                     });
                   }
                 }}

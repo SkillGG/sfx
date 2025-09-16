@@ -52,7 +52,7 @@ export const LongInput = ({
   fieldName: string;
   disabled?: boolean;
 
-  onChange?: (v: string) => void;
+  onChange: (v: string) => void;
 }) => {
   const inRef = useRef<HTMLTextAreaElement>(null);
   useImperativeHandle(ref, () => inRef.current!, []);

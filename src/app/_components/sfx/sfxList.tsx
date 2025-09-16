@@ -23,6 +23,8 @@ export const SFXListPanel = ({
 
   allowSeparate,
 
+  dev,
+
   onSave,
   onRemove,
 }: {
@@ -34,6 +36,8 @@ export const SFXListPanel = ({
   onPage?: number;
 
   allowSeparate?: boolean;
+
+  dev?: boolean;
 
   classNames?: {
     container?: ClassValue;
@@ -80,6 +84,7 @@ export const SFXListPanel = ({
           <li key={`sfx_${sfx.id}`} className={cn("list-none")}>
             <>
               <SFX
+                dev={dev}
                 labels={
                   "separated" in sfx
                     ? {

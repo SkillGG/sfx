@@ -23,7 +23,9 @@ const properID = (n: number | string) =>
 
 export const sfxRouter = createTRPCRouter({
   listLangs: publicProcedure.query(async ({ ctx }) => {
-    return await ctx.db.language.findMany({});
+    const langs = await ctx.db.language.findMany({});
+    console.log("FOUND LANGS", langs);
+    return langs;
   }),
   addLang: publicProcedure
     .input(object({ id: string(), name: string() }))
@@ -61,12 +63,14 @@ export const sfxRouter = createTRPCRouter({
           id: search.id ?? 0,
           ids: search.ids ?? [],
           nodedupe: search.nodedupe ?? false,
+          featured: search.featured ?? false,
         });
 
       console.log("List search", search);
 
       const sfxs = (
         await ctx.db.onomatopoeia.findMany({
+          where: search?.featured ? { featured: search.featured } : undefined,
           orderBy: { id: "asc" },
           select: {
             def: true,
@@ -75,6 +79,7 @@ export const sfxRouter = createTRPCRouter({
             languageId: true,
             read: true,
             text: true,
+            featured: true,
             updatedAt: true,
           },
         })
@@ -116,7 +121,7 @@ export const sfxRouter = createTRPCRouter({
         input: {
           auth: { token, deviceName },
           id,
-          sfx: { text, def, extra, read, language, tls },
+          sfx: { text, def, extra, read, language, tls, featured },
         },
       }) => {
         // TODO: Fix ConnectSFX updates
@@ -136,7 +141,7 @@ export const sfxRouter = createTRPCRouter({
 
         if (loggedIn.ok) {
           const sfxUpdates = [
-            { text, def, extra, read, language, id },
+            { text, def, extra, read, language, id, featured },
             ...allTLs.filter((s) => properID(s.sfx.id)).map((q) => q.sfx),
           ];
 
@@ -150,6 +155,7 @@ export const sfxRouter = createTRPCRouter({
                     def: sfx.def,
                     extra: sfx.extra,
                     languageId: sfx.language,
+                    featured: sfx.featured,
                     read: sfx.read,
                     text: sfx.text,
                     searchread: Parser.strip(sfx.read),
@@ -177,6 +183,7 @@ export const sfxRouter = createTRPCRouter({
                   text: tl.sfx.text,
                   languageId: tl.sfx.language,
                   extra: tl.sfx.extra,
+                  featured: tl.sfx.featured,
                   searchread: Parser.strip(tl.sfx.read),
                   searchextra: Parser.strip(tl.sfx.extra),
                   searchdef: Parser.strip(tl.sfx.def),
@@ -193,6 +200,7 @@ export const sfxRouter = createTRPCRouter({
                   read: tl.sfx.read,
                   text: tl.sfx.text,
                   languageId: tl.sfx.language,
+                  featured: tl.sfx.featured,
                   extra: tl.sfx.extra,
                   searchread: Parser.strip(tl.sfx.read),
                   searchextra: Parser.strip(tl.sfx.extra),
@@ -228,7 +236,7 @@ export const sfxRouter = createTRPCRouter({
     .mutation(
       async ({
         ctx,
-        input: { auth, text, def, extra, read, tls, language },
+        input: { auth, text, def, extra, read, tls, language, featured },
       }) => {
         const loggedIn = await checkSession(ctx.db, auth);
         if (!loggedIn.ok) return loggedIn;
@@ -241,6 +249,7 @@ export const sfxRouter = createTRPCRouter({
           read: string | null;
           text: string;
           searchread: string;
+          featured: boolean;
           searchdef: string;
           searchextra: string;
           ogTranslations: {
@@ -262,6 +271,7 @@ export const sfxRouter = createTRPCRouter({
           languageId,
           read,
           text,
+          featured,
           tls,
         }: Omit<
           CreateCreateObject,
@@ -273,6 +283,7 @@ export const sfxRouter = createTRPCRouter({
             text,
             def,
             extra,
+            featured,
             read,
             languageId,
             searchdef: Parser.strip(def),
@@ -301,6 +312,7 @@ export const sfxRouter = createTRPCRouter({
           languageId: language,
           read,
           text,
+          featured,
           tls,
         });
 

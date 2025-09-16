@@ -1,5 +1,5 @@
 import type { ClassValue } from "clsx";
-import { SFX, SFXEdit, type SFXClasses, type SFXEditClassNames } from "./sfx";
+import { SFX, type SFXClasses } from "./sfx";
 import {
   cn,
   type CollapsedOnomatopoeia,
@@ -9,6 +9,7 @@ import {
 import { useSFXLangs } from "../hooks/langs";
 import { useState } from "react";
 import { ToggleableEditField } from "./sfxEditPanel/toggleableEditField";
+import { SFXEdit, type SFXEditClassNames } from "./sfx/edit";
 
 export type TLClassNames = SFXClasses & {
   container?: ClassValue;
@@ -33,6 +34,8 @@ export const TLCard = ({
 
   classNames,
 
+  dev,
+
   onChange,
   onSave,
 }: {
@@ -50,6 +53,8 @@ export const TLCard = ({
   allowDeeperTLs?: boolean;
 
   classNames?: TLClassNames;
+
+  dev?: boolean;
 
   onSave?: (tl: CollapsedTL | null) => Promisable<void>;
   onChange?: (tl: CollapsedTL) => Promisable<void>;
@@ -72,6 +77,7 @@ export const TLCard = ({
     return (
       <>
         <SFXEdit
+          dev={dev}
           noTLs={noTLs}
           allowDeeperTLs={allowDeeperTLs}
           separate={separate}
@@ -147,6 +153,7 @@ export const TLCard = ({
         {tl.id}
       </div>
       <SFX
+        dev={dev}
         sfx={tl.sfx}
         key={`tl_${tl.id}:${tl.sfx.id}_${tl.forDeletion}`}
         editable={false}

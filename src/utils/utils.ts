@@ -14,6 +14,7 @@ export const SearchOptions = object({
   id: number().int(),
   ids: array(number().int()),
   nodedupe: boolean(),
+  featured: boolean(),
 })
   .partial()
   .or(literal("list"));
@@ -75,6 +76,7 @@ export const CollapsedOnomatopoeia = object({
   read: string().nullable(),
   def: string(),
   extra: string().nullable(),
+  featured: boolean().default(false),
   language: string(),
   tls: array(CollapsedTL),
 });
@@ -85,6 +87,7 @@ export const SFXData = object({
   read: string().nullable(),
   def: string(),
   extra: string().nullable(),
+  featured: boolean().default(false),
   language: string(),
 });
 
@@ -239,6 +242,7 @@ export const parseMemoryData = (
   extra: string | null;
   tempRead: string | null;
   tls: CollapsedTL[];
+  featured: boolean;
 }> | null => {
   if (!q) {
     // console.log("No memory string");
@@ -262,6 +266,8 @@ export const parseMemoryData = (
       ret.lang = memory.lang;
     if ("tempRead" in memory && typeof memory.tempRead === "string")
       ret.tempRead = memory.tempRead;
+    if ("featured" in memory && typeof memory.featured === "boolean")
+      ret.featured = memory.featured;
     if ("tls" in memory && Array.isArray(memory.tls)) {
       const denullifyIds = (tl: CollapsedTL): CollapsedTL => {
         return {

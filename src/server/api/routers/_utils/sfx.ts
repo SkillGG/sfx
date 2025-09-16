@@ -10,6 +10,7 @@ export const sfxGetTLs = async (
     def: string;
     extra: string | null;
     languageId: string;
+    featured: boolean;
     show?: "both" | "reverse";
     hideTLSFXs?: number[];
   }[],
