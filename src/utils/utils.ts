@@ -4,46 +4,67 @@ import clsx, { type ClassValue } from "clsx";
 import type z from "zod/v4";
 import { array, boolean, literal, number, object, string } from "zod/v4";
 import { generate } from "random-words";
+import type { REVERSE_MARK } from "@/app/_components/sfx";
 
+/** Options given to getList that filter the sfx list */
 export const SearchOptions = object({
+  /** Ammount of sfx taken */
   limit: number().default(100),
+  /** Ammount of sfx skipped (from the start, ordered by id) */
   skip: number().default(0),
+  /** String to search the database by. Searches text,searchref,searchdef,searchextra fields */
   query: string(),
+  /** Languages to filter for */
   langs: array(string()),
+  /** The ordering of thhe returned SFX. Ordered by ID */
   order: literal("asc").or(literal("desc")).default("asc"),
+  /** SFX id to search for (returns single item) */
   id: number().int(),
+  /** SFX ids to query. Returns at most ids.length ammount of SFX */
   ids: array(number().int()),
+  /** Skip sfx deduping */
   nodedupe: boolean(),
+  /** Filter by featured flag */
   featured: boolean(),
 })
-  .partial()
-  .or(literal("list"));
+  .partial() // can use any combination
+  .or(literal("list")); // or just `list`. This returns all SFX without thhe TL data
 
 export type SearchOptions = z.infer<typeof SearchOptions>;
 
+/** A Translation object with CollapsedOnomatopoeia and `forDeletion` that marks thhe translation for deletion */
 export type CollapsedTL = Omit<
   Translation & {
+    /** Collapsed SFX data */
     sfx: CollapsedOnomatopoeia;
+    /** Marks the sound effect for deletion */
     forDeletion?: boolean;
   },
   "createdAt" | "updatedAt"
 >;
 
+/** SFX Data with CollapsedTL inside */
 export type CollapsedOnomatopoeia = SFXData & {
   tls: CollapsedTL[];
   createdAt?: Date;
   updatedAt?: Date;
 };
-
+/** Pure translation data */
 export type TranslationData = Omit<
   Translation,
   "id" | "createdAt" | "updatedAt"
 >;
 
+/** Pure Sound effect data */
 export type SFXData = z.infer<typeof SFXData>;
 
 export type Promisable<T> = T | Promise<T>;
 
+/**
+ * Function to generate random string consisting of 2 english words
+ * @param length the number of words in thhe string
+ * @returns A generated string
+ */
 export const getRandomWordString = (length = 2) => {
   const wordString = [
     ...generate({
@@ -59,28 +80,45 @@ export const getRandomWordString = (length = 2) => {
   return wordString;
 };
 
+/** A Translation object with CollapsedOnomatopoeia and `forDeletion` that marks thhe translation for deletion */
 export const CollapsedTL = object({
+  /**  Translation ID */
   id: number().or(literal(Infinity)),
+  /** OGSFX ID */
   sfx1Id: number().or(literal(Infinity)),
+  /** TLSFX ID */
   sfx2Id: number().or(literal(Infinity)),
+  /** Translation specific info. If first chharacter is {@link REVERSE_MARK}, marks it as reverse TL. */
   additionalInfo: string().nullable(),
+  /** If set, TL will be deleted in `update` */
   forDeletion: boolean().optional(),
+  /** TLSFX (or OGSFX if reversed) */
   get sfx() {
     return CollapsedOnomatopoeia;
   },
 });
 
+/** {@link CollapsedOnomatopoeia} zod schema */
 export const CollapsedOnomatopoeia = object({
+  /** SFX id */
   id: number().or(literal(Infinity)),
+  /** SFX main text */
   text: string(),
+  /** SFX reading */
   read: string().nullable(),
+  /** SFX definition */
   def: string(),
+  /** SFX extra information */
   extra: string().nullable(),
+  /** Is the SFX featured on the main page? */
   featured: boolean().default(false),
+  /** SFX's language */
   language: string(),
+  /** An array of translations this SFX references */
   tls: array(CollapsedTL),
 });
 
+/** Client-side SFX Data object without the TLs */
 export const SFXData = object({
   id: number(),
   text: string(),
@@ -91,6 +129,7 @@ export const SFXData = object({
   language: string(),
 });
 
+// #region VALIDATION
 // Simple validation error types
 export type ValidationError = {
   field: string;
@@ -227,6 +266,8 @@ export const validateTranslation = (
     errors,
   };
 };
+
+// #endregion
 
 export const cn = (...inputs: ClassValue[]) => {
   return twMerge(clsx(inputs));

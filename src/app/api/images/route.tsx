@@ -4,6 +4,11 @@ import { IMAGE_SIZE, toLangObject } from "@/utils/utils";
 import { ImageResponse } from "next/og";
 import { NextResponse, type NextRequest } from "next/server";
 
+/**
+ * An endpoint to create OpenGraph image of the sfx
+ *
+ * /api/images?id=<sfxid>
+ */
 export async function GET(req: NextRequest): Promise<Response> {
   const url = new URL(req.url);
 
