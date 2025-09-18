@@ -273,6 +273,7 @@ export const cn = (...inputs: ClassValue[]) => {
   return twMerge(clsx(inputs));
 };
 
+/** Parse creation memory string to SFX memory data */
 export const parseMemoryData = (
   q: string | null,
 ): Partial<{
@@ -296,6 +297,7 @@ export const parseMemoryData = (
       // console.log("No memory data!");
       return null;
     }
+    // insure correct memory data types
     if ("text" in memory && typeof memory.text === "string")
       ret.text = memory.text;
     if ("def" in memory && typeof memory.def === "string") ret.def = memory.def;
@@ -310,6 +312,7 @@ export const parseMemoryData = (
     if ("featured" in memory && typeof memory.featured === "boolean")
       ret.featured = memory.featured;
     if ("tls" in memory && Array.isArray(memory.tls)) {
+      // change sfx ids from null to Infinity as JSON doesn't store those
       const denullifyIds = (tl: CollapsedTL): CollapsedTL => {
         return {
           ...tl,
@@ -324,11 +327,7 @@ export const parseMemoryData = (
         };
       };
 
-      const denullified = memory.tls.map((tl: CollapsedTL) => {
-        return denullifyIds(tl);
-      });
-
-      ret.tls = denullified;
+      ret.tls = memory.tls.map(denullifyIds);
     }
 
     return ret;
@@ -338,20 +337,25 @@ export const parseMemoryData = (
   }
 };
 
+/** Page's URL searchParams */
 export type SearchParams = Promise<
   Record<string, string | string[] | undefined>
 >;
 
+/** do nothing */
 export const noop = () => void 0;
 
+/** List of languages */
 export type LangObject = Record<string, string>;
 
+/** Change {@link Language} array to {@link LangObject} */
 export const toLangObject = (l: Language[]): LangObject => {
   const ret: LangObject = {};
   for (const { id, name } of l) ret[id] = name;
   return ret;
 };
 
+/** OpenGraph image size */
 export const IMAGE_SIZE = {
   width: 600,
   height: 600 * 0.5,

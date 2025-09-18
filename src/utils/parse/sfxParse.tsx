@@ -5,22 +5,93 @@ import z from "zod";
 /**
  * Syntax:
  *
- *  (<SFXData> | <Jump> | <Hide>)
+ *   (<SFXData> | <Jump> | <Hide>)
+ *
  * where:
- *  <SFXData> may be:
- *    sfx:<number> //
- *    <text> // string node
- *  <Hide> // hides element
- *    -<field><index>/<revIndex> // hide <index> element from <field>. (index is relative)
- *   <Jump> // create SFXData under other SFXData group as if it was part of the original group
- *    _<field><index>:<text> // create <text> under <field>
+ *   <SFXData> may be:
+ *     sfx:<number>         // SFX link node, e.g. sfx:1
+ *     <text>               // plain string node, e.g. Hello!
+ *
+ *   <Hide>                 // hides element
+ *     -<field><index>/<revIndex>
+ *       // hide the <index>th element from <field> (indexing starts at 1, calculated AFTER jumps)
+ *       // The value after the slash (`/<n>`) specifies which element in the *translated* field
+ *       // (i.e., the bottom SFX after reversal) should also be hidden.
+ *       // If no slash `/` is present, only original SFX's field is hidden. (e.g. `1` is the same as `1/0`)
+ *       // If the slash is present but no value is given copy the index value (e.g. `1/` is the same as `1/1`).
+ *       // If `/0` is given, it is equivalent to just `<index>`.
+ *       // If the left index is `0`, nothing is hidden in the original; `0/<n>` hides ONLY in the
+ *       // reversed/translated list, while `0/` is the same as `0/0` (no-op).
+ *       // Examples:
+ *       //   -read2      (hide the 2nd element in the "read" field; does not hide any in the translated field)
+ *       //   -read2/     (hide the 2nd element in the "read" field; in the translated field, also hide the 2nd child)
+ *       //   -read2/2    (hide the 2nd element in the "read" field; in the translated field, also hide the 2nd child)
+ *       //   -read2/0    (hide the 2nd element in the "read" field; `/0` is the same as just `2`, so no effect in translated)
+ *       //   -read0/2    (hide ONLY in the reversed/translated view: hide the 2nd child there; original is unchanged)
+ *       //   -read0/     (no-op; same as `-read0/0`)
+ *
+ *
+ *   <Jump>                 // create SFXData under other SFXData group as if it was part of the original group
+ *     _<field><index>:<SFXData>
+ *       // create <SFXData> under <field> as if it was from other field
+ *       // e.g. _def2:sfx:5  (put sfx:5 as if it was the 2nd element in the "def" field)
+ *
+ * Examples:
+ *
+ *   // 1. Simple SFX link
+ *   sfx:1
+ *
+ *   // 2. Multiple SFX links (default label)
+ *   sfx:1,2,3
+ *
+ *   // 3. SFX link with custom label and multiple ids
+ *   sfx[See also:]:2,3
+ *
+ *   // 4. SFX link with custom label and multiple ids
+ *   sfx[Related]:4,5,6
+ *
+ *   // 5. Plain string node
+ *   Hello world!
+ *
+ *   // 6. Hide the second element in the "read" field (original only)
+ *   -read2
+ *
+ *   // 6b. Hide the second element in the "read" field in BOTH original and reversed
+ *   -read2/2
+ *
+ *   // 6c. Hide ONLY in the reversed one (do not hide in original); hide the 2nd in reversed
+ *   -read0/2
+ *
+ *   // 6d. No-op example; hides nothing (same as `-read0/0`)
+ *   -read0/
+ *
+ *   // 6e. Hide the second element in the "read" field; same as `-read2`
+ *   -read2/0
+ *
+ *   // 7. Jump: put "sfx:7" as if it was the 3rd element in the "def" field
+ *   _def3:sfx:7
+ *
+ *   // 8. Jump with string node
+ *   _read2:Extra info
+ *
+ *   // 9. Image field (local and external)
+ *   img:@cat.png
+ *   img:https://example.com/cat.png
+ *
+ *   // 10. Link field
+ *   [https://example.com](Example Site)
+ *
+ *   // 11. Mixed example
+ *   Hello; sfx:1; _def2:sfx:3; -read1/2
  */
 
 const noop = () => void 0;
 
+/** {@link SFXField} base properties */
 export type FieldBase = {
   /** Final absolute index */
   index: number;
+  /** Should be displayed, if an array: saved the reverseIndexes to hide  */
   hidden: boolean | number[];
   jumpedFrom?: keyof SFXFieldsData;
   key: string;
@@ -66,13 +137,16 @@ export type SFXLinkField = {
   label?: string;
 };
 
+/** A SFXField is a single SFX data line. It can either contain a link, text or an image */
 export type SFXField = FieldBase &
   (StringField | ImageField | LinkField | SFXLinkField);
 
+/** And SFXField that can have multilpe Images. Used to reduce multiple {@link ImageField}s next to each other into one field */
 export type SFXFieldWithMultiIMG =
   | (FieldBase & (StringField | ImageField | LinkField | SFXLinkField))
   | (FieldBase & ImageField)[];
 
+/** SFXField data for all 4 of SFX's data types */
 export type SFXFieldsData = {
   def?: SFXField[];
   extra?: SFXField[];
@@ -80,30 +154,37 @@ export type SFXFieldsData = {
   read?: SFXField[];
 };
 
-export const SFXFieldsKeys: (keyof SFXFieldsData)[] = [
+export const SFXDataTypeKeys: (keyof SFXFieldsData)[] = [
   "read",
   "def",
   "extra",
   "tlExtra",
 ];
-const forEachField = (cb: (o: keyof SFXFieldsData) => void) =>
-  SFXFieldsKeys.forEach(cb);
+const forEachType = (cb: (o: keyof SFXFieldsData) => void) =>
+  SFXDataTypeKeys.forEach(cb);
 
+/** Hide Field */
 type HideFieldData = {
   /** Relative index */
   index: number;
+  /** Key of the field type to hide */
   fieldKey: keyof SFXFieldsData;
+  /** reverse indices to hide */
   revIndices?: number[];
 };
 
 type JumpFieldData = {
   /** Relative index */
   index: number;
+  /** Which field type to jump to */
   to: keyof SFXFieldsData;
+  /** The SFXField's text */
   data: string;
+  /** Raw data shown when jump fails */
   raw: string;
 };
 
+/** Get field type key from (possibly abbreviated) string */
 export const stringToSFXFieldKey = (k: string): keyof SFXFieldsData => {
   switch (k) {
     case "d":
@@ -122,10 +203,21 @@ export const stringToSFXFieldKey = (k: string): keyof SFXFieldsData => {
   }
 };
 
+/** Result of a single SFX data line */
 type ParseResult = SFXField | HideFieldData | JumpFieldData;
 
+/** {@link Parser}'s Log status. Decides which logs to show.
+ *
+ * @example { LOG: true, WARN: true } - console.logs LOGs and WARNs.
+ * @default {}
+ */
 type Log = Partial<Record<"LOG" | "WARN" | "ERROR", boolean>>;
 
+/** Console.log function that logs only if {@link Log} of the type is turned on
+ *
+ * @example const print = log ? __print("LOG", log, "in <funtion>") : noop;
+ * const printErr = log ? __print("ERROR", log, "in <function>", console.error) : noop;
+ */
 const __print = (
   l: keyof Log,
   q: Log,
@@ -141,11 +233,10 @@ const __print = (
  * Parser for SFX Data
  */
 export const Parser = {
-  /** Strip all non-text data (e.g. jumps `[_d(2)]`, hide patterns `-d(1)` , images, etc.)
-   *
-   * Used for search purposes */
+  /** Strip all non-text data (e.g. jumps `[_d(2)]`, hide patterns `-d(1)` , images, etc.) */
   strip(
     str?: string | null,
+    /** Which field types to OMMIT */
     leave?: (SFXField["type"] | "jump" | "jump_field" | "hide")[],
     log?: Log,
   ): string {
@@ -427,7 +518,9 @@ export const Parser = {
 
     return field;
   },
+  /** String counter. Started with `- `. */
   stringCounter: 0,
+  /** Parse as {@link StringField} */
   asString(str: string, log?: Log): StringField {
     const print = log ? __print("LOG", log, "asString") : noop;
     const printWarn = log
@@ -461,9 +554,11 @@ export const Parser = {
     if (hide) return hide;
     return this.asField(str, log);
   },
+  /** Same as `str.split(separator).map(q=>`{@link Parser.parse}`)` */
   parseMultiple(str: string, separator = ";", log?: Log): ParseResult[] {
     return str.split(separator)?.map((q) => this.parse(q, log));
   },
+  /** A list of all used field parsers. (Apllied from top to bottom, AFTER jump and hide parsers). If nothing matches, always returns {@link Parser.asString} */
   get fieldParsers() {
     // Use arrow functions to avoid unbound method issues
     return [
@@ -472,6 +567,7 @@ export const Parser = {
       (str: string, log?: Log) => this.asSFXLink(str, log),
     ] as const;
   },
+  /** Parse string as a SFXField (not Jump or Hide) */
   asField(str: string, log?: Log): SFXField {
     for (const parser of this.fieldParsers) {
       const result = parser(str, log);
@@ -481,6 +577,7 @@ export const Parser = {
   },
 };
 
+/** Parse SFX fields */
 export const parseSFXFields = (
   data: Pick<CollapsedOnomatopoeia, "def" | "extra" | "read"> & {
     tlExtra?: string;
@@ -492,14 +589,15 @@ export const parseSFXFields = (
     ? __print("ERROR", log, "parseSFXFields", console.error)
     : noop;
   const printWarn = log
-    ? __print("ERROR", log, "parseSFXFields", console.warn)
+    ? __print("WARN", log, "parseSFXFields", console.warn)
     : noop;
 
-  const fieldsData: SFXFieldsData = {};
+  const typeData: SFXFieldsData = {};
 
   let index = 0;
 
-  const specialFields: {
+  /** Fields to be applied after the main fields. (e.g. jump fields) */
+  const jumpFields: {
     key: keyof SFXFieldsData;
     data: SFXField;
     /** Relative index of parent field  */
@@ -512,20 +610,23 @@ export const parseSFXFields = (
     };
   }[] = [];
 
+  /** All the hide calls from the entire data */
   const hideCalls: {
     key: keyof SFXFieldsData;
     relIndex: number;
     revIndices?: number[];
   }[] = [];
 
-  forEachField((fieldKey) => {
-    print("Parsing data from field: ", fieldKey);
-    const dataQ = data[fieldKey];
+  /** Parse all fields of a given type */
+  forEachType((typeKey) => {
+    print("Parsing data from field: ", typeKey);
+    const dataQ = data[typeKey];
     if (!dataQ) {
-      printErr("No dataQ", fieldKey);
-      return (fieldsData[fieldKey] = []);
+      printErr("No dataQ", typeKey);
+      return (typeData[typeKey] = []);
     }
 
+    /** Parse a single field's data */
     const parseFieldData = (line: string): SFXField | null => {
       if (!line) {
         printErr("No line!", line);
@@ -536,7 +637,7 @@ export const parseSFXFields = (
       print("Parser value", field);
 
       if (Parser.isJump(field)) {
-        if (field.to === fieldKey) {
+        if (field.to === typeKey) {
           const parsed = Parser.asString(line, log);
           printWarn(`Same field jump error!`, line);
           return {
@@ -546,21 +647,25 @@ export const parseSFXFields = (
             hidden: false,
           };
         }
+
+        // restart stringCounter so that jumped-fields have their own counter
         const curCount = Parser.stringCounter;
         Parser.stringCounter = 0;
-        const specialField: (typeof specialFields)[number] = {
-          data: { ...Parser.asField(field.data, log), jumpedFrom: fieldKey },
+        // Parse the new field that will be making the jump
+        const specialField: (typeof jumpFields)[number] = {
+          data: { ...Parser.asField(field.data, log), jumpedFrom: typeKey },
           relIndex: field.index,
           key: field.to,
           onFail: {
             index: index + 1,
-            key: fieldKey,
+            key: typeKey,
             raw: field.raw,
           },
         };
+        // restore the original stringCounter
         Parser.stringCounter = curCount;
-        print("Adding special field field:", specialField);
-        specialFields.push(specialField);
+        print("Adding jump field:", specialField);
+        jumpFields.push(specialField);
         return null;
       }
       if (Parser.isHide(field)) {
@@ -574,32 +679,36 @@ export const parseSFXFields = (
       return { ...field, index: ++index, key: `${index}` };
     };
 
-    fieldsData[fieldKey] = data[fieldKey]
+    typeData[typeKey] = data[typeKey]
       ?.split(";")
       .map<SFXField | null>(parseFieldData)
       .filter((q) => !!q);
-    Parser.stringCounter = 0;
+    Parser.stringCounter = 0; // restart stringCounter
   });
   print(
     "Going into special field sorting:\n",
     "fields:",
-    fieldsData,
+    typeData,
     "\n",
     "special:",
-    specialFields,
+    jumpFields,
+    hideCalls,
   );
 
-  specialFields.forEach((q) => {
+  // process jump fields
+  jumpFields.forEach((q) => {
     print("Sorting out special field: ", q);
-    const fieldData = fieldsData[q.key];
+    const fieldData = typeData[q.key];
     if (!fieldData) return;
 
     let i = 0;
+    /** Number of skipped half-indexes to correctly splice the array */
     let skip = 0;
     print(`Looking in ${q.key}`);
     for (const field of fieldData) {
       if (field.index % 1 !== 0) {
         skip++;
+        // this is a half-step field. cannot jump under it
         continue;
       }
       if (i === q.relIndex) {
@@ -615,40 +724,42 @@ export const parseSFXFields = (
 
         // if string - increment and add counter number
         if (fieldObj.type === "string") {
-          const countered = halves.filter(
+          const isCounted = halves.filter(
             (q): q is StringField & FieldBase =>
               q.type === "string" && !!q.counter,
           );
-          if (countered.length > 0) {
-            const prevCounter = countered[countered.length - 1]?.counter;
+          if (isCounted.length > 0) {
+            const prevCounter = isCounted[isCounted.length - 1]?.counter; // get the last element's counter
             if (prevCounter) fieldObj.counter = prevCounter + 1;
           }
         }
         fieldData.splice(i + skip + halves.length + 1, 0, {
           ...fieldObj,
-          key: `${fieldObj.key}.${halves.length}`, // add a key for react <fieldID>.5.<order_in_sublist>
+          key: `${fieldObj.key}.${halves.length}`, // add a key for react
         });
-        fieldData.sort((a, b) => a.index - b.index);
+        fieldData.sort((a, b) => a.index - b.index); // possibly unnecesarry?
         print("Added obj", fieldObj, "into field", q.key);
-        print("Result: ", fieldsData);
+        print("Result: ", typeData);
         return;
       }
       i++;
     }
     printErr(`Failed!`);
 
-    // fail crunch, add back as StringField
+    // jump failed, add back as StringField
 
-    const failedField = fieldsData[q.onFail.key];
-    if (!failedField) return;
+    const failedType = typeData[q.onFail.key];
+    if (!failedType) return;
 
+    /** Change indexes of every field that comes AFTER the one pushed. */
     const reindex = (n: number) => {
       print("Reindexing everything above or equal", n);
-      forEachField((fieldKey) => {
-        const dataQ = fieldsData[fieldKey];
+      forEachType((fieldKey) => {
+        const dataQ = typeData[fieldKey];
         if (!dataQ) return;
         dataQ.forEach((field) => {
           const newIndex = Math.abs(
+            // Math.abs to change the negative index of the field that was just inserted to the correct one
             field.index >= n ? field.index + 1 : field.index,
           );
           if (field.index !== newIndex) {
@@ -657,8 +768,8 @@ export const parseSFXFields = (
           field.index = newIndex;
         });
       });
-      specialFields.forEach((q) => q.onFail.index++);
-      print("After reindex", fieldsData, specialFields);
+      jumpFields.forEach((q) => q.onFail.index++);
+      print("After reindex", typeData, jumpFields);
     };
 
     i = -1;
@@ -667,17 +778,20 @@ export const parseSFXFields = (
       hidden: q.data.hidden,
       type: "string",
       value: q.onFail.raw,
-      index: -q.onFail.index,
+      index: -q.onFail.index, // index is negative so the reindexing don't change its index value, but sets it correctly
       key: `fail_${q.onFail.raw}`,
     };
-    for (const field of failedField) {
+
+    // find where to splice the array with the new field
+    for (const field of failedType) {
       i++;
       if (found) continue;
       if (field.index === q.onFail.index) {
-        failedField.splice(i, 1, ...[obj, field]);
+        failedType.splice(i, 1, ...[obj, field]);
         print(`Added `, obj, ` before `, field);
         reindex(q.onFail.index);
         found = true;
+        break;
       }
     }
 
@@ -686,7 +800,7 @@ export const parseSFXFields = (
         `Did not find any field withh index ${q.onFail.index}! Pushing `,
         obj,
       );
-      failedField.push(obj);
+      failedType.push(obj);
       reindex(q.onFail.index);
     }
   });
@@ -694,10 +808,10 @@ export const parseSFXFields = (
   // hide
   for (const hideCall of hideCalls) {
     const { key, relIndex } = hideCall;
-    const f = fieldsData[key];
+    const f = typeData[key];
     if (!f) continue;
 
-    const obj = f.find((_, i) => i === relIndex);
+    const obj = f[relIndex];
     if (obj) {
       const hideValue = hideCall.revIndices ?? true;
       const children = f.filter((q) =>
@@ -708,5 +822,5 @@ export const parseSFXFields = (
     }
   }
 
-  return fieldsData;
+  return typeData;
 };

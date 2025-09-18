@@ -1,15 +1,21 @@
 import type { SearchOptions, SearchParams } from "./utils";
 
 export type SearchQuery = Exclude<SearchOptions, "list"> & {
+  /** Stop querying flag */
   stop: boolean;
+  /** Was this query made from a SFXLink */
   linked?: boolean;
 };
 
+/** SearchParam to string (due to its complicated type) */
 export const getParamAsString = (
   q: Awaited<SearchParams>[string],
   {
+    /** array to string mapper in case Param is an array */
     ifArray,
+    /** The value if param is not set */
     defaultValue,
+    /** Prefix to add before the result */
     prefix,
   }: {
     ifArray?: (t: string[]) => string;
@@ -26,6 +32,7 @@ export const getParamAsString = (
       : `${prefix ?? ""}${q}`;
 };
 
+/** Parse {@link SearchParams} as {@link SearchQuery} */
 export const searchParamsToQuery = (
   params?: Awaited<SearchParams>,
 ): SearchQuery | null => {
@@ -37,6 +44,7 @@ export const searchParamsToQuery = (
   return strToSearchQuery(query);
 };
 
+/** Parse a query string to {@link SearchQuery} */
 export const strToSearchQuery = (query?: string): SearchQuery | null => {
   if (query === "") return { stop: false };
   if (!query) return null;
@@ -65,6 +73,7 @@ export const strToSearchQuery = (query?: string): SearchQuery | null => {
   return { query: value, langs, stop: false, id: id > 0 ? id : 0 };
 };
 
+/** Convert {@link SearchQuery} to {@link SearchParams} */
 export const searchQueryToParams = (
   query: SearchQuery | null,
 ): Awaited<SearchParams> | null => {
@@ -76,6 +85,7 @@ export const searchQueryToParams = (
   return searchParams;
 };
 
+/** Convert {@link SearchQuery} to string */
 export const searchQueryToString = (
   query: SearchQuery | null,
 ): string | null => {
@@ -95,6 +105,11 @@ export const searchQueryToString = (
   return `${qStr}${!!langQ ? space1 + langQ : ""}${!!idStr ? space2 + idStr : ""}`;
 };
 
+/** Check if a {@link SearchQuery}'s searchh his valid and should be sent to the server
+ *
+ * @param search The query
+ * @param invalidStrings return false if search.query contains one of the following strings
+ */
 export const isValidSearch = (
   search?: SearchQuery | null,
   invalidStrings: string[] = [],
@@ -103,7 +118,8 @@ export const isValidSearch = (
   const qLength = search.query?.length ?? 0;
   const lLength = search.langs?.length ?? 0;
   const id = search.id ?? 0;
-  if (invalidStrings.some((str) => !!search.query?.includes(str))) return false;
-  if (search.stop) return false;
+
+  if (invalidStrings.some((str) => !!search.query?.includes(str))) return false; // has invalid strings
+  if (search.stop) return false; // stop flag is set
   return qLength >= 3 || qLength === 0 || lLength > 0 || id > 0;
 };
