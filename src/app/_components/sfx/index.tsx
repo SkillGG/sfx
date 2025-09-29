@@ -117,7 +117,7 @@ export const SFX = ({
     !(
       tlExtra?.startsWith(REVERSE_MARK) ||
       sfx.tls.some((q) => q.additionalInfo?.startsWith(REVERSE_MARK))
-    )
+    ) // prevent edit buttons from showing on reverse searches
   ) {
     if (mode === "view")
       return (

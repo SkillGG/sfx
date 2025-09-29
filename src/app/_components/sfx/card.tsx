@@ -20,9 +20,7 @@ const reversedTL = (str?: string): string => {
 
   return `${Parser.strip(str)};${hides
     .map((q) =>
-      stringToSFXFieldKey(q.fieldKey) === "def"
-        ? q.revIndices?.map((q) => `-d${q + 1}`)
-        : "",
+        q.revIndices?.map((ri) => `-${q.fieldKey}${ri + 1}`)
     )
     .flat(2)
     .filter(Boolean)
@@ -63,15 +61,15 @@ export const SFXCard = ({
   const usedSFX = useMemo(() => ({ ...sfx }), [sfx]);
   const titleId = `sfx_${usedSFX.id}_title`;
 
-  const curTLExtra = useMemo(() => {
-    const reversedTLs = sfx.tls
-      .filter((q) => q.additionalInfo?.startsWith(REVERSE_MARK))
-      .map((q) => q.additionalInfo?.substring(1) ?? "")
-      .filter<string>((q): q is string => !!q)
-      .filter((q) => !Parser.asHide(q));
-
-    return `${tlExtra ?? ""}${tlExtra ? ";" : ""}${reversedTLs.join(";")}`;
-  }, [tlExtra, sfx.tls]);
+  /*   const curTLExtra = useMemo(() => {
+      const reversedTLs = sfx.tls
+        .filter((q) => q.additionalInfo?.startsWith(REVERSE_MARK))
+        .map((q) => q.additionalInfo?.substring(1) ?? "")
+        .filter<string>((q): q is string => !!q)
+        .filter((q) => !Parser.asHide(q));
+  
+      return `${tlExtra ?? ""}${tlExtra ? ";" : ""}${reversedTLs.join(";")}`;
+    }, [tlExtra, sfx.tls]); */
 
   const parsed = useMemo(
     () =>
@@ -79,10 +77,12 @@ export const SFXCard = ({
         def: sfx.def,
         extra: sfx.extra,
         read: sfx.read,
-        tlExtra: curTLExtra,
+        tlExtra: tlExtra,
       }),
-    [sfx.def, sfx.extra, sfx.read, curTLExtra],
+    [sfx.def, sfx.extra, sfx.read],
   );
+
+  console.log(`SFXID: ${sfx.id}, parsedData: `, parsed, `from:`, sfx, tlExtra)
 
   return (
     <article
@@ -258,13 +258,14 @@ export const SFXCard = ({
                   tl={
                     isReversed
                       ? {
-                          ...tl,
-                          additionalInfo: reversedTL(
-                            tl.additionalInfo?.substring(1),
-                          ),
-                        }
+                        ...tl,
+                        additionalInfo: reversedTL(
+                          tl.additionalInfo?.substring(1),
+                        ),
+                      }
                       : tl
                   }
+                  dev={dev}
                   classNames={{
                     ...classNames?.tls?.sfx,
                     container: cn(

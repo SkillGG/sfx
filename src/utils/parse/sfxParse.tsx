@@ -166,7 +166,7 @@ const forEachType = (cb: (o: keyof SFXFieldsData) => void) =>
 /** Hide Field */
 type HideFieldData = {
   /** Relative index */
-  index: number;
+  index: number[];
   /** Key of the field type to hide */
   fieldKey: keyof SFXFieldsData;
   /** reverse indices to hide */
@@ -349,7 +349,7 @@ export const Parser = {
       ? __print("ERROR", log, "asHide", console.error)
       : noop;
     const rx =
-      /^\-(?<key>[a-z]+)(?<index>\d+)(?<revIndex>\/(?:\d+,?)*)?$/i.exec(
+      /^\-(?<key>[a-z]+)(?<index>(?:\d+,?)+)(?<revIndex>\/(?:\d+,?)*)?$/i.exec(
         str.trim(),
       );
     if (!rx) {
@@ -366,11 +366,16 @@ export const Parser = {
       printErr(`'${str}'`, "No index");
       return null;
     }
-    const i = Number(index);
-    if (i <= 0 || !isFinite(i) || isNaN(i)) {
-      printErr(`'${str}'`, "index NaN");
-      return null;
+    const indices = index?.split(",").map(Number).filter(i=>{
+      return !(i <= 0 || !isFinite(i) || isNaN(i));
+    });
+
+    if(indices.length === 0){
+      printErr(`'${str}'`, "no valid indices to hide!");
     }
+
+    const reducedIndices = indices.map(q=>q-1);
+
     const kKey = stringToSFXFieldKey(key);
     if (!kKey) {
       printErr(`'${str}'`, "invalid key");
@@ -386,18 +391,18 @@ export const Parser = {
         .filter((q) => !!q)
         .map((q) => q - 1);
       print(`'${str}'`, {
-        index: i - 1,
+        index: reducedIndices,
         key: kKey,
-        revIndices: revIndices.length > 0 ? revIndices : [i - 1],
+        revIndices: revIndices.length > 0 ? revIndices : reducedIndices,
       });
       return {
-        index: i - 1,
+        index: reducedIndices,
         fieldKey: kKey,
-        revIndices: revIndices.length > 0 ? revIndices : [i - 1],
+        revIndices: revIndices.length > 0 ? revIndices : reducedIndices,
       };
     }
-    print(`'${str}'`, { index: i - 1, key: kKey });
-    return { index: i - 1, fieldKey: kKey };
+    print(`'${str}'`, { index: reducedIndices, key: kKey });
+    return { index: reducedIndices, fieldKey: kKey };
   },
   /** Parse string as a {@link ImageField}.
    * @returns {ImageField} {@link ImageField} if parsed successfully
@@ -613,7 +618,7 @@ export const parseSFXFields = (
   /** All the hide calls from the entire data */
   const hideCalls: {
     key: keyof SFXFieldsData;
-    relIndex: number;
+    relIndices: number[];
     revIndices?: number[];
   }[] = [];
 
@@ -671,7 +676,7 @@ export const parseSFXFields = (
       if (Parser.isHide(field)) {
         hideCalls.push({
           key: field.fieldKey,
-          relIndex: field.index,
+          relIndices: field.index,
           revIndices: field.revIndices,
         });
         return null;
@@ -807,20 +812,22 @@ export const parseSFXFields = (
 
   // hide
   for (const hideCall of hideCalls) {
-    const { key, relIndex } = hideCall;
+    const { key, relIndices } = hideCall;
     const f = typeData[key];
     if (!f) continue;
 
-    const obj = f[relIndex];
-    if (obj) {
-      const hideValue = hideCall.revIndices ?? true;
-      const children = f.filter((q) =>
-        obj.index % 1 === 0 ? q.index === obj.index + 0.5 : false,
+    for(const relIndex of relIndices){
+      const obj = f[relIndex];
+      if (obj) {
+        const hideValue = hideCall.revIndices ?? true;
+        const children = f.filter((q) =>
+          obj.index % 1 === 0 ? q.index === obj.index + 0.5 : false,
       );
       children.forEach((c) => (c.hidden = hideValue));
       obj.hidden = hideValue;
     }
   }
-
+}
+  
   return typeData;
 };
