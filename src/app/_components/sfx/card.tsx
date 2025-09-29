@@ -1,7 +1,6 @@
 import {
   Parser,
   parseSFXFields,
-  stringToSFXFieldKey,
   type SFXField,
   type SFXFieldWithMultiIMG,
 } from "@/utils/parse/sfxParse";
@@ -79,7 +78,7 @@ export const SFXCard = ({
         read: sfx.read,
         tlExtra: tlExtra,
       }),
-    [sfx.def, sfx.extra, sfx.read],
+    [sfx.def, sfx.extra, sfx.read, tlExtra],
   );
 
   console.log(`SFXID: ${sfx.id}, parsedData: `, parsed, `from:`, sfx, tlExtra)
