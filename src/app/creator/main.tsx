@@ -9,6 +9,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import {
   cn,
   parseMemoryData,
+  SFXObj,
   type CollapsedOnomatopoeia,
   type CollapsedTL,
 } from "@/utils/utils";
@@ -44,12 +45,13 @@ const CreatorPage = () => {
 
   const [sfx, setSFX] = useState<string>("");
   const [def, setDef] = useState<string>("");
-  const [extra, setExtra] = useState<string>("");
+  const [extra, setExtra] = useState<string|null>(null);
   const [read, setRead] = useState<string | null>("");
   const [lang, setLang] = useState<SFXLang["code"]>("");
   const [featured, setFeatured] = useState<boolean>(false);
 
   const [tempRead, setTempRead] = useState<string>("");
+  const [tempExtra, setTempExtra] = useState<string>("");
 
   const [tls, setTLs] = useState<CollapsedTL[]>([]);
 
@@ -106,28 +108,29 @@ const CreatorPage = () => {
     const sfxData = {
       text: sfx,
       def,
-      extra: extra ?? null,
+      extra,
       featured,
-      read: read,
+      read,
       language: lang ?? "en",
       tls: tls ?? {},
     };
 
     setTempRead(read ?? "");
+    setTempExtra(extra ?? "");
 
     const validationResult = validation.validateSFXData(sfxData);
 
     if (validationResult.isValid) {
-      const validSFX = {
+      const validSFX = {...SFXObj({
         text: sfx,
         def,
-        extra: extra ?? null,
-        read: read,
+        extra,
+        read,
         language: lang ?? "en",
         tls: tls ?? [],
         featured,
-        auth,
-      } satisfies Omit<CollapsedOnomatopoeia, "id"> & { auth: UserSessionData };
+        
+      }), auth} satisfies Omit<CollapsedOnomatopoeia, "id"> & { auth: UserSessionData };
 
       await createSFX.mutateAsync(validSFX);
 
@@ -253,8 +256,9 @@ const CreatorPage = () => {
               },
               extra: {
                 label: "Extra",
-                type: "normal",
+                type: "toggle",
                 value: extra,
+                temp: tempExtra,
                 placeholder: "Extra",
                 key: "newextra",
                 long: true,
@@ -279,16 +283,16 @@ const CreatorPage = () => {
           }}
           dev
           removeOnCancel
-          sfx={{
+          sfx={SFXObj({
             def,
             extra,
+            read,
             id: Infinity,
             language: lang,
-            read: null,
             text: sfx,
             tls: tls,
             featured: featured,
-          }}
+          })}
         />
         <button
           className={cn(

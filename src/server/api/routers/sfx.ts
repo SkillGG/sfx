@@ -16,10 +16,21 @@ const authShape = object({ token: string(), deviceName: string() });
 const DEFAULT_LIMIT = 100;
 const DEFAULT_SKIP = 0;
 
-const properID = (n: number | string) =>
+const properID = (n: number | string, failedValue = 0) =>
   ((n: number) => {
     return isFinite(n) && n > 0;
-  })(Number(n));
+  })(Number(n))
+    ? Number(n)
+    : failedValue;
+
+const flattenTLs: (t: CollapsedTL[]) => CollapsedTL[] = (tls) => {
+  return tls
+    .map<CollapsedTL[]>((tl) => {
+      if (!tl.sfx.tls || tl.sfx.tls.length === 0) return [tl];
+      return [tl, ...flattenTLs(tl.sfx.tls)];
+    })
+    .flat(100);
+};
 
 export const sfxRouter = createTRPCRouter({
   listLangs: publicProcedure.query(async ({ ctx }) => {
@@ -47,23 +58,17 @@ export const sfxRouter = createTRPCRouter({
     .query(async ({ ctx, input }): Promise<CollapsedOnomatopoeia[]> => {
       const search = typeof input === "object" && input ? input : null;
 
-      if (
-        search &&
-        (!!search.query ||
-          (search.langs?.length ?? 0) > 0 ||
-          Number(search.id) > 0 ||
-          (search.ids?.length ?? 0) > 0)
-      )
+      if (searchIsValid(search))
         return await searchDBForSFX(ctx.db, {
-          langs: search.langs ?? [],
-          limit: search.limit ?? DEFAULT_LIMIT,
-          skip: search.skip ?? DEFAULT_SKIP,
-          order: search.order ?? "asc",
-          query: search.query ?? "",
-          id: search.id ?? 0,
-          ids: search.ids ?? [],
-          nodedupe: search.nodedupe ?? false,
-          featured: search.featured ?? false,
+          langs: search?.langs ?? [],
+          limit: search?.limit ?? DEFAULT_LIMIT,
+          skip: search?.skip ?? DEFAULT_SKIP,
+          order: search?.order ?? "asc",
+          query: search?.query ?? "",
+          id: search?.id ?? 0,
+          ids: search?.ids ?? [],
+          nodedupe: search?.nodedupe ?? false,
+          featured: search?.featured ?? false,
         });
 
       console.log("List search", search);
@@ -76,6 +81,7 @@ export const sfxRouter = createTRPCRouter({
             def: true,
             extra: true,
             id: true,
+            info: true,
             languageId: true,
             read: true,
             text: true,
@@ -124,108 +130,97 @@ export const sfxRouter = createTRPCRouter({
           sfx: { text, def, extra, read, language, tls, featured },
         },
       }) => {
-        // TODO: Fix ConnectSFX updates
-
-        const flattenTLs: (t: CollapsedTL[]) => CollapsedTL[] = (tls) => {
-          return tls
-            .map<CollapsedTL[]>((tl) => {
-              if (!tl.sfx.tls || tl.sfx.tls.length === 0) return [tl];
-              return [tl, ...flattenTLs(tl.sfx.tls)];
-            })
-            .flat(100);
-        };
-
         const allTLs = flattenTLs(tls);
 
         const loggedIn = await checkSession(ctx.db, { token, deviceName });
+        if (!loggedIn.ok) return loggedIn;
 
-        if (loggedIn.ok) {
-          const sfxUpdates = [
-            { text, def, extra, read, language, id, featured },
-            ...allTLs.filter((s) => properID(s.sfx.id)).map((q) => q.sfx),
-          ];
+        const sfxUpdates = [
+          { text, def, extra, read, language, id, featured },
+          ...allTLs.filter((s) => properID(s.sfx.id)).map((q) => q.sfx),
+        ];
 
-          // update every SFX
-          await Promise.all(
-            sfxUpdates.map(async (sfx) => {
-              if (properID(sfx.id))
-                return await ctx.db.onomatopoeia.update({
-                  where: { id: sfx.id },
-                  data: {
-                    def: sfx.def,
-                    extra: sfx.extra,
-                    languageId: sfx.language,
-                    featured: sfx.featured,
-                    read: sfx.read,
-                    text: sfx.text,
-                    searchread: Parser.strip(sfx.read),
-                    searchextra: Parser.strip(sfx.extra),
-                    searchdef: Parser.strip(sfx.def),
-                    updatedAt: new Date(),
-                  },
-                });
-            }),
-          );
-
-          for (const tl of allTLs) {
-            // update the tls
-            if (tl.forDeletion) {
-              await ctx.db.translation.delete({ where: { id: tl.id } });
-              continue;
-            }
-
-            if (!properID(tl.id) || !properID(tl.sfx2Id)) {
-              await ctx.db.onomatopoeia.upsert({
-                where: { id: properID(tl.sfx.id) ? tl.sfx.id : -1 },
-                create: {
-                  def: tl.sfx.def,
-                  read: tl.sfx.read,
-                  text: tl.sfx.text,
-                  languageId: tl.sfx.language,
-                  extra: tl.sfx.extra,
-                  featured: tl.sfx.featured,
-                  searchread: Parser.strip(tl.sfx.read),
-                  searchextra: Parser.strip(tl.sfx.extra),
-                  searchdef: Parser.strip(tl.sfx.def),
-                  tlTranslations: {
-                    create: {
-                      additionalInfo: tl.additionalInfo,
-                      ogSFX: { connect: { id: tl.sfx1Id } },
-                    },
-                  },
-                },
-                update: {
+        // update every SFX
+        await Promise.all(
+          sfxUpdates.map(async (sfx) => {
+            if (properID(sfx.id))
+              return await ctx.db.onomatopoeia.update({
+                where: { id: sfx.id },
+                data: {
+                  def: sfx.def,
+                  extra: sfx.extra,
+                  languageId: sfx.language,
+                  featured: sfx.featured,
+                  read: sfx.read,
+                  text: sfx.text,
+                  searchread: Parser.strip(sfx.read),
+                  searchextra: Parser.strip(sfx.extra),
+                  searchdef: Parser.strip(sfx.def),
                   updatedAt: new Date(),
-                  def: tl.sfx.def,
-                  read: tl.sfx.read,
-                  text: tl.sfx.text,
-                  languageId: tl.sfx.language,
-                  featured: tl.sfx.featured,
-                  extra: tl.sfx.extra,
-                  searchread: Parser.strip(tl.sfx.read),
-                  searchextra: Parser.strip(tl.sfx.extra),
-                  searchdef: Parser.strip(tl.sfx.def),
-                  tlTranslations: {
-                    create: {
-                      additionalInfo: tl.additionalInfo,
-                      ogSFX: { connect: { id: tl.sfx1Id } },
-                    },
-                  },
                 },
               });
-              continue;
-            }
-            await ctx.db.translation.update({
-              where: { id: tl.id },
-              data: {
-                additionalInfo: tl.additionalInfo,
-                updatedAt: new Date(),
-              },
-            });
+          }),
+        );
+
+        for (const tl of allTLs) {
+          // update the tls
+          if (tl.forDeletion) {
+            await ctx.db.translation.delete({ where: { id: tl.id } });
+            continue;
           }
 
-          return;
-        } else return loggedIn;
+          const hasgoodIds = properID(tl.id) && properID(tl.sfx2Id);
+
+          if (!hasgoodIds) {
+            const id = properID(tl.sfx.id, -1);
+            await ctx.db.onomatopoeia.upsert({
+              where: { id },
+              create: {
+                def: tl.sfx.def,
+                read: tl.sfx.read,
+                text: tl.sfx.text,
+                languageId: tl.sfx.language,
+                extra: tl.sfx.extra,
+                featured: tl.sfx.featured,
+                searchread: Parser.strip(tl.sfx.read),
+                searchextra: Parser.strip(tl.sfx.extra),
+                searchdef: Parser.strip(tl.sfx.def),
+                tlTranslations: {
+                  create: {
+                    additionalInfo: tl.additionalInfo,
+                    ogSFX: { connect: { id: tl.sfx1Id } },
+                  },
+                },
+              },
+              update: {
+                updatedAt: new Date(),
+                def: tl.sfx.def,
+                read: tl.sfx.read,
+                text: tl.sfx.text,
+                languageId: tl.sfx.language,
+                featured: tl.sfx.featured,
+                extra: tl.sfx.extra,
+                searchread: Parser.strip(tl.sfx.read),
+                searchextra: Parser.strip(tl.sfx.extra),
+                searchdef: Parser.strip(tl.sfx.def),
+                tlTranslations: {
+                  create: {
+                    additionalInfo: tl.additionalInfo,
+                    ogSFX: { connect: { id: tl.sfx1Id } },
+                  },
+                },
+              },
+            });
+            continue;
+          }
+          await ctx.db.translation.update({
+            where: { id: tl.id },
+            data: {
+              additionalInfo: tl.additionalInfo,
+              updatedAt: new Date(),
+            },
+          });
+        }
       },
     ),
 
@@ -336,3 +331,15 @@ export const sfxRouter = createTRPCRouter({
       });
     }),
 });
+function searchIsValid(
+  search: SearchOptions | null,
+) {
+  return (
+    !!search &&
+    search !== "list" &&
+    (!!search.query ||
+      (search.langs?.length ?? 0) > 0 ||
+      Number(search.id) > 0 ||
+      (search.ids?.length ?? 0) > 0)
+  );
+}

@@ -4,7 +4,21 @@ import clsx, { type ClassValue } from "clsx";
 import type z from "zod/v4";
 import { array, boolean, literal, number, object, string } from "zod/v4";
 import { generate } from "random-words";
-import type { REVERSE_MARK } from "@/app/_components/sfx";
+
+export const SFXObj =
+  (sfx: Partial<CollapsedOnomatopoeia>): CollapsedOnomatopoeia => {
+    return {
+      def: "",
+      extra: null,
+      featured: false,
+      id: -1,
+      info: null,
+      language: "en",
+      read: null,
+      text: "",
+      tls: [],
+      ...sfx};
+  };
 
 /** Options given to getList that filter the sfx list */
 export const SearchOptions = object({
@@ -106,6 +120,8 @@ export const CollapsedOnomatopoeia = object({
   text: string(),
   /** SFX reading */
   read: string().nullable(),
+  /** SFX hidden info data containing sources and other information avaiable through "more" panel */
+  info: string().nullable(),
   /** SFX definition */
   def: string(),
   /** SFX extra information */
@@ -124,6 +140,7 @@ export const SFXData = object({
   text: string(),
   read: string().nullable(),
   def: string(),
+  info: string().nullable(),
   extra: string().nullable(),
   featured: boolean().default(false),
   language: string(),

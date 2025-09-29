@@ -1,5 +1,6 @@
 import {
   cn,
+  SFXObj,
   type CollapsedOnomatopoeia,
   type CollapsedTL,
   type Promisable,
@@ -62,21 +63,24 @@ export const TLEditorDirect = ({
     sfx1Id: sfx?.id ?? Infinity,
     sfx2Id: Infinity,
     id: -(tls.length + 1),
-    sfx: {
-      def: "",
-      featured: false,
-      extra: null,
-      id: -(tls.length + 1),
-      language: "",
-      read: null,
-      text: "",
-      tls: [],
-    },
+    sfx: SFXObj({ id: -(tls.length + 1) }),
+    // },
   });
 
   const connSFXDialog = useRef<HTMLDialogElement>(null);
 
   const [freshTLs, setFreshTLs] = useState<number[]>([]);
+
+  const handleAddTL = async () => {
+    const newTLs = [...tls, newTL];
+    await onChange?.(newTLs);
+    setFreshTLs((prev) => [...prev, newTL.id]);
+    setNewTL((p) => ({
+      ...p,
+      id: p.id - 1,
+      sfx: { ...p.sfx, id: p.id - 1 },
+    }));
+  };
 
   return (
     <div
@@ -165,16 +169,7 @@ export const TLEditorDirect = ({
 
             classNames?.add?.addTL,
           )}
-          onClick={async () => {
-            const newTLs = [...tls, newTL];
-            await onChange?.(newTLs);
-            setFreshTLs((prev) => [...prev, newTL.id]);
-            setNewTL((p) => ({
-              ...p,
-              id: p.id - 1,
-              sfx: { ...p.sfx, id: p.id - 1 },
-            }));
-          }}
+          onClick={handleAddTL}
         >
           Add Translation
         </button>

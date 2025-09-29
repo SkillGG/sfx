@@ -8,6 +8,7 @@ export const sfxGetTLs = async (
     text: string;
     read: string | null;
     def: string;
+    info: string | null;
     extra: string | null;
     languageId: string;
     featured: boolean;

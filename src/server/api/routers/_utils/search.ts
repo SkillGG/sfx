@@ -1,7 +1,8 @@
-import type {
-  CollapsedOnomatopoeia,
-  SearchOptions,
-  SFXData,
+import {
+  SFXObj,
+  type CollapsedOnomatopoeia,
+  type SearchOptions,
+  type SFXData,
 } from "@/utils/utils";
 import type { PrismaClient } from "@prisma/client";
 import { sfxGetTLs } from "./sfx";
@@ -31,6 +32,7 @@ export const searchDBForSFX = async (
       id: true,
       languageId: true,
       featured: true,
+      info: true,
       createdAt: true,
       updatedAt: true,
       ogTranslations: {
@@ -116,16 +118,18 @@ export const searchDBForSFX = async (
     // console.log("NOT DEDUPING!", sfxs);
     return sfxs
       .map(
-        (sfx): CollapsedOnomatopoeia => ({
-          def: sfx.def,
-          extra: sfx.extra,
-          id: sfx.id,
-          language: sfx.languageId,
-          read: sfx.read,
-          text: sfx.text,
-          featured: sfx.featured,
-          tls: [],
-        }),
+        (sfx): CollapsedOnomatopoeia =>
+          SFXObj({
+            def: sfx.def,
+            extra: sfx.extra,
+            id: sfx.id,
+            language: sfx.languageId,
+            read: sfx.read,
+            info: sfx.info,
+            text: sfx.text,
+            featured: sfx.featured,
+            tls: [],
+          }),
       )
       .slice(search.skip, search.limit + search.skip);
   }
@@ -137,6 +141,7 @@ export const searchDBForSFX = async (
       read: string | null;
       def: string;
       extra: string | null;
+      info: string | null;
       featured: boolean;
       languageId: string;
       ogtls: (typeof sfxs)[number]["ogTranslations"];
@@ -153,6 +158,7 @@ export const searchDBForSFX = async (
       languageId: sfx.languageId,
       read: sfx.read,
       text: sfx.text,
+      info: sfx.info,
       featured: sfx.featured,
       updatedAt: sfx.updatedAt,
       ogtls: sfx.ogTranslations,
