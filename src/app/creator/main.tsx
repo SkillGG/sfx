@@ -47,11 +47,13 @@ const CreatorPage = () => {
   const [def, setDef] = useState<string>("");
   const [extra, setExtra] = useState<string|null>(null);
   const [read, setRead] = useState<string | null>("");
+  const [info, setInfo] = useState<string | null>("");
   const [lang, setLang] = useState<SFXLang["code"]>("");
   const [featured, setFeatured] = useState<boolean>(false);
 
   const [tempRead, setTempRead] = useState<string>("");
   const [tempExtra, setTempExtra] = useState<string>("");
+  const [tempInfo, setTempInfo] = useState<string>("");
 
   const [tls, setTLs] = useState<CollapsedTL[]>([]);
 
@@ -74,7 +76,10 @@ const CreatorPage = () => {
       setLang(memoryData.lang ?? "en");
       setRead(memoryData.read ?? null);
       setTempRead(memoryData.tempRead ?? "");
+      setTempExtra(memoryData.tempExtra ?? "");
+      setTempInfo(memoryData.tempInfo ?? "");
       setTLs(memoryData.tls ?? []);
+      setInfo(memoryData?.info ?? null);
       setFeatured(memoryData?.featured ?? false);
     }
     setFirstRun(true);
@@ -89,12 +94,15 @@ const CreatorPage = () => {
       extra,
       lang,
       read,
+      info,
       tls,
       tempRead,
+      tempExtra,
+      tempInfo,
       featured,
     };
     localStorage.setItem("memory", JSON.stringify(memory));
-  }, [sfx, def, extra, lang, read, tls, firstRun, tempRead, featured]);
+  }, [sfx, def, extra, lang, read, tls, firstRun, tempRead,tempExtra, tempInfo, featured, info]);
 
   if (!auth)
     // loading and checking whether user is logged in
@@ -111,12 +119,14 @@ const CreatorPage = () => {
       extra,
       featured,
       read,
+      info,
       language: lang ?? "en",
       tls: tls ?? {},
     };
 
     setTempRead(read ?? "");
     setTempExtra(extra ?? "");
+    setTempInfo(info ?? "");
 
     const validationResult = validation.validateSFXData(sfxData);
 
@@ -126,6 +136,7 @@ const CreatorPage = () => {
         def,
         extra,
         read,
+        info,
         language: lang ?? "en",
         tls: tls ?? [],
         featured,
@@ -142,6 +153,7 @@ const CreatorPage = () => {
       setRead(!!read ? "" : null);
       setDef("");
       setExtra("");
+      setInfo("");
       setTLs([]);
     }
   };
@@ -219,11 +231,13 @@ const CreatorPage = () => {
               extra: nextra,
               read: nread,
               text: ntext,
+              info: ninfo,
               featured: nf,
             }) => {
               setRead(nread.value);
               setTempRead(nread.temp);
               setDef(ndef.value);
+              setInfo(ninfo.value)
               setSFX(ntext.value);
               setExtra(nextra.value);
               setFeatured(nf.value ?? featured);
@@ -262,6 +276,15 @@ const CreatorPage = () => {
                 placeholder: "Extra",
                 key: "newextra",
                 long: true,
+              },
+              info: {
+                label: "Info",
+                type: "toggle",
+                value: info,
+                temp: tempInfo,
+                long: "raw",
+                placeholder: "Info in topleft",
+                key:"newinfo"
               },
               featured: {
                 label: "Featured",

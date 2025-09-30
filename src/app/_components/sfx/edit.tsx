@@ -75,6 +75,8 @@ export const SFXEdit = ({
   const validation = useValidation();
 
   const [tempRead, setTempRead] = useState("");
+  const [tempExtra, setTempExtra] = useState("");
+  const [tempInfo, setTempInfo] = useState("");
 
   return (
     <>
@@ -120,7 +122,10 @@ export const SFXEdit = ({
             },
             extra: {
               label: "Extra",
-              value: sfx.extra ?? "",
+              value: sfx.extra,
+              type: "toggle",
+              temp: tempExtra,
+              placeholder: "Extra",
               key: `sfxextra_${sfx.id}`,
               long: true,
             },
@@ -131,6 +136,15 @@ export const SFXEdit = ({
               temp: tempRead,
               key: `sfxread_${sfx.id}`,
               long: true,
+            },
+            info: {
+              label: "Info",
+              value: sfx.info,
+              type:"toggle",
+              temp: tempInfo,
+              placeholder: "Additional info in the info box",
+              key: `sfxinfo_${sfx.id}`,
+              long: "raw",
             },
             ...(dev
               ? {
@@ -151,6 +165,10 @@ export const SFXEdit = ({
                   // do nothihng
                 } else if ("type" in v && k === "read") {
                   setTempRead(v.temp);
+                }else if ("type" in v && k === "extra") {
+                  setTempExtra(v.temp);
+                }else if ("type" in v && k === "info") {
+                  setTempInfo(v.temp);
                 }
                 return { ...p, [k]: v.value };
               }, {});

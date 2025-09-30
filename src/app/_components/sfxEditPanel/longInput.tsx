@@ -41,6 +41,7 @@ export const LongInput = ({
   validation,
   placeholder,
   disabled,
+  noParse,
 
   onChange,
 }: {
@@ -51,6 +52,7 @@ export const LongInput = ({
   validation?: Validation;
   fieldName: string;
   disabled?: boolean;
+  noParse?: boolean;
 
   onChange: (v: string) => void;
 }) => {
@@ -75,7 +77,8 @@ export const LongInput = ({
       rows={parseView(value).split("\n").length}
       ref={inRef}
       onChange={(e) => {
-        onChange?.(parseUpdate(value, e.currentTarget.value));
+        if (!noParse) onChange?.(parseUpdate(value, e.currentTarget.value));
+        else onChange?.(e.currentTarget.value);
       }}
       data-text={value}
       disabled={disabled}

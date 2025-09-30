@@ -5,20 +5,22 @@ import type z from "zod/v4";
 import { array, boolean, literal, number, object, string } from "zod/v4";
 import { generate } from "random-words";
 
-export const SFXObj =
-  (sfx: Partial<CollapsedOnomatopoeia>): CollapsedOnomatopoeia => {
-    return {
-      def: "",
-      extra: null,
-      featured: false,
-      id: -1,
-      info: null,
-      language: "en",
-      read: null,
-      text: "",
-      tls: [],
-      ...sfx};
+export const SFXObj = (
+  sfx: Partial<CollapsedOnomatopoeia>,
+): CollapsedOnomatopoeia => {
+  return {
+    def: "",
+    extra: null,
+    featured: false,
+    id: -1,
+    info: null,
+    language: "en",
+    read: null,
+    text: "",
+    tls: [],
+    ...sfx,
   };
+};
 
 /** Options given to getList that filter the sfx list */
 export const SearchOptions = object({
@@ -300,7 +302,10 @@ export const parseMemoryData = (
   lang: string;
   extra: string | null;
   tempRead: string | null;
+  tempExtra: string | null;
+  tempInfo: string | null;
   tls: CollapsedTL[];
+  info: string | null;
   featured: boolean;
 }> | null => {
   if (!q) {
@@ -326,8 +331,14 @@ export const parseMemoryData = (
       ret.lang = memory.lang;
     if ("tempRead" in memory && typeof memory.tempRead === "string")
       ret.tempRead = memory.tempRead;
+    if ("tempExtra" in memory && typeof memory.tempExtra === "string")
+      ret.tempExtra = memory.tempExtra;
+    if ("tempInfo" in memory && typeof memory.tempInfo === "string")
+      ret.tempInfo = memory.tempInfo;
     if ("featured" in memory && typeof memory.featured === "boolean")
       ret.featured = memory.featured;
+    if ("info" in memory && typeof memory.info === "string")
+      ret.info = memory.info;
     if ("tls" in memory && Array.isArray(memory.tls)) {
       // change sfx ids from null to Infinity as JSON doesn't store those
       const denullifyIds = (tl: CollapsedTL): CollapsedTL => {

@@ -11,6 +11,7 @@ import { REVERSE_MARK } from ".";
 import { cn } from "@/utils/utils";
 import { MultiIMGField, SFXFieldDiv } from "./fields";
 import { TLCard } from "../tlCard";
+import { SFXInfoButton } from "./info";
 
 const reversedTL = (str?: string): string => {
   if (!str) return "";
@@ -18,9 +19,7 @@ const reversedTL = (str?: string): string => {
   const hides = Parser.parseMultiple(str)?.filter((q) => Parser.isHide(q));
 
   return `${Parser.strip(str)};${hides
-    .map((q) =>
-        q.revIndices?.map((ri) => `-${q.fieldKey}${ri + 1}`)
-    )
+    .map((q) => q.revIndices?.map((ri) => `-${q.fieldKey}${ri + 1}`))
     .flat(2)
     .filter(Boolean)
     .join(";")}`;
@@ -81,7 +80,7 @@ export const SFXCard = ({
     [sfx.def, sfx.extra, sfx.read, tlExtra],
   );
 
-  console.log(`SFXID: ${sfx.id}, parsedData: `, parsed, `from:`, sfx, tlExtra)
+  console.log(`SFXID: ${sfx.id}, parsedData: `, parsed, `from:`, sfx, tlExtra);
 
   return (
     <article
@@ -96,7 +95,6 @@ export const SFXCard = ({
       aria-labelledby={titleId}
       aria-label="SFX entry"
     >
-      {/* <div className="absolute top-2 left-2 text-red-500">*</div> */}
       <header
         className={cn(
           "flex-rowitems-baseline flex gap-2",
@@ -111,7 +109,12 @@ export const SFXCard = ({
           )}
           id={titleId}
         >
-          {usedSFX.text}
+          {usedSFX.text}{" "}
+          {sfx.info && (
+            <div className="relative -top-2 inline">
+              <SFXInfoButton sfx={sfx} />
+            </div>
+          )}
         </div>
 
         {usedSFX.read && (
@@ -257,11 +260,11 @@ export const SFXCard = ({
                   tl={
                     isReversed
                       ? {
-                        ...tl,
-                        additionalInfo: reversedTL(
-                          tl.additionalInfo?.substring(1),
-                        ),
-                      }
+                          ...tl,
+                          additionalInfo: reversedTL(
+                            tl.additionalInfo?.substring(1),
+                          ),
+                        }
                       : tl
                   }
                   dev={dev}

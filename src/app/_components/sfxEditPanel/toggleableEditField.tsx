@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 
 export type ToggledEditField = {
   label: string;
-  long?: boolean;
+  long?: "parsed" | "raw" | boolean;
   value: string | null;
   type: "toggle";
   placeholder?: string;
@@ -35,6 +35,7 @@ export const ToggleableEditField = ({
     key,
     long,
   } = field;
+
 
   const inputRef = useRef<HTMLInputElement>(null);
   const tAreaRef = useRef<HTMLTextAreaElement>(null);
@@ -91,12 +92,13 @@ export const ToggleableEditField = ({
             value={value ?? temp}
             ref={tAreaRef}
             placeholder={placeholder}
+            noParse={long === "raw"}
             onChange={(e) => {
               onChange?.(e);
             }}
             disabled={value === null}
           />
-        ) : (
+        )  : (
           <input
             type="text"
             className={cn(

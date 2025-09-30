@@ -127,7 +127,7 @@ export const sfxRouter = createTRPCRouter({
         input: {
           auth: { token, deviceName },
           id,
-          sfx: { text, def, extra, read, language, tls, featured },
+          sfx: { text, def, extra, read, language, tls, featured, info },
         },
       }) => {
         const allTLs = flattenTLs(tls);
@@ -136,7 +136,7 @@ export const sfxRouter = createTRPCRouter({
         if (!loggedIn.ok) return loggedIn;
 
         const sfxUpdates = [
-          { text, def, extra, read, language, id, featured },
+          { text, def, extra, read, language, id, featured, info },
           ...allTLs.filter((s) => properID(s.sfx.id)).map((q) => q.sfx),
         ];
 
@@ -151,6 +151,7 @@ export const sfxRouter = createTRPCRouter({
                   extra: sfx.extra,
                   languageId: sfx.language,
                   featured: sfx.featured,
+                  info: sfx.info,
                   read: sfx.read,
                   text: sfx.text,
                   searchread: Parser.strip(sfx.read),
@@ -180,6 +181,7 @@ export const sfxRouter = createTRPCRouter({
                 read: tl.sfx.read,
                 text: tl.sfx.text,
                 languageId: tl.sfx.language,
+                info: tl.sfx.info,
                 extra: tl.sfx.extra,
                 featured: tl.sfx.featured,
                 searchread: Parser.strip(tl.sfx.read),
@@ -199,6 +201,7 @@ export const sfxRouter = createTRPCRouter({
                 text: tl.sfx.text,
                 languageId: tl.sfx.language,
                 featured: tl.sfx.featured,
+                info: tl.sfx.info,
                 extra: tl.sfx.extra,
                 searchread: Parser.strip(tl.sfx.read),
                 searchextra: Parser.strip(tl.sfx.extra),
@@ -231,22 +234,26 @@ export const sfxRouter = createTRPCRouter({
     .mutation(
       async ({
         ctx,
-        input: { auth, text, def, extra, read, tls, language, featured },
+        input: { auth, text, def, extra, read,info, tls, language, featured },
       }) => {
         const loggedIn = await checkSession(ctx.db, auth);
         if (!loggedIn.ok) return loggedIn;
         // create og SFX
 
         type CreateCreateObject = {
+          text: string;
+          languageId: string;
+
+          read: string | null;
           def: string;
           extra: string | null;
-          languageId: string;
-          read: string | null;
-          text: string;
           searchread: string;
-          featured: boolean;
           searchdef: string;
           searchextra: string;
+
+          info: string | null;
+          featured: boolean;
+
           ogTranslations: {
             create: {
               additionalInfo: string | null;
@@ -265,6 +272,7 @@ export const sfxRouter = createTRPCRouter({
           extra,
           languageId,
           read,
+          info,
           text,
           featured,
           tls,
@@ -277,6 +285,7 @@ export const sfxRouter = createTRPCRouter({
           return {
             text,
             def,
+            info,
             extra,
             featured,
             read,
@@ -307,6 +316,7 @@ export const sfxRouter = createTRPCRouter({
           languageId: language,
           read,
           text,
+          info,
           featured,
           tls,
         });
@@ -331,9 +341,8 @@ export const sfxRouter = createTRPCRouter({
       });
     }),
 });
-function searchIsValid(
-  search: SearchOptions | null,
-) {
+
+function searchIsValid(search: SearchOptions | null) {
   return (
     !!search &&
     search !== "list" &&
