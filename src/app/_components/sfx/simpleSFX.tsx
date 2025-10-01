@@ -89,12 +89,8 @@ const SimpleField = async ({
         >
           {labels.pre}
           {link
-            ?.map(
-              (q) =>
-                `${labels.inx.pre}${q.label}${labels.inx.post}`,
-            )
-            .join(labels.sep) ??
-            `${field.ids.join(labels.sep)}`}
+            ?.map((q) => `${labels.inx.pre}${q.label}${labels.inx.post}`)
+            .join(labels.sep) ?? `${field.ids.join(labels.sep)}`}
           {labels.post}
         </div>
       );

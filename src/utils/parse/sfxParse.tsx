@@ -139,7 +139,7 @@ export type SFXLinkField = {
   postLabel?: string;
   /** A custom label in-between every result
    */
-  inLabel?: {pre?: string;post?:string}
+  inLabel?: { pre?: string; post?: string };
   /** A custom separator between links */
   labelSeparator?: string;
 };
@@ -373,15 +373,18 @@ export const Parser = {
       printErr(`'${str}'`, "No index");
       return null;
     }
-    const indices = index?.split(",").map(Number).filter(i=>{
-      return !(i <= 0 || !isFinite(i) || isNaN(i));
-    });
+    const indices = index
+      ?.split(",")
+      .map(Number)
+      .filter((i) => {
+        return !(i <= 0 || !isFinite(i) || isNaN(i));
+      });
 
-    if(indices.length === 0){
+    if (indices.length === 0) {
       printErr(`'${str}'`, "no valid indices to hide!");
     }
 
-    const reducedIndices = indices.map(q=>q-1);
+    const reducedIndices = indices.map((q) => q - 1);
 
     const kKey = stringToSFXFieldKey(key);
     if (!kKey) {
@@ -505,7 +508,7 @@ export const Parser = {
     const field: SFXLinkField = {
       ids: intID,
       type: "sfxlink",
-       preLabel,
+      preLabel,
       consume: async (api) => {
         let result: CollapsedOnomatopoeia[] = [];
         if ("useUtils" in api) {
@@ -823,18 +826,18 @@ export const parseSFXFields = (
     const f = typeData[key];
     if (!f) continue;
 
-    for(const relIndex of relIndices){
+    for (const relIndex of relIndices) {
       const obj = f[relIndex];
       if (obj) {
         const hideValue = hideCall.revIndices ?? true;
         const children = f.filter((q) =>
           obj.index % 1 === 0 ? q.index === obj.index + 0.5 : false,
-      );
-      children.forEach((c) => (c.hidden = hideValue));
-      obj.hidden = hideValue;
+        );
+        children.forEach((c) => (c.hidden = hideValue));
+        obj.hidden = hideValue;
+      }
     }
   }
-}
-  
+
   return typeData;
 };
