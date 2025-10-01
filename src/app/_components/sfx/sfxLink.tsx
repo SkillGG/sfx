@@ -6,9 +6,13 @@ import { memo } from "react";
 
 const SFXLink = ({
   ids,
+  separator = ", ",
+  surround,
   className,
 }: {
   ids: number[];
+  separator?: string;
+  surround?: { pre?: string; post?: string };
   className?: ClassValue;
 }) => {
   const [sfxs] = api.sfx.listSFX.useSuspenseQuery({ ids: ids, nodedupe: true });
@@ -16,7 +20,7 @@ const SFXLink = ({
   if (!sfxs || sfxs.length === 0)
     return (
       <div className={cn(className)}>
-        Unknown reference to SFX#{ids.join(", ")}
+        Unknown reference to SFX#{ids.join(separator)}
       </div>
     );
 
@@ -28,16 +32,19 @@ const SFXLink = ({
         if (!sfx)
           return (
             <span className={cn(className)} key={`sfxlink_fail_${id}`}>
-              [NO={id}]{i !== a.length - 1 && ", "}
+              {surround?.pre ?? ""}[NO={id}]{surround?.post ?? ""}
+              {i !== a.length - 1 && separator}
             </span>
           );
 
         return (
           <span key={`sfxlink_${sfx.id}`} className={cn(className)}>
+            {surround?.pre ?? ""}
             <Link href={`?id=${sfx.id}`} className="underline" target="_self">
               {sfx.text}
             </Link>
-            {i !== a.length - 1 && ", "}
+            {surround?.post ?? ""}
+            {i !== a.length - 1 && separator}
           </span>
         );
       })}

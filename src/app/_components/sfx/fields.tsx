@@ -62,10 +62,18 @@ export const SFXLinkField = ({
 }: FieldProps<SFXLinkFieldType>) => {
   const fieldType: keyof typeof FieldTypeClasses = `${type}${jumped ? "_j" : ""}`;
 
+  const labels = {
+    pre: field.preLabel ?? (field.postLabel ? "" : "See also"),
+    post: field.postLabel ?? "",
+    sep: field.labelSeparator ?? ", ",
+    inx: { pre: field.inLabel?.pre ?? "", post: field.inLabel?.post ?? "" },
+  };
+
   return (
     <span className={cn(FieldTypeClasses[fieldType], className)}>
-      {field.label ?? "See also: "}
-      <SfxLink ids={field.ids} />
+      {labels.pre}
+      <SfxLink ids={field.ids} separator={labels.sep} surround={labels.inx} />
+      {labels.post}
     </span>
   );
 };

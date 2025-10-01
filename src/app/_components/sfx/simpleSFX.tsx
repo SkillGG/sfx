@@ -72,7 +72,12 @@ const SimpleField = async ({
     case "sfxlink":
       const link = await field.consume?.(api);
 
-      // console.log(link);
+      const labels = {
+        pre: field.preLabel ?? (field.postLabel ? "" : "See also"),
+        post: field.postLabel ?? "",
+        sep: field.labelSeparator ?? ",",
+        inx: { pre: field.inLabel?.pre ?? "", post: field.inLabel?.post ?? "" },
+      };
 
       return (
         <div
@@ -82,8 +87,15 @@ const SimpleField = async ({
             display: "flex",
           }}
         >
-          {field.label ?? "See also: "}
-          {link?.map((q) => q.label).join(", ") ?? `${field.ids.join(",")}`}
+          {labels.pre}
+          {link
+            ?.map(
+              (q) =>
+                `${labels.inx.pre}${q.label}${labels.inx.post}`,
+            )
+            .join(labels.sep) ??
+            `${field.ids.join(labels.sep)}`}
+          {labels.post}
         </div>
       );
     default:

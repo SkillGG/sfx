@@ -134,7 +134,14 @@ export type SFXLinkField = {
   /** A function to get the SFX from the API */
   consume?: (api: Api) => Promise<{ id: number; label: string }[] | null>;
   /** A custom label before the sfx list */
-  label?: string;
+  preLabel?: string;
+  /** A custom label after the sfx list */
+  postLabel?: string;
+  /** A custom label in-between every result
+   */
+  inLabel?: {pre?: string;post?:string}
+  /** A custom separator between links */
+  labelSeparator?: string;
 };
 
 /** A SFXField is a single SFX data line. It can either contain a link, text or an image */
@@ -469,7 +476,7 @@ export const Parser = {
     const printErr = log
       ? __print("ERROR", log, "asSFXLink", console.error)
       : noop;
-    const rx = /^sfx(?:\[(?<label>[^\]]+)\])?:(?<id>(?:\d+,?)+)$/gi.exec(
+    const rx = /^sfx(?:\[(?<preLabel>[^\]]+)\])?:(?<id>(?:\d+,?)+)$/gi.exec(
       str.trim(),
     );
 
@@ -493,12 +500,12 @@ export const Parser = {
       return null;
     }
 
-    const label = rx.groups.label;
+    const preLabel = rx.groups.preLabel;
 
     const field: SFXLinkField = {
       ids: intID,
       type: "sfxlink",
-      label,
+       preLabel,
       consume: async (api) => {
         let result: CollapsedOnomatopoeia[] = [];
         if ("useUtils" in api) {

@@ -410,16 +410,34 @@ describe("String parse - links", () => {
   it("labeled sfx", () => {
     const parsed = parseSFXFields(fieldData("sfx[This is the label__:P]:1"));
 
-    expect(parsed).toMatchObject<Omit<SFXFieldsData, "data">>({
+    expect(parsed).toMatchObject<SFXFieldsData>({
       ...emptyFieldResult,
       read: [
         {
           type: "sfxlink",
           hidden: false,
           ids: [1],
-          label: "This is the label__:P",
+          preLabel: "This is the label__:P",
           index: 1,
           key: "1",
+        },
+      ],
+    });
+  });
+
+  it("post-labeled sfx", () => {
+    const parsed = parseSFXFields(fieldData("sfx< - also this>:1"));
+
+    expect(parsed).toMatchObject<SFXFieldsData>({
+      ...emptyFieldResult,
+      read: [
+        {
+          type: "sfxlink",
+          hidden: false,
+          ids: [1],
+          postLabel: "post",
+          key: "1",
+          index: 1,
         },
       ],
     });
