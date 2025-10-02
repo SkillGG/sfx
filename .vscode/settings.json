@@ -14,10 +14,11 @@
   "codemetrics.nodeconfiguration.ReturnStatement": 0,
   "codemetrics.nodeconfiguration.CaseClause": 0,
   "codemetrics.nodeconfiguration.DefaultClause": 0,
-  "codemetrics.basics.ComplexityLevelExtreme" : 30,
-  "codemetrics.basics.CodeLensHiddenUnder" : 10,
+  "codemetrics.basics.ComplexityLevelExtreme": 30,
+  "codemetrics.basics.CodeLensHiddenUnder": 10,
   "codemetrics.nodeconfiguration.AnyKeyword": 100,
   "codemetrics.nodeconfiguration.ArrowFunction": 0,
+  "codemetrics.nodeconfiguration.ArrowFunctionDescription": "Arrow functions with something bad inside, but codemetrics sucks and won't tell you what",
   "codemetrics.nodeconfiguration.JsxElement": 0,
   "codemetrics.nodeconfiguration.JsxSelfClosingElement": 0,
   "codemetrics.nodeconfiguration.FunctionType": 0

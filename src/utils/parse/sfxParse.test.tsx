@@ -428,6 +428,8 @@ describe("String parse - links", () => {
   it("post-labeled sfx", () => {
     const parsed = parseSFXFields(fieldData("sfx< - also this>:1"));
 
+    console.log(parsed);
+
     expect(parsed).toMatchObject<SFXFieldsData>({
       ...emptyFieldResult,
       read: [
@@ -435,9 +437,35 @@ describe("String parse - links", () => {
           type: "sfxlink",
           hidden: false,
           ids: [1],
-          postLabel: "post",
+          postLabel: " - also this",
           key: "1",
           index: 1,
+        },
+      ],
+    });
+  });
+
+  it("multi-labeled sfx", () => {
+    const parsed = parseSFXFields(
+      fieldData("sfx{-in}[pre]<post>{+in}...:1,2,3,4"),
+    );
+
+    expect(parsed).toMatchObject<SFXFieldsData>({
+      ...emptyFieldResult,
+      read: [
+        {
+          type: "sfxlink",
+          hidden: false,
+          ids: [1, 2, 3, 4],
+          key: "1",
+          index: 1,
+          inLabel: {
+            post: "in",
+            pre: "in",
+          },
+          labelSeparator: "...",
+          postLabel: "post",
+          preLabel: "pre",
         },
       ],
     });

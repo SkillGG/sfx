@@ -2,6 +2,7 @@ import { type api as serverApi } from "@/trpc/server";
 import { type api as clientApi } from "@/trpc/react";
 import { type CollapsedOnomatopoeia } from "@/utils/utils";
 import z from "zod";
+import { multiRXExtract } from "./rxExtract";
 /**
  * Syntax:
  *
@@ -471,6 +472,8 @@ export const Parser = {
     return field;
   },
   /** Parse string as a {@link SFXLinkField}.
+   * @example sfx:12
+   * @example sfx[preList]<postList>{-inPre}{+inPost}, :1
    * @returns {SFXLinkField} {@link SFXLinkField} if parsed successfully
    * @returns {null} {@link null} if string was not a hide clause
    */
@@ -479,21 +482,28 @@ export const Parser = {
     const printErr = log
       ? __print("ERROR", log, "asSFXLink", console.error)
       : noop;
-    const rx = /^sfx(?:\[(?<preLabel>[^\]]+)\])?:(?<id>(?:\d+,?)+)$/gi.exec(
-      str.trim(),
-    );
 
-    if (!rx) {
+    const rxX = multiRXExtract(str.trim(), [
+      /\[(?<preLabel>.*?)\]/g,
+      /<(?<postLabel>.*?)>/g,
+      /\{\-(?<pre>.*?)\}/g,
+      /\{\+(?<post>.*?)\}/g,
+      /^sfx(?<labelSeparator>.*?):/gi,
+    ]);
+
+    if (!rxX) {
       printErr(`${str}`, "no RX");
       return null;
     }
 
-    if (!rx.groups?.id) {
-      printErr(`${str}`, "no id");
+    const idStr = /^(\d+,?)+$/.exec(rxX.out);
+
+    if (!idStr) {
+      printErr(`${str}`, "no ids");
       return null;
     }
 
-    const intID = rx.groups.id
+    const intID = rxX.out
       .split(",")
       .map(Number)
       .filter((q) => !(isNaN(q) || !isFinite(q) || !Number.isInteger(q)));
@@ -503,12 +513,22 @@ export const Parser = {
       return null;
     }
 
-    const preLabel = rx.groups.preLabel;
+    const preLabel = rxX.matches.preLabel?.join("");
+    const postLabel = rxX.matches.postLabel?.join("");
+    const pre = rxX.matches.pre?.join("");
+    const post = rxX.matches.post?.join("");
+    const labelSeparator = rxX.matches.labelSeparator?.join("");
 
     const field: SFXLinkField = {
       ids: intID,
       type: "sfxlink",
       preLabel,
+      postLabel,
+      labelSeparator,
+      inLabel: {
+        post,
+        pre,
+      },
       consume: async (api) => {
         let result: CollapsedOnomatopoeia[] = [];
         if ("useUtils" in api) {
