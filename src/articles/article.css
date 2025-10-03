@@ -1,15 +1,15 @@
 p {
-  padding-block: 10px;
+	padding-block: 10px;
 }
 
 .link {
-  color: var(--accent-200);
+	color: var(--accent-200);
 }
 
 .link:visited {
-  color: var(--accent-600);
+	color: var(--accent-600);
 }
 
 .link:hover {
-  color: var(--notice-200);
+	color: var(--notice-200);
 }

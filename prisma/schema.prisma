@@ -21,6 +21,8 @@ model Onomatopoeia {
 
     extra String?
 
+    info String?
+
     searchread  String?
     searchdef   String
     searchextra String?

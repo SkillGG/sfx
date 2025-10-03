@@ -1,47 +1,47 @@
-import "@/styles/globals.css";
+import '@/styles/globals.css'
 
-import { Geist } from "next/font/google";
+import { Geist } from 'next/font/google'
 
-import { TRPCReactProvider } from "@/trpc/react";
-import { SFXLangProvider } from "./hooks/langs";
-import { ThemeProvider } from "./hooks/theme";
-import { cn } from "@/utils/utils";
-import type { Metadata } from "next";
-import { NuqsAdapter } from "nuqs/adapters/next/app";
+import { TRPCReactProvider } from '@/trpc/react'
+import { SFXLangProvider } from './hooks/langs'
+import { ThemeProvider } from './hooks/theme'
+import { cn } from '@/utils/utils'
+import type { Metadata } from 'next'
+import { NuqsAdapter } from 'nuqs/adapters/next/app'
 
 export const metadata: Metadata = {
-  title: "SFX Vault",
-  description: "An app for SFX Translations",
-  metadataBase: new URL("https://sfxvault.org/"),
-  openGraph: {
-    type: "website",
-    description: "An app for SFX Translations",
-    determiner: "the",
-    emails: ["contact@sfxvault.org"],
-    siteName: "SFX Vault",
-    url: "https://sfxvault.org",
-  },
-};
+	title: 'SFX Vault',
+	description: 'An app for SFX Translations',
+	metadataBase: new URL('https://sfxvault.org/'),
+	openGraph: {
+		type: 'website',
+		description: 'An app for SFX Translations',
+		determiner: 'the',
+		emails: ['contact@sfxvault.org'],
+		siteName: 'SFX Vault',
+		url: 'https://sfxvault.org',
+	},
+}
 
-const geist = Geist({
-  subsets: ["latin"],
-  variable: "--font-geist-sans",
-});
+const geist = Geist({ subsets: ['latin'], variable: '--font-geist-sans' })
 
 export default async function RootLayout({
-  children,
+	children,
 }: Readonly<{ children: React.ReactNode }>) {
-  return (
-    <html lang="en" className={cn(geist.variable)}>
-      <body className={cn("m-0 h-full w-full bg-(color:--main-bg) p-0")}>
-        <TRPCReactProvider>
-          <NuqsAdapter>
-            <SFXLangProvider>
-              <ThemeProvider>{children}</ThemeProvider>
-            </SFXLangProvider>
-          </NuqsAdapter>
-        </TRPCReactProvider>
-      </body>
-    </html>
-  );
+	return (
+		<html
+			lang='en'
+			className={cn(geist.variable)}
+		>
+			<body className={cn('m-0 h-full w-full bg-(color:--main-bg) p-0')}>
+				<TRPCReactProvider>
+					<NuqsAdapter>
+						<SFXLangProvider>
+							<ThemeProvider>{children}</ThemeProvider>
+						</SFXLangProvider>
+					</NuqsAdapter>
+				</TRPCReactProvider>
+			</body>
+		</html>
+	)
 }

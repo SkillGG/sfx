@@ -1,203 +1,187 @@
-import type {
-  CollapsedOnomatopoeia,
-  SearchOptions,
-  SFXData,
-} from "@/utils/utils";
-import type { PrismaClient } from "@prisma/client";
-import { sfxGetTLs } from "./sfx";
+import {
+	SFXObj,
+	type CollapsedOnomatopoeia,
+	type SearchOptions,
+	type SFXData,
+} from '@/utils/utils'
+import type { PrismaClient } from '@prisma/client'
+import { sfxGetTLs } from './sfx'
 
-const sfxContains = (sfx: Omit<SFXData, "language">, search: string) => {
-  const rx = new RegExp(search, "i");
-  return (
-    rx.test(sfx.def) ||
-    rx.test(sfx.extra ?? "") ||
-    rx.test(sfx.read ?? "") ||
-    rx.test(sfx.text)
-  );
-};
+const sfxContains = (sfx: Omit<SFXData, 'language'>, search: string) => {
+	const rx = new RegExp(search, 'i')
+	return (
+		rx.test(sfx.def) ||
+		rx.test(sfx.extra ?? '') ||
+		rx.test(sfx.read ?? '') ||
+		rx.test(sfx.text)
+	)
+}
 
 export const searchDBForSFX = async (
-  db: PrismaClient,
-  search: Required<SearchOptions>,
+	db: PrismaClient,
+	search: Required<SearchOptions>,
 ): Promise<CollapsedOnomatopoeia[]> => {
-  if (search === "list") return [];
+	if (search === 'list') return []
 
-  const query = search.query;
+	const query = search.query
 
-  const sfxs = await db.onomatopoeia.findMany({
-    select: {
-      def: true,
-      extra: true,
-      id: true,
-      languageId: true,
-      featured: true,
-      createdAt: true,
-      updatedAt: true,
-      ogTranslations: {
-        include: { tlSFX: true },
-      },
-      tlTranslations: { include: { ogSFX: true } },
-      read: true,
-      text: true,
-    },
+	const sfxs = await db.onomatopoeia.findMany({
+		select: {
+			def: true,
+			extra: true,
+			id: true,
+			languageId: true,
+			featured: true,
+			info: true,
+			createdAt: true,
+			updatedAt: true,
+			ogTranslations: { include: { tlSFX: true } },
+			tlTranslations: { include: { ogSFX: true } },
+			read: true,
+			text: true,
+		},
 
-    where: {
-      AND: [
-        search.featured ? { featured: search.featured } : {},
-        search.ids.length > 0
-          ? { OR: search.ids.filter((q) => q > 0).map((q) => ({ id: q })) }
-          : {}, // multi ID search
-        search.id && search.id > 0 ? { id: search.id } : {}, // single ID search
-        search.langs && search.langs.length > 0 // language search
-          ? { language: { id: { in: search.langs } } }
-          : {},
-        {
-          // text search
-          OR: [
-            {
-              searchdef: { contains: query },
-            },
-            {
-              searchextra: { contains: query },
-            },
-            {
-              text: { contains: query },
-            },
-            { searchread: { contains: query } },
-            {
-              ogTranslations: {
-                some: {
-                  tlSFX: {
-                    OR: [
-                      {
-                        searchdef: { contains: query },
-                      },
-                      {
-                        searchextra: { contains: query },
-                      },
-                      {
-                        text: { contains: query },
-                      },
-                      { searchread: { contains: query } },
-                    ],
-                  },
-                },
-              },
-            },
-            {
-              tlTranslations: {
-                some: {
-                  ogSFX: {
-                    OR: [
-                      {
-                        searchdef: { contains: query },
-                      },
-                      {
-                        searchextra: { contains: query },
-                      },
-                      {
-                        text: { contains: query },
-                      },
-                      { searchread: { contains: query } },
-                    ],
-                  },
-                },
-              },
-            },
-          ],
-        },
-      ],
-    },
-  });
+		where: {
+			AND: [
+				search.featured ? { featured: search.featured } : {},
+				search.ids.length > 0
+					? { OR: search.ids.filter(q => q > 0).map(q => ({ id: q })) }
+					: {}, // multi ID search
+				search.id && search.id > 0 ? { id: search.id } : {}, // single ID search
+				search.langs && search.langs.length > 0 // language search
+					? { language: { id: { in: search.langs } } }
+					: {},
+				{
+					// text search
+					OR: [
+						{ searchdef: { contains: query } },
+						{ searchextra: { contains: query } },
+						{ text: { contains: query } },
+						{ searchread: { contains: query } },
+						{
+							ogTranslations: {
+								some: {
+									tlSFX: {
+										OR: [
+											{ searchdef: { contains: query } },
+											{ searchextra: { contains: query } },
+											{ text: { contains: query } },
+											{ searchread: { contains: query } },
+										],
+									},
+								},
+							},
+						},
+						{
+							tlTranslations: {
+								some: {
+									ogSFX: {
+										OR: [
+											{ searchdef: { contains: query } },
+											{ searchextra: { contains: query } },
+											{ text: { contains: query } },
+											{ searchread: { contains: query } },
+										],
+									},
+								},
+							},
+						},
+					],
+				},
+			],
+		},
+	})
 
-  const order = search.order ?? "asc";
+	const order = search.order ?? 'asc'
 
-  if (search.nodedupe) {
-    // console.log("NOT DEDUPING!", sfxs);
-    return sfxs
-      .map(
-        (sfx): CollapsedOnomatopoeia => ({
-          def: sfx.def,
-          extra: sfx.extra,
-          id: sfx.id,
-          language: sfx.languageId,
-          read: sfx.read,
-          text: sfx.text,
-          featured: sfx.featured,
-          tls: [],
-        }),
-      )
-      .slice(search.skip, search.limit + search.skip);
-  }
+	if (search.nodedupe) {
+		// console.log("NOT DEDUPING!", sfxs);
+		return sfxs
+			.map(
+				(sfx): CollapsedOnomatopoeia =>
+					SFXObj({
+						def: sfx.def,
+						extra: sfx.extra,
+						id: sfx.id,
+						language: sfx.languageId,
+						read: sfx.read,
+						info: sfx.info,
+						text: sfx.text,
+						featured: sfx.featured,
+						tls: [],
+					}),
+			)
+			.slice(search.skip, search.limit + search.skip)
+	}
 
-  const deduped = sfxs.reduce<
-    {
-      id: number;
-      text: string;
-      read: string | null;
-      def: string;
-      extra: string | null;
-      featured: boolean;
-      languageId: string;
-      ogtls: (typeof sfxs)[number]["ogTranslations"];
-      optls: (typeof sfxs)[number]["tlTranslations"];
-      show?: "both" | "reverse";
-      hideTLSFXs?: number[];
-    }[]
-  >((arr, sfx) => {
-    const sfxObj = {
-      createdAt: sfx.createdAt,
-      def: sfx.def,
-      extra: sfx.extra,
-      id: sfx.id,
-      languageId: sfx.languageId,
-      read: sfx.read,
-      text: sfx.text,
-      featured: sfx.featured,
-      updatedAt: sfx.updatedAt,
-      ogtls: sfx.ogTranslations,
-      optls: sfx.tlTranslations,
-      show: "both" as "both" | "reverse",
-    };
+	const deduped = sfxs.reduce<
+		{
+			id: number
+			text: string
+			read: string | null
+			def: string
+			extra: string | null
+			info: string | null
+			featured: boolean
+			languageId: string
+			ogtls: (typeof sfxs)[number]['ogTranslations']
+			optls: (typeof sfxs)[number]['tlTranslations']
+			show?: 'both' | 'reverse'
+			hideTLSFXs?: number[]
+		}[]
+	>((arr, sfx) => {
+		const sfxObj = {
+			createdAt: sfx.createdAt,
+			def: sfx.def,
+			extra: sfx.extra,
+			id: sfx.id,
+			languageId: sfx.languageId,
+			read: sfx.read,
+			text: sfx.text,
+			info: sfx.info,
+			featured: sfx.featured,
+			updatedAt: sfx.updatedAt,
+			ogtls: sfx.ogTranslations,
+			optls: sfx.tlTranslations,
+			show: 'both' as 'both' | 'reverse',
+		}
 
-    // get all sfx that have this as opposite sfx
-    const prevSFX = arr.filter(
-      (v) =>
-        v.ogtls.some((tl) => tl.tlSFX.id === sfx.id) ||
-        v.optls.some((tl) => tl.ogSFX.id === sfx.id),
-    );
+		// get all sfx that have this as opposite sfx
+		const prevSFX = arr.filter(
+			v =>
+				v.ogtls.some(tl => tl.tlSFX.id === sfx.id) ||
+				v.optls.some(tl => tl.ogSFX.id === sfx.id),
+		)
 
-    if (prevSFX.length) {
-      if (sfxContains(sfx, query)) {
-        const prevSFXToHide = prevSFX.filter((psfx) => {
-          return !sfxContains(psfx, query);
-        });
-        if (prevSFXToHide.length > 0) {
-          return [
-            ...arr.filter((q) => !prevSFXToHide.find((x) => x.id === q.id)),
-            {
-              ...sfxObj,
-            },
-          ];
-        }
-      }
+		if (prevSFX.length) {
+			if (sfxContains(sfx, query)) {
+				const prevSFXToHide = prevSFX.filter(psfx => {
+					return !sfxContains(psfx, query)
+				})
+				if (prevSFXToHide.length > 0) {
+					return [
+						...arr.filter(q => !prevSFXToHide.find(x => x.id === q.id)),
+						{ ...sfxObj },
+					]
+				}
+			}
 
-      // add reversed version
-      if (
-        prevSFX.some((q) => q.show) // if there is a reversed sfx
-      ) {
-        return [...arr, { ...sfxObj, show: "reverse" as const }];
-      }
+			// add reversed version
+			if (
+				prevSFX.some(q => q.show) // if there is a reversed sfx
+			) {
+				return [...arr, { ...sfxObj, show: 'reverse' as const }]
+			}
 
-      // skip it
-      return arr;
-    }
+			// skip it
+			return arr
+		}
 
-    return [...arr, sfxObj];
-  }, []);
+		return [...arr, sfxObj]
+	}, [])
 
-  return (await sfxGetTLs(db, deduped, order === "desc")).slice(
-    search.skip,
-    search.limit + search.skip,
-  );
-};
+	return (await sfxGetTLs(db, deduped, order === 'desc')).slice(
+		search.skip,
+		search.limit + search.skip,
+	)
+}
