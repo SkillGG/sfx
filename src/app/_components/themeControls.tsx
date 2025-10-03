@@ -1,18 +1,18 @@
-"use client";
+'use client'
 
-import { cn } from "@/utils/utils";
-import DarkModeSwitch, { AccentSwitch } from "./darkModeSwitch";
+import { cn } from '@/utils/utils'
+import DarkModeSwitch, { AccentSwitch } from './darkModeSwitch'
 
 export const ThemeControls = ({ className }: { className?: string }) => {
-  return (
-    <nav
-      className={cn("flex items-center gap-2", className)}
-      aria-label="Theme"
-    >
-      <AccentSwitch />
-      <DarkModeSwitch />
-    </nav>
-  );
-};
+	return (
+		<nav
+			className={cn('flex items-center gap-2', className)}
+			aria-label='Theme'
+		>
+			<AccentSwitch />
+			<DarkModeSwitch />
+		</nav>
+	)
+}
 
-export default ThemeControls;
+export default ThemeControls
