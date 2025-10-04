@@ -4,6 +4,20 @@ import { getArticles } from '@/articles'
 import BlogHeader from '@/app/blog/_components/Header'
 import Tag from '@/app/blog/_components/Tag'
 
+export async function generateStaticParams() {
+	const posts = getArticles()
+
+	const tags = new Set<string>()
+
+	for (const post of posts) {
+		for (const tag of post.tags ?? []) {
+			tags.add(tag)
+		}
+	}
+
+	return [...tags].map(tag => ({ tag }))
+}
+
 const TagSearch = async ({ params }: { params: Promise<{ tag: string }> }) => {
 	const posts = getArticles()
 
