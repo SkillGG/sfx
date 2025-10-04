@@ -1,15 +1,13 @@
 import type { Metadata } from 'next'
 import { SearchPage } from './main'
 import { api } from '@/trpc/server'
-import { IMAGE_SIZE, type SearchParams } from '@/utils/utils'
+import { IMAGE_SIZE } from '@/utils/utils'
 import { searchParamsToQuery } from '@/utils/searchUtils'
 import { parseSFXFields } from '@/utils/parse/sfxParse'
 
-type Props = { searchParams: SearchParams }
-
 export async function generateMetadata({
 	searchParams,
-}: Props): Promise<Metadata> {
+}: PageProps<'/'>): Promise<Metadata> {
 	const params = await searchParams
 	const query = searchParamsToQuery(params)
 
@@ -118,6 +116,6 @@ export async function generateMetadata({
 	return basicMetadata
 }
 
-export default async function Home({ searchParams }: Props) {
+export default async function Home({ searchParams }: PageProps<'/'>) {
 	return <SearchPage searchParams={await searchParams} />
 }

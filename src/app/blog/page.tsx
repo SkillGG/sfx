@@ -2,9 +2,16 @@ import { cn } from '@/utils/utils'
 import { getArticles } from '@/articles'
 import BlogHeader from './_components/Header'
 import { PostLink } from './_components/PostLink'
+import type { Metadata } from 'next'
+
+export const generateMetadata = (): Metadata => {
+	return { title: 'SFX Vault - Blog' }
+}
 
 const BlogPage = () => {
 	const posts = getArticles()
+		.filter(p => p.featured)
+		.toReversed()
 
 	return (
 		<main className={cn('mx-auto w-full max-w-3xl px-4 py-8')}>

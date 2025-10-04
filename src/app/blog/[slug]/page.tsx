@@ -2,8 +2,9 @@ import { cn } from '@/utils/utils'
 import { getArticleBySlug, getArticles } from '@/articles'
 import BlogHeader from '../_components/Header'
 import Tag from '../_components/Tag'
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { BackLink } from './back'
+import type { Metadata } from 'next'
 
 export const dynamic = 'force-static'
 
@@ -12,13 +13,21 @@ export async function generateStaticParams() {
 	return posts.map(p => ({ slug: p.slug }))
 }
 
-const ArticlePage = async ({
-	params: asyncParams,
-}: {
-	params: Promise<{ slug: string }>
-}) => {
-	const params = await asyncParams
+export const generateMetadata = async (
+	props: PageProps<'/blog/[slug]'>,
+): Promise<Metadata> => {
+	const param = await props.params
+	const post = getArticleBySlug(param.slug)
+
+	if (!post) return {}
+
+	return { title: `${post.title} - SFX Vault Blog` }
+}
+
+const ArticlePage = async (props: PageProps<'/blog/[slug]'>) => {
+	const params = await props.params
 	const post = getArticleBySlug(params.slug)
+
 	if (!post) return notFound()
 
 	return (
@@ -33,8 +42,7 @@ const ArticlePage = async ({
 							{post.title}
 						</h1>
 						<nav aria-label='Breadcrumb'>
-							<Link
-								href='/blog'
+							<BackLink
 								className={cn(
 									'text-sm underline-offset-4',
 									'text-(--button-submit-nobg-text)',
@@ -42,7 +50,7 @@ const ArticlePage = async ({
 								)}
 							>
 								← Go back
-							</Link>
+							</BackLink>
 						</nav>
 					</header>
 				}
@@ -52,15 +60,11 @@ const ArticlePage = async ({
 				className={cn(
 					'rounded-lg border border-(--regular-border)',
 					'bg-(--main-bg)/60 px-6 py-2 shadow-sm',
+					'has-[.no-border]:border-none has-[.no-border]:shadow-none',
 				)}
 				aria-labelledby={`post_${post.slug}_title`}
 			>
-				<section
-					className={cn(
-						'prose prose-invert max-w-none',
-						'text-(--blog-paragraph-text)',
-					)}
-				>
+				<section className={cn('max-w-none', 'text-(--blog-paragraph-text)')}>
 					{post.content}
 				</section>
 				<footer className='w-full'>

@@ -1,3 +1,4 @@
+import { getArticles } from '@/articles'
 import { api } from '@/trpc/server'
 import type { MetadataRoute } from 'next'
 
@@ -13,6 +14,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 			changeFrequency: 'weekly',
 			priority: 1,
 		},
+		{
+			url: `${ORIGIN}/blog`,
+			lastModified: new Date(),
+			changeFrequency: 'weekly',
+			priority: 0.1,
+		},
+		...getArticles().map<MetadataRoute.Sitemap[number]>(article => ({
+			url: `${ORIGIN}/blog/${article.slug}`,
+			lastModified: article.date,
+			changeFrequency: 'never',
+			priority: 0.3,
+		})),
 		...sfxs
 			.map((sfx): MetadataRoute.Sitemap[number][] => {
 				return [
@@ -26,7 +39,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 						url: `${ORIGIN}/?q=${sfx.text}`,
 						changeFrequency: 'monthly',
 						lastModified: sfx.updatedAt ?? new Date(),
-						priority: 0.5,
+						priority: 0.1,
 					},
 				]
 			})

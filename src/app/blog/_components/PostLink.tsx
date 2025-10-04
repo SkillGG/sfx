@@ -2,8 +2,15 @@ import type { Article } from '@/articles'
 import { cn } from '@/utils/utils'
 import Tag from './Tag'
 import Link from 'next/link'
+import type { ClassValue } from 'clsx'
 
-export const PostLink = ({ post }: { post: Article }) => {
+export const PostLink = ({
+	post,
+	className,
+}: {
+	post: Article
+	className?: ClassValue
+}) => {
 	return (
 		<li
 			key={post.slug}
@@ -13,6 +20,7 @@ export const PostLink = ({ post }: { post: Article }) => {
 				className={cn(
 					'rounded-lg border border-(--regular-border)',
 					'bg-(--main-bg)/60 p-4 shadow-sm',
+					className,
 				)}
 				aria-labelledby={`post_${post.slug}_title`}
 			>

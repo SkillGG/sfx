@@ -9,6 +9,8 @@
 @custom-variant dark (&:where(.dark, .dark *));
 @custom-variant light (&:where(.light, .light *));
 
+@custom-variant hover (&:hover);
+
 :root {
 	--main-bg: var(--color-white);
 	--deeper-bg: var(--color-white);
