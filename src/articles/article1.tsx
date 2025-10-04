@@ -8,8 +8,9 @@ export const Article1: Article = {
 	slug: 'devlog-1',
 	title: '[Devlog #1] Welcome to SFX Vault',
 	description: 'The why and how',
-	date: '2025-09-12T21:16:43.705Z',
+	date: new Date('2025-09-12T21:16:43.705Z'),
 	tags: ['devlog', 'site', 'app'],
+	featured: true,
 	content: (
 		<>
 			<section className='text-justify'>

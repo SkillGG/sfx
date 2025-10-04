@@ -74,7 +74,7 @@ const ArticlePage = async ({
 						</span>
 						<span className={cn('text-sm text-(--label-text)')}>•</span>
 						<span className={cn('text-sm text-(--label-text)')}>
-							{new Date(post.date).toLocaleDateString()}
+							{post.date.toLocaleDateString()}
 						</span>
 						{post.tags && post.tags.length > 0 && (
 							<>
