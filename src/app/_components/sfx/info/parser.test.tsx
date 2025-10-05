@@ -4,6 +4,6 @@ const test = (v: string, exp: InfoField[]) => expect(parseInfo(v)).toEqual(exp)
 
 describe('field types', () => {
 	it('empty string text', () => {
-		test('', [{ type: 'string', value: '' }])
+		test('', [{ type: 'string', value: '', key: '1' }])
 	})
 })

@@ -1,13 +1,15 @@
 import type { CollapsedOnomatopoeia } from '@/utils/utils'
 
 import { cn } from '@/utils/utils'
-import { useRef, type RefObject } from 'react'
+import { useMemo, useRef, type RefObject } from 'react'
+import { parseInfo, type InfoField } from './parser'
+import { StringField } from '../fields'
 
 const DEFAULT_INFOBUTTONTITLE = 'See more'
 
 const infoButtonTitle: Record<string, string | undefined> = {
 	en: DEFAULT_INFOBUTTONTITLE,
-	ja: 'Motto miru',
+	ja: 'もっと',
 }
 
 const InfoIcon = ({
@@ -62,12 +64,31 @@ export const SFXInfoButton = ({ sfx }: { sfx: CollapsedOnomatopoeia }) => {
 	)
 }
 
+const SFXInfoField = ({ field }: { field: InfoField }) => {
+	switch (field.type) {
+		case 'string':
+			return (
+				<StringField
+					field={{ hidden: false, index: 0, ...field }}
+					type='def'
+				/>
+			)
+	}
+	return null
+}
+
 const parseSFXInfo = (info: string | null): React.ReactNode => {
 	if (!info) return null
+
+	const parsed = parseInfo(info)
+
 	return (
 		<>
-			{info.split('\n').map((q, i) => (
-				<div key={q + i}>{q}</div>
+			{parsed.map(q => (
+				<SFXInfoField
+					key={q.key}
+					field={q}
+				/>
 			))}
 		</>
 	)
@@ -80,6 +101,19 @@ export const SFXInfoBox = ({
 	sfx: CollapsedOnomatopoeia
 	ref: RefObject<HTMLDialogElement | null>
 }) => {
+	const dialog = useMemo(() => parseSFXInfo(sfx.info), [sfx])
+
+	if (!dialog)
+		return (
+			<dialog
+				className='hidden'
+				popover='auto'
+				ref={ref}
+			>
+				No data to show!
+			</dialog>
+		)
+
 	return (
 		<dialog
 			popover={`auto`}
@@ -89,7 +123,7 @@ export const SFXInfoBox = ({
 				'border-(--regular-border) bg-(--dialog-bg)/50 p-6 shadow-lg backdrop-blur-sm',
 			)}
 		>
-			{parseSFXInfo(sfx.info) ?? ''}
+			{parseSFXInfo(sfx.info) ?? false}
 		</dialog>
 	)
 }
