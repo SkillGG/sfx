@@ -16,6 +16,7 @@ export const Tag = ({
 				'rounded-full border border-(--regular-border)',
 				'bg-(--blog-tag-bg)/20 px-2 py-0.5',
 				'text-xs text-(--blog-tag-text)',
+				'hover:brightness-[115%] hover:backdrop-brightness-125',
 				className,
 			)}
 			href={`/blog/tag/${tag}`}

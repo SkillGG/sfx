@@ -5,6 +5,8 @@ import type { ClassValue } from 'clsx'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
+import '@/styles/blog.css'
+
 export const BackLink = ({
 	children,
 	className,

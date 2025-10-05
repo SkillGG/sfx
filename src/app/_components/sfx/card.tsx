@@ -80,7 +80,7 @@ export const SFXCard = ({
 		[sfx.def, sfx.extra, sfx.read, tlExtra],
 	)
 
-	console.log(`SFXID: ${sfx.id}, parsedData: `, parsed, `from:`, sfx, tlExtra)
+	// console.log(`SFXID: ${sfx.id}, parsedData: `, parsed, `from:`, sfx, tlExtra)
 
 	return (
 		<article

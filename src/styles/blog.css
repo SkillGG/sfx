@@ -1,3 +1,23 @@
+@import 'tailwindcss';
+
+:root {
+	--blog-brightness: 75%;
+	&.dark {
+		--blog-brightness: 150%;
+	}
+
+	&[accent='purple'] {
+		--blog-brightness: 200%;
+		&.dark {
+			--blog-brightness: 150%;
+		}
+	}
+}
+
 article code {
-	font-family: var(--font-mono);
+	@apply font-mono text-(--complement-500);
+}
+
+article h2 {
+	@apply text-center text-xl text-(--complement-500) brightness-(--blog-brightness);
 }

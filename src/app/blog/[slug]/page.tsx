@@ -8,6 +8,12 @@ import type { Metadata } from 'next'
 
 export const dynamic = 'force-static'
 
+import '@/styles/blog.css'
+import Link from 'next/link'
+import { AuthorLink } from '../_components/AuthorLink'
+import { ArticleDate } from '../_components/ArticleDate'
+import { ArticleFooter } from '../_components/Footer'
+
 export async function generateStaticParams() {
 	const posts = getArticles()
 	return posts.map(p => ({ slug: p.slug }))
@@ -67,36 +73,8 @@ const ArticlePage = async (props: PageProps<'/blog/[slug]'>) => {
 				<section className={cn('max-w-none', 'text-(--blog-paragraph-text)')}>
 					{post.content}
 				</section>
-				<footer className='w-full'>
-					<div
-						className={cn(
-							'flex flex-row flex-wrap items-center justify-end gap-6',
-						)}
-					>
-						<span className={cn('text-sm text-(--label-text)')}>
-							{post.author}
-						</span>
-						<span className={cn('text-sm text-(--label-text)')}>•</span>
-						<span className={cn('text-sm text-(--label-text)')}>
-							{post.date.toLocaleDateString()}
-						</span>
-						{post.tags && post.tags.length > 0 && (
-							<>
-								<span className={cn('text-sm text-(--label-text)')}>•</span>
-								<ul className={cn('m-0 flex flex-row flex-wrap gap-2 p-0')}>
-									{post.tags.map(t => (
-										<li
-											key={t}
-											className={cn('list-none')}
-										>
-											<Tag tag={t}>{t}</Tag>
-										</li>
-									))}
-								</ul>
-							</>
-						)}
-					</div>
-				</footer>
+
+				<ArticleFooter post={post} />
 			</article>
 		</main>
 	)

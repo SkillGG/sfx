@@ -40,7 +40,8 @@ export const SFXInfoButton = ({ sfx }: { sfx: CollapsedOnomatopoeia }) => {
 
 	if (!sfx.info) return null
 
-	console.log('Got sfx info for sfx', sfx.id, sfx.info)
+	console.log('Got sfx info for sfx', sfx.id)
+	console.log(JSON.stringify(sfx.info))
 
 	return (
 		<>

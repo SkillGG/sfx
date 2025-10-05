@@ -1,10 +1,10 @@
 import { cn } from '@/utils/utils'
 import { getArticles } from '@/articles'
 import BlogHeader from './_components/Header'
-import { PostLink } from './_components/PostLink'
 import type { Metadata } from 'next'
 
 import '@/styles/blog.css'
+import { ArticleLink } from './_components/ArticleLink'
 
 export const generateMetadata = (): Metadata => {
 	return { title: 'SFX Vault - Blog' }
@@ -36,7 +36,7 @@ const BlogPage = () => {
 			<section aria-label='Articles list'>
 				<ul className={cn('flex flex-col gap-4')}>
 					{posts.map(post => (
-						<PostLink
+						<ArticleLink
 							key={post.slug}
 							post={post}
 						/>

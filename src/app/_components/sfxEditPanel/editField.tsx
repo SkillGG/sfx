@@ -11,7 +11,7 @@ export type EditField = {
 	placeholder?: string
 	type?: 'normal'
 	key?: string
-	long?: boolean
+	long?: 'parsed' | 'raw' | boolean
 }
 
 export const EditField = ({
@@ -42,6 +42,7 @@ export const EditField = ({
 						fieldName={fieldName}
 						label={label}
 						value={value}
+						noParse={long === 'raw'}
 						placeholder={placeholder}
 						validation={validation}
 						onChange={onChange}

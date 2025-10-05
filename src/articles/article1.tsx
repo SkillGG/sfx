@@ -38,7 +38,7 @@ export const Article1: Article = {
 					<span className='text-(--complement-500)'>Just look it up!</span>
 				</blockquote>
 				<blockquote className='text-center font-mono text-balance'>
-					Do I want to check what SFX to use in English or Portuguese for
+					Do I want to check what SFX to usez in English or Portuguese for
 					&quot;fast blowing wind&quot;?
 					<br />
 					<span className='text-(--complement-500)'>Just search it up.</span>

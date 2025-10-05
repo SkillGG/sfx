@@ -15,7 +15,7 @@ export const Article2: Article = {
 	content: (
 		<>
 			<section className='no-border mb-2 text-justify'>
-				<h2 className='text-center text-xl'>
+				<h2>
 					A list of &quot;daily&quot; updates about the developement of the
 					site.
 				</h2>

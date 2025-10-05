@@ -66,6 +66,8 @@ export const LongInput = ({
 		}
 	}, [value])
 
+	const usedValue = noParse ? value : parseView(value)
+
 	return (
 		<textarea
 			className={cn(
@@ -73,8 +75,8 @@ export const LongInput = ({
 				'disabled:cursor-not-allowed disabled:opacity-50',
 			)}
 			placeholder={placeholder ?? label}
-			value={parseView(value)}
-			rows={parseView(value).split('\n').length}
+			value={usedValue}
+			rows={usedValue.split('\n').length}
 			ref={inRef}
 			onChange={e => {
 				if (!noParse) onChange?.(parseUpdate(value, e.currentTarget.value))

@@ -10,7 +10,7 @@ export const multiRXExtract = (str: string, rxs: RegExp[]) => {
 		if (!val) continue
 
 		ret.out = val.out
-		console.log(val.out)
+		// console.log(val.out)
 		for (const [k, v] of Object.entries(val.matches)) {
 			if (ret.matches[k]) {
 				ret.matches[k] = [...ret.matches[k], ...v]
@@ -47,22 +47,22 @@ export const rxExtract = (
 
 		const ostrarr = [...out]
 
-		console.log(match)
+		// console.log(match)
 
-		console.log(match.index, match[0].length)
+		// console.log(match.index, match[0].length)
 		const front = ostrarr.slice(0, match.index)
 		const back = ostrarr.slice(match.index + match[0].length)
 
-		console.log(out)
-		console.log(front, back)
+		// console.log(out)
+		// console.log(front, back)
 
 		out = [...front, ...back].join('')
 		rx.lastIndex = 0
 		match = rx.exec(out)
 	}
 
-	console.log(found)
-	console.log(out)
+	// console.log(found)
+	// console.log(out)
 
 	const matches = Object.fromEntries(
 		Object.entries(found)
@@ -84,7 +84,7 @@ export const rxExtract = (
 			}, []),
 	)
 
-	console.log(matches)
+	// console.log(matches)
 
 	return { out, matches }
 }

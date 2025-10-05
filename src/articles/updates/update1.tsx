@@ -10,14 +10,14 @@ export const Update: Article = {
 	content: (
 		<>
 			<section>
-				<h2 className='text-center text-xl'>What I did today:</h2>
+				<h2>What I did today:</h2>
 				<ul className='list-decimal px-6 marker:font-mono'>
 					<li>Create an update section in the blog.</li>
 					<li>Fix some typescript and eslint errors.</li>
 				</ul>
 			</section>
 			<section>
-				<h2 className='text-center text-xl'>Additional info to each task:</h2>
+				<h2>Additional info to each task:</h2>
 				<ul className='list-decimal px-6 marker:font-mono'>
 					<li>
 						Also when creating this section, I&apos;ve found the need to add an

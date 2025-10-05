@@ -10,21 +10,23 @@ import { ArticleLink } from '../../_components/ArticleLink'
 export async function generateStaticParams() {
 	const posts = getArticles()
 
-	const tags = new Set<string>()
+	const authors = new Set<string>()
 
 	for (const post of posts) {
-		for (const tag of post.tags ?? []) {
-			tags.add(tag)
-		}
+		authors.add(post.author)
 	}
 
-	return [...tags].map(tag => ({ tag }))
+	return [...authors].map(author => ({ author }))
 }
 
-const TagSearch = async ({ params }: { params: Promise<{ tag: string }> }) => {
+const TagSearch = async ({
+	params,
+}: {
+	params: Promise<{ author: string }>
+}) => {
 	const posts = getArticles()
 
-	const { tag } = await params
+	const { author } = await params
 
 	return (
 		<main className={cn('mx-auto w-full max-w-3xl px-4 py-8')}>
@@ -33,7 +35,7 @@ const TagSearch = async ({ params }: { params: Promise<{ tag: string }> }) => {
 					<>
 						<header>
 							<h1 className={cn('text-3xl font-bold text-(--header-text)')}>
-								Posts with tag {tag}
+								Posts made by {author}
 							</h1>
 							<nav aria-label='Breadcrumb'>
 								<Link
@@ -55,7 +57,7 @@ const TagSearch = async ({ params }: { params: Promise<{ tag: string }> }) => {
 			<section aria-label='Articles list'>
 				<ul className={cn('flex flex-col gap-4')}>
 					{posts
-						.filter(p => p.tags?.includes(tag))
+						.filter(p => (p.author = author))
 						.toReversed()
 						.map(post => (
 							<ArticleLink
