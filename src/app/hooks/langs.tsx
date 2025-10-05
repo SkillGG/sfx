@@ -2,6 +2,7 @@
 
 import { api } from '@/trpc/react'
 import { createContext, useContext, useEffect } from 'react'
+import { LoadPageSpinner } from '../_components/loadPage'
 
 export type SFXLang = { name: string; code: string }
 
@@ -35,7 +36,7 @@ export const SFXLangProvider = ({
 }: {
 	children: React.ReactNode
 }) => {
-	const { data } = api.sfx.listLangs.useQuery()
+	const { data, isFetched } = api.sfx.listLangs.useQuery()
 
 	// console.log("langs", data);
 
@@ -74,7 +75,7 @@ export const SFXLangProvider = ({
 				},
 			}}
 		>
-			{children}
+			{!isFetched ? <LoadPageSpinner key={'lps'} /> : children}
 		</SFXLangs.Provider>
 	)
 }

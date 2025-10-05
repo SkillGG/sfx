@@ -4,6 +4,8 @@ import BlogHeader from './_components/Header'
 import { PostLink } from './_components/PostLink'
 import type { Metadata } from 'next'
 
+import '@/styles/blog.css'
+
 export const generateMetadata = (): Metadata => {
 	return { title: 'SFX Vault - Blog' }
 }

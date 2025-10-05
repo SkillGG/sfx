@@ -36,9 +36,9 @@ export default async function RootLayout({
 			<body className={cn('m-0 h-full w-full bg-(color:--main-bg) p-0')}>
 				<TRPCReactProvider>
 					<NuqsAdapter>
-						<SFXLangProvider>
-							<ThemeProvider>{children}</ThemeProvider>
-						</SFXLangProvider>
+						<ThemeProvider>
+							<SFXLangProvider>{children}</SFXLangProvider>
+						</ThemeProvider>
 					</NuqsAdapter>
 				</TRPCReactProvider>
 			</body>
