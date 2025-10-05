@@ -2,7 +2,6 @@ import { cn } from '@/utils/utils'
 import Link from 'next/link'
 import { getArticles } from '@/articles'
 import BlogHeader from '@/app/blog/_components/Header'
-import Tag from '@/app/blog/_components/Tag'
 
 import '@/styles/blog.css'
 import { ArticleLink } from '../../_components/ArticleLink'

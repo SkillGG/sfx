@@ -1,7 +1,6 @@
 import { cn } from '@/utils/utils'
 import { getArticleBySlug, getArticles } from '@/articles'
 import BlogHeader from '../_components/Header'
-import Tag from '../_components/Tag'
 import { notFound } from 'next/navigation'
 import { BackLink } from './back'
 import type { Metadata } from 'next'
@@ -9,9 +8,6 @@ import type { Metadata } from 'next'
 export const dynamic = 'force-static'
 
 import '@/styles/blog.css'
-import Link from 'next/link'
-import { AuthorLink } from '../_components/AuthorLink'
-import { ArticleDate } from '../_components/ArticleDate'
 import { ArticleFooter } from '../_components/Footer'
 
 export async function generateStaticParams() {
