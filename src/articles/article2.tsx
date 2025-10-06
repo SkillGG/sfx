@@ -19,12 +19,16 @@ export const Article2: Article = {
 					A list of &quot;daily&quot; updates about the developement of the
 					site.
 				</h2>
-				<ol className={cn('mx-auto flex w-[50%] rounded-xl border-1 py-2')}>
+				<ol
+					className={cn(
+						'mx-auto flex w-[50%] flex-col rounded-xl border-1 py-2',
+					)}
+				>
 					{UpdateArticles.map((q, i) => (
 						<li
 							key={q.slug}
 							className={cn(
-								'flex w-full list-none px-2 even:backdrop-brightness-[125%] hover:backdrop-brightness-200',
+								'flex w-full list-none px-2 even:backdrop-brightness-[125%] hover:backdrop-brightness-200 even:hover:backdrop-brightness-200',
 							)}
 						>
 							<div className='font-mono'>{i + 1}.</div>

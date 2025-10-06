@@ -23,6 +23,7 @@ import { useValidation, type Validation } from '../hooks/validation'
 import { useSearch } from '../hooks/search'
 import SearchBar from '../_components/searchBar'
 import { Spinner } from '../_components/spinner'
+import { ViewSwitch } from './viewSwitch'
 
 // SFX creator page
 const CreatorPage = () => {
@@ -54,6 +55,8 @@ const CreatorPage = () => {
 	const [tempRead, setTempRead] = useState<string>('')
 	const [tempExtra, setTempExtra] = useState<string>('')
 	const [tempInfo, setTempInfo] = useState<string>('')
+
+	const [view, setView] = useState<'create' | 'edit' | null>(null)
 
 	const [tls, setTLs] = useState<CollapsedTL[]>([])
 
@@ -177,29 +180,40 @@ const CreatorPage = () => {
 		<div
 			className={cn(
 				'flex h-[100vh] w-full basis-1/2 lg:flex-row',
-				'flex-col bg-(--main-bg) p-4 lg:gap-8',
+				'relative flex-col bg-(--main-bg) p-4 lg:gap-8',
+				'transition-colors',
 				mode,
 			)}
 			data-accent={accent}
 		>
+			<div className='align-center absolute flex text-4xl'>
+				<button
+					className={cn(
+						'mr-4 cursor-pointer rounded-lg bg-(--back-bg) px-2 pb-1',
+						'text-(--back-text) transition-colors hover:bg-(--back-hover-bg)',
+					)}
+					title='Back'
+					onClick={() => {
+						router.back()
+					}}
+				>
+					&lt;
+				</button>
+				<ViewSwitch
+					view={view}
+					setView={setView}
+					className={'cursor-pointer text-2xl text-(--label-text)'}
+				/>
+			</div>
 			{/* Main creator form */}
 			<div
-				className={cn('flex max-h-screen flex-1 flex-col gap-4 lg:max-h-none')}
+				className={cn(
+					'flex max-h-screen flex-1 flex-col gap-4 lg:max-h-none',
+					view === 'edit' && 'hidden',
+				)}
 			>
 				<h1 className={cn('text-4xl font-bold text-(--header-text)')}>
 					<div className={cn('flex w-full items-center justify-between')}>
-						<button
-							className={cn(
-								'mr-4 cursor-pointer rounded-lg bg-(--back-bg) px-2 pb-1',
-								'text-(--back-text) transition-colors hover:bg-(--back-hover-bg)',
-							)}
-							title='Back'
-							onClick={() => {
-								router.back()
-							}}
-						>
-							&lt;
-						</button>
 						<span
 							className={cn(
 								'flex-1 text-center text-4xl font-bold',
@@ -342,12 +356,11 @@ const CreatorPage = () => {
 					{createSFX.isPending ? 'Creating...' : 'Create'}
 				</button>
 			</div>
-
-			{/* Side panel with SFX list */}
-			<hr className='my-2 border-(--regular-border) lg:hidden' />
 			<div
 				className={cn(
-					'grid max-h-[50lvh] flex-1 auto-rows-[1fr_1fr_10fr] gap-4 pb-2 lg:flex lg:max-h-none lg:flex-col lg:pb-0',
+					'grid flex-1 auto-rows-[1fr_1fr_20fr] gap-4 lg:flex lg:max-h-none lg:flex-col lg:pb-0',
+					view === null ? 'max-h-[50lvh] pb-2' : 'max-h-[100%] lg:grid',
+					view === 'create' && 'hidden lg:hidden',
 				)}
 			>
 				<h2

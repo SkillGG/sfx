@@ -14,6 +14,7 @@ import type { ClassValue } from 'clsx'
 import { LocalImg } from './localImg'
 import SfxLink from './sfxLink'
 import Link from 'next/link'
+import type { RichStringField as RichStringFieldType } from './info/parser'
 
 export const FieldTypeClasses: Record<
 	keyof SFXFieldsData | `${keyof SFXFieldsData}_j`,
@@ -34,6 +35,21 @@ type FieldProps<T> = {
 	jumped?: boolean
 	type: keyof SFXFieldsData
 	className?: ClassValue
+}
+
+export const RichStringField = ({
+	field,
+	type,
+	className,
+	jumped,
+}: FieldProps<RichStringFieldType>) => {
+	const fieldType: keyof typeof FieldTypeClasses = `${type}${jumped ? '_j' : ''}`
+
+	return (
+		<div className={cn(FieldTypeClasses[fieldType], className)}>
+			{field.value}
+		</div>
+	)
 }
 
 export const StringField = ({

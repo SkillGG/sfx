@@ -12,8 +12,8 @@ import { SFXListPanel } from './_components/sfx/sfxList'
 import { useSearch } from './hooks/search'
 import { Spinner } from './_components/spinner'
 import { CookieBanner } from './_components/cookieBanner'
-import { QuestionMarkSVG } from './_components/questionMark'
 import { isValidSearch, type SearchQuery } from '@/utils/searchUtils'
+import { QuestionMark } from './_components/icons'
 
 const PageLoad = () => {
 	const { mode } = useTheme()
@@ -172,7 +172,7 @@ export const SearchPage = ({
 									'focus:ring-2 focus:ring-(color:--input-focus-border) focus:outline-none',
 								)}
 							>
-								<QuestionMarkSVG />
+								<QuestionMark />
 							</button>
 						</nav>
 					</header>

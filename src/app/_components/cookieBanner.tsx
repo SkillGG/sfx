@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { cn } from '@/utils/utils'
-import { QuestionMarkSVG } from './questionMark'
 import CookiesDialog from './cookiesDialog'
+import { QuestionMark } from './icons'
 
 // Version tracking for banner content changes
 const BANNER_VERSION = 2
@@ -76,7 +76,7 @@ export const CookieBanner = () => {
 								'focus:ring-offset-2 focus:ring-offset-(color:--dialog-bg) focus:outline-none',
 							)}
 						>
-							<QuestionMarkSVG classNames={{ svg: cn('bg-transparent') }} />
+							<QuestionMark classNames={{ svg: cn('bg-transparent') }} />
 						</button>
 					</div>
 					<button
