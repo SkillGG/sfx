@@ -303,6 +303,13 @@ export const Parser = {
 	isField(o: ParseResult): o is SFXField {
 		return 'type' in o
 	},
+	// field regexes (pulled out for use in InfoParser)
+	jumpRegex: /^_(?<to>[a-z]+)(?<index>\d+):(?<data>.*)$/,
+	hideRegex:
+		/^\-(?<key>[a-z]+)(?<index>(?:\d+,?)+)(?<revIndex>\/(?:\d+,?)*)?$/i,
+	imgRegex: /^img:(?<url>.*)$/gi,
+	linkRegex: /^\[(?<label>.*?)\]\((?<url>https?:\/\/[^\)]*)\)$/,
+
 	/** Parse string as a {@link JumpFieldData}.
 	 * @returns {JumpFieldData} {@link JumpFieldData} if parsed successfully
 	 * @returns {null} {@link null} if string was not a jump clause
@@ -310,7 +317,7 @@ export const Parser = {
 	asJump(str: string, log?: Log): JumpFieldData | null {
 		const print = log ? __print('LOG', log, 'asJump') : noop
 		const printErr = log ? __print('ERROR', log, 'asJump', console.error) : noop
-		const rx = /^_(?<to>[a-z]+)(?<index>\d+):(?<data>.*)$/.exec(str.trim())
+		const rx = this.jumpRegex.exec(str.trim())
 		if (!rx) {
 			printErr(`'${str}'`, 'no RX')
 			return null
@@ -350,10 +357,7 @@ export const Parser = {
 	asHide(str: string, log?: Log): HideFieldData | null {
 		const print = log ? __print('LOG', log, 'asHide') : noop
 		const printErr = log ? __print('ERROR', log, 'asHide', console.error) : noop
-		const rx =
-			/^\-(?<key>[a-z]+)(?<index>(?:\d+,?)+)(?<revIndex>\/(?:\d+,?)*)?$/i.exec(
-				str.trim(),
-			)
+		const rx = this.hideRegex.exec(str.trim())
 		if (!rx) {
 			printErr(`'${str}'`, 'no RX')
 			return null
@@ -419,9 +423,10 @@ export const Parser = {
 			? __print('ERROR', log, 'asImage', console.error)
 			: noop
 
-		const rx = /^img:(?<url>.*)$/gi.exec(str.trim())
+		const rx = this.imgRegex.exec(str.trim())
+
 		if (!rx?.groups?.url) {
-			printErr(`${str}`, 'not img syntax')
+			printErr(`'${str}'`, 'not img syntax')
 			return null
 		}
 
@@ -440,9 +445,7 @@ export const Parser = {
 	asLink(str: string, log?: Log): LinkField | null {
 		const print = log ? __print('LOG', log, 'asLink') : noop
 		const printErr = log ? __print('ERROR', log, 'asLink', console.error) : noop
-		const rx = /^\[(?<url>https?:\/\/[^\)]*)\]\((?<label>.*?)\)/.exec(
-			str.trim(),
-		)
+		const rx = this.linkRegex.exec(str.trim())
 
 		if (!rx) {
 			printErr(`'${str}'`, 'no RX')

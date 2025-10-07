@@ -363,3 +363,5 @@ export const toLangObject = (l: Language[]): LangObject => {
 
 /** OpenGraph image size */
 export const IMAGE_SIZE = { width: 600, height: 600 * 0.5 }
+
+export const makeRegexLineIndependent = (r: RegExp) => new RegExp(r.source.replace(/\$$/, '').replace(/^\^/, ''), r.flags)

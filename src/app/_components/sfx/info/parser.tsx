@@ -1,32 +1,40 @@
-import {
-	Parser,
-	type FieldBase,
-	type ImageField,
-	type LinkField,
-} from '@/utils/parse/sfxParse'
+import { Parser, type FieldBase, type ImageField } from '@/utils/parse/sfxParse'
+import { makeRegexLineIndependent } from '@/utils/utils'
+import { link } from 'fs'
 import { Fragment } from 'react'
 
 export type RichStringField = { type: 'string'; value: React.ReactNode }
 
 export type InfoField = Omit<FieldBase, 'hidden' | 'index' | 'jumpedFrom'> &
-	(LinkField | RichStringField | ImageField)
+	(RichStringField | ImageField) & { style: 'def' | 'read' | 'extra' }
 
 export const parseInfoField = (line: string): InfoField => {
 	const regParse = Parser.asField(line)
 
-	if (regParse.type === 'link') return regParse
-	if (regParse.type === 'img') return regParse
+	if (regParse.type === 'img') return { ...regParse, style: 'def' }
 
 	const str = line.trim()
 
+	const links: { url: string; label: string }[] = []
+
 	return {
 		type: 'string',
+		style: 'def',
 		value: !str ? (
 			<br />
 		) : (
 			<>
 				{str
 					.replace(/\\t/g, '\t')
+					.replace(makeRegexLineIndependent(Parser.linkRegex), match => {
+						console.log('found a link!', match)
+
+						const utf8PUACode = 57344 // '\ue000'.codePointAt(0);
+
+						const utf8CodePoint = `${String.fromCodePoint(utf8PUACode + links.length)}`
+
+						return utf8CodePoint
+					})
 					.split('')
 					.map((q, i) => {
 						switch (q) {

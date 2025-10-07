@@ -334,7 +334,7 @@ describe('String parse - img', () => {
 describe('String parse - links', () => {
 	it('site link', () => {
 		expect(
-			parseSFXFields(fieldData('[https://google.com](Test)')),
+			parseSFXFields(fieldData('[Test](https://google.com)')),
 		).toEqual<SFXFieldsData>({
 			...emptyFieldResult,
 			read: [

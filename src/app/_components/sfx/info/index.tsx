@@ -3,7 +3,7 @@ import type { CollapsedOnomatopoeia } from '@/utils/utils'
 import { cn } from '@/utils/utils'
 import { useMemo, useRef, type RefObject } from 'react'
 import { parseInfo, type InfoField } from './parser'
-import { LinkField, MultiIMGField, RichStringField } from '../fields'
+import { MultiIMGField, RichStringField } from '../fields'
 import { InfoIcon } from '../../icons'
 
 const DEFAULT_INFOBUTTONTITLE = 'See more'
@@ -45,14 +45,7 @@ const SFXInfoField = ({ field }: { field: InfoField }) => {
 			return (
 				<RichStringField
 					field={{ hidden: false, index: 0, ...field }}
-					type='def'
-				/>
-			)
-		case 'link':
-			return (
-				<LinkField
-					field={{ hidden: false, index: 0, ...field }}
-					type='def'
+					type={field.style}
 				/>
 			)
 		case 'img':
