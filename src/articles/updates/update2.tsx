@@ -1,4 +1,6 @@
+import React, { Fragment } from 'react'
 import type { Article } from '..'
+import Link from 'next/link'
 
 export const Update: Article = {
 	author: 'Skillu',
@@ -8,7 +10,7 @@ export const Update: Article = {
 	slug: `update-051025`,
 	title: 'Update 05.10.25',
 	content: (
-		<>
+		<Fragment>
 			<section className='text-justify'>
 				<h2>
 					The <code>info</code> field
@@ -42,11 +44,12 @@ export const Update: Article = {
 				<h2>Languages not loading</h2>
 				<p>
 					Due to a racing condition in the code, the language selection boxes in{' '}
-					<code>/creator</code> page did not load languages properly.
+					<Link href='/creator'>/creator</Link> page did not load languages
+					properly.
 					<br />
 					That&apos;s why I decided to force load languages before showing or
 					loading any other content, so they load properly before showing the{' '}
-					<code>/creator</code> page.
+					<Link href='/creator'>/creator</Link> page.
 				</p>
 				<p>
 					Doing so made <code>ThemeProvider</code> reset every time, so I had to
@@ -63,10 +66,10 @@ export const Update: Article = {
 				<p>
 					Also made the blog more consistant by reusing components in every
 					single screen of the blog. Now there won&apos;t be any jarring style
-					changes between page loadings in whole <code>/blog</code> side of the
-					site.
+					changes between page loadings in whole <Link href='/blog'>/blog</Link>{' '}
+					side of the site.
 				</p>
 			</section>
-		</>
+		</Fragment>
 	),
 }

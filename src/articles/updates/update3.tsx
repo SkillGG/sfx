@@ -1,3 +1,4 @@
+import React, { Fragment } from 'react'
 import type { Article } from '..'
 
 export const Update: Article = {
@@ -8,7 +9,7 @@ export const Update: Article = {
 	slug: `update-061025`,
 	title: 'Update 06.10.25',
 	content: (
-		<>
+		<Fragment>
 			<section className='text-justify'>
 				<h2>Editor changes</h2>
 				<p>
@@ -34,6 +35,6 @@ export const Update: Article = {
 					will be expanded in the future.
 				</p>
 			</section>
-		</>
+		</Fragment>
 	),
 }

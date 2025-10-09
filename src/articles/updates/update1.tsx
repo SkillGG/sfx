@@ -1,4 +1,6 @@
+import React, { Fragment } from 'react'
 import type { Article } from '..'
+import Link from 'next/link'
 
 export const Update: Article = {
 	author: 'Skillu',
@@ -8,7 +10,7 @@ export const Update: Article = {
 	slug: `update-041025`,
 	title: 'Update 04.10.25',
 	content: (
-		<>
+		<Fragment>
 			<section>
 				<h2>What I did today:</h2>
 				<ul className='list-decimal px-6 marker:font-mono'>
@@ -22,14 +24,14 @@ export const Update: Article = {
 					<li>
 						Also when creating this section, I&apos;ve found the need to add an
 						actual &quot;back&quot; button. Previously it was done by just
-						navigating to <code>/back</code> which was satisfiabale, but now
-						that we link from one blog to another, there is a need to go back
-						through the <code>React.router</code> instead, so I had to code the
-						back button as a separate client component.
+						navigating to <Link href='/blog'>/blog</Link> which was
+						satisfiabale, but now that we link from one blog to another, there
+						is a need to go back through the <code>React.router</code> instead,
+						so I had to code the back button as a separate client component.
 					</li>
 					<li>-</li>
 				</ul>
 			</section>
-		</>
+		</Fragment>
 	),
 }

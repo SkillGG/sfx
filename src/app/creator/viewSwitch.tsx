@@ -51,12 +51,12 @@ export const ViewSwitch = ({
 			'+'
 		) : view === 'edit' ? (
 			isLarge ? (
-				<SplitIcon className={'fill-(--label-text)'} />
+				<SplitIcon classNames={{ svg: 'fill-(--label-text)' }} />
 			) : (
 				'+'
 			)
 		) : (
-			<EditIcon className={'stroke-(--label-text)'} />
+			<EditIcon classNames={{ svg: 'stroke-(--label-text)' }} />
 		)
 
 	return (

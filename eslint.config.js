@@ -4,7 +4,7 @@ import tseslint from 'typescript-eslint'
 const compat = new FlatCompat({ baseDirectory: import.meta.dirname })
 
 export default tseslint.config(
-	{ ignores: ['.next'] },
+	{ ignores: ['.next', '**/*.template'] },
 	...compat.extends('next/core-web-vitals'),
 	{
 		files: ['**/*.ts', '**/*.tsx'],

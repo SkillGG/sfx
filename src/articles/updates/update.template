@@ -1,0 +1,20 @@
+import React, { Fragment } from 'react'
+import type { Article } from '..'
+
+export const Update: Article = {
+	author: 'Skillu',
+	// @ts-expect-error
+	date: new Date({ unixtime }),
+	description: `{desc}`,
+	featured: false,
+	slug: `{slug}`,
+	title: '{title}',
+	content: (
+		<Fragment>
+			<section>
+				<h2></h2>
+				<p></p>
+			</section>
+		</Fragment>
+	),
+}
