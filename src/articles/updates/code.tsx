@@ -31,7 +31,7 @@ export const QuoteCode = ({
 					'absolute top-1 right-1 hover:cursor-pointer hover:brightness-150',
 					copied && 'text-green-400',
 				)}
-				onClick={async e => {
+				onClick={async () => {
 					await navigator.clipboard.writeText(value)
 					setCopied(true)
 				}}

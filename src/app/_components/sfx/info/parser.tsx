@@ -1,6 +1,5 @@
 import { Parser, type FieldBase, type ImageField } from '@/utils/parse/sfxParse'
 import { makeRegexLineIndependent } from '@/utils/utils'
-import { link } from 'fs'
 import { Fragment } from 'react'
 
 export type RichStringField = { type: 'string'; value: React.ReactNode }
