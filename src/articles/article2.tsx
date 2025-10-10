@@ -33,7 +33,7 @@ export const Article2: Article = {
 						>
 							<div className='font-mono'>{i + 1}.</div>
 							<Link
-								href={`/blog/${q.slug}/?back=daily-list`}
+								href={`/blog/${q.slug}`}
 								className='w-full flex-1 justify-center text-center underline'
 							>
 								{q.title}

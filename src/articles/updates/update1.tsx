@@ -1,6 +1,7 @@
 import React, { Fragment } from 'react'
 import type { Article } from '..'
 import Link from 'next/link'
+import { QuoteCode } from './code'
 
 export const Update: Article = {
 	author: 'Skillu',
@@ -26,8 +27,9 @@ export const Update: Article = {
 						actual &quot;back&quot; button. Previously it was done by just
 						navigating to <Link href='/blog'>/blog</Link> which was
 						satisfiabale, but now that we link from one blog to another, there
-						is a need to go back through the <code>React.router</code> instead,
-						so I had to code the back button as a separate client component.
+						is a need to go back through the <QuoteCode>React.router</QuoteCode>{' '}
+						instead, so I had to code the back button as a separate client
+						component.
 					</li>
 					<li>-</li>
 				</ul>

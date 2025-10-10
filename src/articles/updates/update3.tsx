@@ -1,5 +1,6 @@
 import React, { Fragment } from 'react'
 import type { Article } from '..'
+import { QuoteCode } from './code'
 
 export const Update: Article = {
 	author: 'Skillu',
@@ -26,13 +27,13 @@ export const Update: Article = {
 				<p>
 					Now the first info-only parsing.
 					<br />
-					Added <code>RichStringField</code> to be able to add custom html
-					elements when parsing.
+					Added <QuoteCode>RichStringField</QuoteCode> to be able to add custom
+					html elements when parsing.
 					<br />
-					So far, only <code>\t</code> is getting replaced with{' '}
-					<code>&lt;&gt;&amp;emsp;&lt;/&gt;</code> html element (it is a{' '}
-					<code>ReactNode</code> so it displays the html entity properly) but it
-					will be expanded in the future.
+					So far, only <QuoteCode>\t</QuoteCode> is getting replaced with{' '}
+					<QuoteCode>{`<>&emsp;</>`}</QuoteCode> element (it is a{' '}
+					<QuoteCode>ReactNode</QuoteCode> so it displays the html entity
+					properly) but it will be expanded in the future.
 				</p>
 			</section>
 		</Fragment>

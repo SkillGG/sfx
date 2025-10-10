@@ -1,22 +1,26 @@
 @import 'tailwindcss';
 
-:root {
-	--blog-brightness: 75%;
-	--quote-brightness: 75%;
+.root {
+	&.light {
+		--blog-brightness: 75%;
+		--quote-brightness: 90%;
+	}
 	&.dark {
 		--blog-brightness: 150%;
-		--quote-brightness: 75%;
+		--quote-brightness: 200%;
 	}
 
-	--icon-stroke: black;
-	--icon-fill: white;
+	&.light {
+		--icon-stroke: black;
+		--icon-fill: white;
+	}
 
 	&.dark {
 		--icon-stroke: white;
 		--icon-fill: black;
 	}
 
-	&[accent='purple'] {
+	&[data-accent='purple'] {
 		--blog-brightness: 200%;
 		&.dark {
 			--blog-brightness: 150%;

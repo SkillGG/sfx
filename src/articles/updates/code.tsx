@@ -1,15 +1,29 @@
 'use client'
 
 import { ClipboardIcon } from '@/app/_components/icons'
+import {
+	SyntaxHighlight,
+	type SupportedLanguage,
+} from '@/app/_components/syntaxHighlight'
 import { cn } from '@/utils/utils'
+import type { ClassValue } from 'clsx'
 import type React from 'react'
 import { useEffect, useState } from 'react'
 
 export const QuoteCode = ({
 	children,
 	value,
+	lang,
+	block,
 	fadeout,
-}: React.PropsWithChildren<{ value: string; fadeout?: number }>) => {
+	className,
+}: React.PropsWithChildren<{
+	value?: string
+	block?: boolean
+	fadeout?: number
+	lang?: SupportedLanguage
+	className?: ClassValue
+}>) => {
 	const [copied, setCopied] = useState<boolean>(false)
 
 	useEffect(() => {
@@ -22,9 +36,19 @@ export const QuoteCode = ({
 	}, [copied, fadeout])
 
 	return (
-		<code className='relative my-2 block w-full p-2 backdrop-brightness-(--quote-brightness)'>
-			{children}
-			{!!value && (
+		<code
+			className={cn(
+				block && 'relative my-2 block w-full p-2',
+				'backdrop-brightness-(--quote-brightness)',
+				className,
+			)}
+		>
+			{lang ? (
+				<SyntaxHighlight language={lang}>{children}</SyntaxHighlight>
+			) : (
+				children
+			)}
+			{value && block && (
 				<button
 					title={copied ? 'Copied!' : 'Copy to clipboard'}
 					aria-label={copied ? 'Copied to clipboard' : 'Copy to clipboard'}

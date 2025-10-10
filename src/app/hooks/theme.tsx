@@ -56,6 +56,14 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
 		if (lsAccent) setAccent(lsAccent)
 	}, [])
 
+	useEffect(() => {
+		localStorage.setItem('darkMode', mode)
+	}, [mode])
+
+	useEffect(() => {
+		localStorage.setItem('accentName', accent)
+	}, [accent])
+
 	return (
 		<ThemeContext.Provider value={{ mode, setMode, accent, setAccent }}>
 			<div

@@ -24,19 +24,24 @@ export const Update: Article = {
 				<h2>Update file creator</h2>
 				<p>
 					So I keep all update articles inside the{' '}
-					<code>/articles/updates</code> folder.
+					<QuoteCode>/articles/updates</QuoteCode> folder.
 				</p>
 				<p>
 					Now, I found tedious updating and changing the date unix timestamp and
-					dates on duplicated <code>update1.tsx</code> file so I made{' '}
-					<code>update.template</code> file as a template for the updates= and
-					wrote a quick script (<code>newUpdate.ts</code>) to create new update
-					files for me!
+					dates on duplicated <QuoteCode>update1.tsx</QuoteCode> file so I made{' '}
+					<QuoteCode>update.template</QuoteCode> file as a template for the
+					updates= and wrote a quick script (<QuoteCode>newUpdate.ts</QuoteCode>
+					) to create new update files for me!
 				</p>
 				<p>
 					Now I just need to run{' '}
-					<QuoteCode value='pnpm update:new'>&gt; pnpm update:new</QuoteCode>{' '}
-					and it will create a new <code>update#.tsx</code> file and
+					<QuoteCode
+						value='pnpm update:new'
+						block
+					>
+						&gt; pnpm update:new
+					</QuoteCode>{' '}
+					and it will create a new <QuoteCode>update#.tsx</QuoteCode> file and
 					automatically add the update to the list avaiable{' '}
 					<Link href='/blog/daily-list'>here</Link>
 				</p>

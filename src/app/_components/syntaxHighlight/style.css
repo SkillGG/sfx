@@ -1,0 +1,185 @@
+@import 'tailwindcss';
+
+.dark {
+	.syntax-highlighted {
+		--syntax-property: hsl(350, 40%, 70%);
+		--syntax-tag: hsl(350, 40%, 70%);
+		--syntax-boolean: hsl(350, 40%, 70%);
+		--syntax-number: hsl(350, 40%, 70%);
+		--syntax-constant: hsl(350, 40%, 70%);
+		--syntax-symbol: hsl(350, 40%, 70%);
+
+		--syntax-deleted: red;
+
+		--syntax-comment: hsl(30, 20%, 50%);
+		--syntax-prolog: hsl(30, 20%, 50%);
+		--syntax-doctype: hsl(30, 20%, 50%);
+		--syntax-cdata: hsl(30, 20%, 50%);
+
+		--syntax-punctuation: #999;
+
+		--syntax-selector: hsl(75, 70%, 60%);
+		--syntax-attr-name: hsl(75, 70%, 60%);
+		--syntax-string: hsl(75, 70%, 60%);
+		--syntax-char: hsl(75, 70%, 60%);
+		--syntax-builtin: hsl(75, 70%, 60%);
+		--syntax-inserted: hsl(75, 70%, 60%);
+
+		--syntax-operator: hsl(40, 90%, 60%);
+		--syntax-entity: hsl(40, 90%, 60%);
+		--syntax-url: hsl(40, 90%, 60%);
+		--syntax-variable: hsl(40, 90%, 60%);
+
+		--syntax-atrule: hsl(350, 40%, 70%);
+		--syntax-attr-value: hsl(350, 40%, 70%);
+		--syntax-keyword: hsl(350, 40%, 70%);
+
+		--syntax-function: #dd4a68;
+		--syntax-class-name: #dd4a68;
+		--syntax-regex: #e90;
+		--syntax-important: #e90;
+		--syntax-literal-property: var(--syntax-property);
+		--syntax-token: #fff;
+
+		&::highlight(syntax-punctuation) {
+			opacity: 0.7;
+		}
+	}
+}
+
+.syntax-highlighted {
+	--syntax-property: #905;
+	--syntax-tag: #905;
+	--syntax-boolean: #905;
+	--syntax-number: #905;
+	--syntax-constant: #905;
+	--syntax-symbol: #905;
+	--syntax-deleted: #905;
+	--syntax-comment: slategray;
+	--syntax-prolog: slategray;
+	--syntax-doctype: slategray;
+	--syntax-cdata: slategray;
+	--syntax-punctuation: #999;
+	--syntax-selector: #690;
+	--syntax-attr-name: #690;
+	--syntax-string: #690;
+	--syntax-char: #690;
+	--syntax-builtin: #690;
+	--syntax-inserted: #690;
+	--syntax-operator: #9a6e3a;
+	--syntax-entity: #9a6e3a;
+	--syntax-url: #9a6e3a;
+	--syntax-atrule: #07a;
+	--syntax-attr-value: #07a;
+	--syntax-keyword: #07a;
+	--syntax-function: #dd4a68;
+	--syntax-class-name: #dd4a68;
+	--syntax-regex: #e90;
+	--syntax-important: #e90;
+	--syntax-variable: #e90;
+	--syntax-literal-property: var(--syntax-property);
+	--syntax-token: inherit;
+
+	&::highlight(syntax-token) {
+		color: var(--syntax-token);
+	}
+	&::highlight(syntax-literal-property) {
+		color: var(--syntax-literal-property);
+	}
+	&::highlight(syntax-property) {
+		color: var(--syntax-property);
+	}
+	&::highlight(syntax-tag) {
+		color: var(--syntax-tag);
+	}
+	&::highlight(syntax-boolean) {
+		color: var(--syntax-boolean);
+	}
+	&::highlight(syntax-number) {
+		color: var(--syntax-number);
+	}
+	&::highlight(syntax-constant) {
+		color: var(--syntax-constant);
+	}
+	&::highlight(syntax-symbol) {
+		color: var(--syntax-symbol);
+	}
+	&::highlight(syntax-deleted) {
+		color: var(--syntax-deleted);
+	}
+	&::highlight(syntax-comment) {
+		color: var(--syntax-comment);
+	}
+	&::highlight(syntax-prolog) {
+		color: var(--syntax-prolog);
+	}
+	&::highlight(syntax-doctype) {
+		color: var(--syntax-doctype);
+	}
+	&::highlight(syntax-cdata) {
+		color: var(--syntax-cdata);
+	}
+	&::highlight(syntax-punctuation) {
+		color: var(--syntax-punctuation);
+	}
+	&::highlight(syntax-selector) {
+		color: var(--syntax-selector);
+	}
+	&::highlight(syntax-attr-name) {
+		color: var(--syntax-attr-name);
+	}
+	&::highlight(syntax-string) {
+		color: var(--syntax-string);
+	}
+	&::highlight(syntax-char) {
+		color: var(--syntax-char);
+	}
+	&::highlight(syntax-builtin) {
+		color: var(--syntax-builtin);
+	}
+	&::highlight(syntax-inserted) {
+		color: var(--syntax-inserted);
+	}
+	&::highlight(syntax-operator) {
+		color: var(--syntax-operator);
+	}
+	&::highlight(syntax-entity) {
+		color: var(--syntax-entity);
+	}
+	&::highlight(syntax-url) {
+		color: var(--syntax-url);
+	}
+	&::highlight(syntax-atrule) {
+		color: var(--syntax-atrule);
+	}
+	&::highlight(syntax-attr-value) {
+		color: var(--syntax-attr-value);
+	}
+	&::highlight(syntax-keyword) {
+		color: var(--syntax-keyword);
+	}
+	&::highlight(syntax-function) {
+		color: var(--syntax-function);
+	}
+	&::highlight(syntax-class-name) {
+		color: var(--syntax-class-name);
+	}
+	&::highlight(syntax-regex) {
+		color: var(--syntax-regex);
+	}
+	&::highlight(syntax-important) {
+		color: var(--syntax-important);
+	}
+	&::highlight(syntax-variable) {
+		color: var(--syntax-variable);
+	}
+
+	&::highlight(syntax-important),
+	&::highlight(syntax-bold) {
+		font-weight: bold;
+	}
+
+	&::highlight(syntax-italic) {
+		font-style: italic;
+	}
+}

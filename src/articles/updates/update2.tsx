@@ -1,6 +1,7 @@
 import React, { Fragment } from 'react'
 import type { Article } from '..'
 import Link from 'next/link'
+import { QuoteCode } from './code'
 
 export const Update: Article = {
 	author: 'Skillu',
@@ -13,12 +14,12 @@ export const Update: Article = {
 		<Fragment>
 			<section className='text-justify'>
 				<h2>
-					The <code>info</code> field
+					The <QuoteCode>info</QuoteCode> field
 				</h2>
 				<p>
-					So <code>info</code> is a new field of hidden-by-default information
-					about the sound effect. It is accesible by the little questionmark
-					icon right beside the SFX name itself.
+					So <QuoteCode>info</QuoteCode> is a new field of hidden-by-default
+					information about the sound effect. It is accesible by the little
+					questionmark icon right beside the SFX name itself.
 				</p>
 				<p>
 					It opens a window that will show all tl-non-essential information
@@ -29,15 +30,15 @@ export const Update: Article = {
 					I&apos;m planning on it also containing source/additional info about
 					the translation in the translated SFX.
 					<br />
-					As <code>info</code> field will be using an extended set of field
-					types, and doesn&apos;t use the <code>long:&quot;parse&quot;</code>{' '}
-					text parser that is used for other SFX fields, I need to create a new
-					parser for that.
+					As <QuoteCode>info</QuoteCode> field will be using an extended set of
+					field types, and doesn&apos;t use the{' '}
+					<QuoteCode>long:&quot;parse&quot;</QuoteCode> text parser that is used
+					for other SFX fields, I need to create a new parser for that.
 				</p>
 				<p>
 					To keep backwards-compatibility with the other fields, I will be using
 					the original parser, but I plan to extend its use for{' '}
-					<code>info</code> field&apos;s sake.
+					<QuoteCode>info</QuoteCode> field&apos;s sake.
 				</p>
 			</section>
 			<section>
@@ -52,8 +53,9 @@ export const Update: Article = {
 					<Link href='/creator'>/creator</Link> page.
 				</p>
 				<p>
-					Doing so made <code>ThemeProvider</code> reset every time, so I had to
-					reorganize the provider&apos;s order to load the themes correctly.
+					Doing so made <QuoteCode>ThemeProvider</QuoteCode> reset every time,
+					so I had to reorganize the provider&apos;s order to load the themes
+					correctly.
 				</p>
 			</section>
 			<section>

@@ -44,6 +44,9 @@ importers:
       nuqs:
         specifier: ^2.5.2
         version: 2.7.0(next@15.5.4(@babel/core@7.28.4)(babel-plugin-react-compiler@19.1.0-rc.3)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0)
+      prismjs:
+        specifier: ^1.30.0
+        version: 1.30.0
       random-words:
         specifier: ^2.0.1
         version: 2.0.1
@@ -99,6 +102,9 @@ importers:
       '@types/node':
         specifier: ^20.14.10
         version: 20.19.19
+      '@types/prismjs':
+        specifier: ^1.26.5
+        version: 1.26.5
       '@types/react':
         specifier: ^19.1.12
         version: 19.2.0
@@ -1308,6 +1314,9 @@ packages:
 
   '@types/node@20.19.19':
     resolution: {integrity: sha512-pb1Uqj5WJP7wrcbLU7Ru4QtA0+3kAXrkutGiD26wUKzSMgNNaPARTUDQmElUXp64kh3cWdou3Q0C7qwwxqSFmg==}
+
+  '@types/prismjs@1.26.5':
+    resolution: {integrity: sha512-AUZTa7hQ2KY5L7AmtSiqxlhWxb4ina0yd8hNbl4TWuqnv/pFP0nDMb3YrfSBf4hJVGLh2YEIBfKaBW/9UEl6IQ==}
 
   '@types/react-dom@19.2.0':
     resolution: {integrity: sha512-brtBs0MnE9SMx7px208g39lRmC5uHZs96caOJfTjFcYSLHNamvaSMfJNagChVNkup2SdtOxKX1FDBkRSJe1ZAg==}
@@ -3212,6 +3221,10 @@ packages:
       typescript:
         optional: true
 
+  prismjs@1.30.0:
+    resolution: {integrity: sha512-DEvV2ZF2r2/63V+tK8hQvrR2ZGn10srHbXviTlcv7Kpzw8jWiNTqbVgjO3IY8RxrrOUF8VPMQQFysYYYv0YZxw==}
+    engines: {node: '>=6'}
+
   prop-types@15.8.1:
     resolution: {integrity: sha512-oj87CgZICdulUohogVAR7AjlC0327U4el4L6eAvOqCeudMDVU0NThNaV+b9Df4dXgSP1gXMTnPdhfe/2qDH5cg==}
 
@@ -4929,6 +4942,8 @@ snapshots:
   '@types/node@20.19.19':
     dependencies:
       undici-types: 6.21.0
+
+  '@types/prismjs@1.26.5': {}
 
   '@types/react-dom@19.2.0(@types/react@19.2.0)':
     dependencies:
@@ -7127,6 +7142,8 @@ snapshots:
       typescript: 5.9.3
     transitivePeerDependencies:
       - magicast
+
+  prismjs@1.30.0: {}
 
   prop-types@15.8.1:
     dependencies:
