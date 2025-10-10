@@ -2,7 +2,6 @@
 
 import { api } from '@/trpc/react'
 import { Suspense, useEffect, useState } from 'react'
-import { useTheme } from '../hooks/theme'
 import DarkModeSwitch, { AccentSwitch } from '../_components/darkModeSwitch'
 import { SFXLangSelect } from '../_components/sfx/sfxLangSelect'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -61,8 +60,6 @@ const CreatorPage = () => {
 	const [tls, setTLs] = useState<CollapsedTL[]>([])
 
 	const router = useRouter()
-
-	const { mode, accent } = useTheme()
 
 	const [firstRun, setFirstRun] = useState(false)
 
@@ -182,9 +179,7 @@ const CreatorPage = () => {
 				'flex h-[100vh] w-full basis-1/2 lg:flex-row',
 				'relative flex-col bg-(--main-bg) p-4 lg:gap-8',
 				'transition-colors',
-				mode,
 			)}
-			data-accent={accent}
 		>
 			<div className='align-center absolute flex text-4xl'>
 				<button

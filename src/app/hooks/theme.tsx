@@ -1,5 +1,6 @@
 'use client'
 
+import { cn } from '@/utils/utils'
 import { createContext, useContext, useEffect, useState } from 'react'
 
 export type LightMode = 'light' | 'dark'
@@ -41,7 +42,7 @@ export const useTheme = () => {
 }
 
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
-	const [mode, setMode] = useState<LightMode>('light')
+	const [mode, setMode] = useState<LightMode>('dark')
 	const [accent, setAccent] = useState<AccentName>('blue')
 
 	// hydrate from storage and system preference
@@ -55,21 +56,17 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
 		if (lsAccent) setAccent(lsAccent)
 	}, [])
 
-	// persist and reflect to DOM
-	useEffect(() => {
-		localStorage.setItem('darkMode', mode)
-		// apply class for dark mode
-		document.documentElement.classList.toggle('dark', mode === 'dark')
-	}, [mode])
-
-	useEffect(() => {
-		localStorage.setItem('accentName', accent)
-		document.documentElement.dataset.accent = accent
-	}, [accent])
-
 	return (
 		<ThemeContext.Provider value={{ mode, setMode, accent, setAccent }}>
-			{children}
+			<div
+				className={cn(
+					'root m-0 h-full min-h-screen w-full bg-(color:--main-bg) p-0',
+					mode,
+				)}
+				data-accent={accent}
+			>
+				{children}
+			</div>
 		</ThemeContext.Provider>
 	)
 }

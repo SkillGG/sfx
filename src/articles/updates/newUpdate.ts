@@ -75,14 +75,14 @@ const main = async (args: string[]) => {
 		.map(line => {
 			return /\/\/ \+import/.exec(line)
 				? [
-						`import { Update as Update${newID} } from "./update${newID}"\n`,
+						`\nimport { Update as Update${newID} } from "./update${newID}"\n`,
 						line,
 					]
 				: line
 		})
 		.flat(2)
 		.map(line => {
-			return /\/\/ \+array/.exec(line) ? [`\tUpdate${newID},\n`, line] : line
+			return /\/\/ \+array/.exec(line) ? [`\n\tUpdate${newID},\n`, line] : line
 		})
 		.flat(2)
 

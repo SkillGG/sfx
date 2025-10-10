@@ -3,7 +3,6 @@
 import { api } from '@/trpc/react'
 import DarkModeSwitch, { AccentSwitch } from './_components/darkModeSwitch'
 import AboutDialog from './_components/aboutDialog'
-import { useTheme } from './hooks/theme'
 import { cn, type SearchParams } from '@/utils/utils'
 import Link from 'next/link'
 import SearchBar from './_components/searchBar'
@@ -16,10 +15,8 @@ import { isValidSearch, type SearchQuery } from '@/utils/searchUtils'
 import { QuestionMark } from './_components/icons'
 
 const PageLoad = () => {
-	const { mode } = useTheme()
 	return (
 		<section
-			className={cn(mode)}
 			aria-busy='true'
 			aria-live='polite'
 		>
@@ -111,15 +108,11 @@ export const SearchPage = ({
 }) => {
 	const search = useSearch(searchParams)
 
-	const { mode, accent } = useTheme()
-
 	return (
 		<main
 			className={cn(
 				'flex h-screen w-full items-center justify-center bg-(--deeper-bg)',
-				mode,
 			)}
-			data-accent={accent}
 		>
 			<section
 				className={cn(

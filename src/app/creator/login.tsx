@@ -4,13 +4,10 @@ import { api } from '@/trpc/react'
 import { cn } from '@/utils/utils'
 import { useState } from 'react'
 import DarkModeSwitch, { AccentSwitch } from '../_components/darkModeSwitch'
-import { useTheme } from '../hooks/theme'
 
 const LoginPage = () => {
 	const [pass, setPass] = useState<string>('')
 	const login = api.user.logIn.useMutation()
-
-	const { mode } = useTheme()
 
 	const [err, setError] = useState('')
 
@@ -22,7 +19,6 @@ const LoginPage = () => {
 		<div
 			className={cn(
 				'flex min-h-screen items-center justify-center bg-(--deeper-bg)',
-				mode,
 			)}
 		>
 			<form

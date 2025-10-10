@@ -1,15 +1,12 @@
 import { cn } from '@/utils/utils'
-import { useTheme } from '../hooks/theme'
 import { Spinner } from './spinner'
 
 export const LoadPageSpinner = () => {
-	const { mode } = useTheme()
 	return (
-		<div
+		<main
 			className={cn(
 				'flex h-screen w-full items-center justify-center bg-(color:--accent-50)',
 				'dark:bg-slate-900',
-				mode,
 			)}
 		>
 			<div
@@ -20,6 +17,6 @@ export const LoadPageSpinner = () => {
 			>
 				<Spinner />
 			</div>
-		</div>
+		</main>
 	)
 }

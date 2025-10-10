@@ -4,6 +4,7 @@ import { cn } from '@/utils/utils'
 import ThemeControls from '../../_components/themeControls'
 
 export const BlogHeader = ({ title }: { title: React.ReactNode }) => {
+	console.log('I AM A CLIENT COMPONENT!')
 	return (
 		<header className={cn('mb-6 flex items-center justify-between')}>
 			{title}

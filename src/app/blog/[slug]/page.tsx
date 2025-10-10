@@ -27,6 +27,8 @@ export const generateMetadata = async (
 }
 
 const ArticlePage = async (props: PageProps<'/blog/[slug]'>) => {
+	console.log('I AM A SERVER COMPONENT!')
+
 	const params = await props.params
 	const post = getArticleBySlug(params.slug)
 
